@@ -5,6 +5,33 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Animais – Sítio Córrego do Pinhal</title>
 
+<link rel="manifest" href="../manifest.json">
+<meta name="theme-color" content="#7b3f2a">
+
+<!-- FIREBASE (PADRÃO GLOBAL) -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+<script>
+firebase.initializeApp({
+  apiKey: "AIzaSyCW-CuFDrOLO-dteckl_GrPTocmyS-IrzY",
+  authDomain: "sitio-corrego-do-pinhal.firebaseapp.com",
+  projectId: "sitio-corrego-do-pinhal"
+});
+</script>
+
+<!-- IDENTIFICAÇÃO DA PÁGINA -->
+<script>
+  window.PERMISSAO_PAGINA = {
+    area: "app",
+    chave: "animais"
+  };
+</script>
+
+<!-- AUTH GUARD GLOBAL -->
+<script src="../login/auth-guard.js"></script>
+
 <style>
 :root{
   --marrom:#7b3f2a;
@@ -37,49 +64,6 @@ header{
 header img{
   max-width:260px;
   width:100%;
-}
-
-/* MENU – IGUAL AO INDEX */
-nav{
-  background:var(--marrom);
-  display:flex;
-  flex-wrap:wrap;
-  justify-content:center;
-  gap:4px;
-}
-nav a{
-  color:#fff;
-  text-decoration:none;
-  font-weight:600;
-  font-size:15px;
-  padding:12px 14px;
-  border-radius:10px;
-  display:flex;
-  align-items:center;
-  gap:6px;
-  opacity:.85;
-  position:relative;
-  transition:.2s;
-}
-nav a span{font-size:18px}
-nav a:hover{
-  background:rgba(255,255,255,.12);
-  opacity:1;
-}
-nav a.ativo{
-  background:rgba(255,255,255,.18);
-  font-weight:800;
-  opacity:1;
-}
-nav a.ativo::after{
-  content:"";
-  position:absolute;
-  bottom:4px;
-  left:15%;
-  width:70%;
-  height:3px;
-  background:#fff;
-  border-radius:10px;
 }
 
 /* CONTAINER */
@@ -164,9 +148,10 @@ select{
 <body>
 
 <header>
-  <img src="logo.png">
+  <img src="../logo.png">
 </header>
 
+<!-- MENU GLOBAL -->
 <div id="menu"></div>
 
 <div class="container">
@@ -189,85 +174,82 @@ select{
 </div>
 
 <script>
-fetch("menu.html")
+const db = firebase.firestore();
+const lista = document.getElementById("lista");
+const filtroEspecie = document.getElementById("filtroEspecie");
+const filtroStatus = document.getElementById("filtroStatus");
+
+/* MENU */
+fetch("../menu/menu.html")
   .then(r=>r.text())
   .then(html=>{
-    document.getElementById("menu").innerHTML=html;
+    document.getElementById("menu").innerHTML = html;
     document.querySelectorAll("#menu a").forEach(a=>{
-      if(a.getAttribute("href")==="animais.html"){
+      if(a.getAttribute("href")==="../app/animais.html"){
         a.classList.add("ativo");
       }
     });
   });
-</script>
-
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
-import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
-
-const app=initializeApp({
-  apiKey:"AIzaSyCW-CuFDrOLO-dteckl_GrPTocmyS-IrzY",
-  authDomain:"sitio-corrego-do-pinhal.firebaseapp.com",
-  projectId:"sitio-corrego-do-pinhal"
-});
-const db=getFirestore(app);
-
-let ANIMAIS=[];
-
-window.abrirAnimal=id=>{
-  location.href="animal.html?id="+encodeURIComponent(id);
-};
 
 function ordemStatus(s){
-  return {ativo:1,inativo:2,vendido:3,falecido:4}[s]||9;
+  return {ativo:1,inativo:2,vendido:3,falecido:4}[s] || 9;
 }
 
-function render(){
-  const especie=filtroEspecie.value;
-  const status=filtroStatus.value;
-  lista.innerHTML="";
+function abrirAnimal(id){
+  location.href = "../app/animal.html?id=" + encodeURIComponent(id);
+}
 
-  const dados=ANIMAIS
-    .filter(a=>especie==="todas"||a.especie===especie)
-    .filter(a=>status==="todos"||(a.status||"").toLowerCase()===status)
+let ANIMAIS = [];
+
+function render(){
+  const especie = filtroEspecie.value;
+  const status  = filtroStatus.value;
+
+  lista.innerHTML = "";
+
+  const dados = ANIMAIS
+    .filter(a => especie==="todas" || a.especie===especie)
+    .filter(a => status==="todos" || (a.status||"").toLowerCase()===status)
     .sort((a,b)=>{
-      const o=ordemStatus((a.status||"").toLowerCase())-ordemStatus((b.status||"").toLowerCase());
-      return o!==0?o:(a.nome||"").localeCompare(b.nome||"");
+      const o = ordemStatus((a.status||"").toLowerCase()) - ordemStatus((b.status||"").toLowerCase());
+      return o!==0 ? o : (a.nome||"").localeCompare(b.nome||"");
     });
 
   if(!dados.length){
-    lista.innerHTML="<div class='vazio'>🐾 Nenhum animal encontrado.</div>";
+    lista.innerHTML = "<div class='vazio'>🐾 Nenhum animal encontrado.</div>";
     return;
   }
 
   dados.forEach(a=>{
-    const st=(a.status||"").toLowerCase();
-    lista.innerHTML+=`
-      <div class="card ${st}" onclick="abrirAnimal('${a.id}')">
+    const st = (a.status||"").toLowerCase();
+    lista.innerHTML += `
+      <div class="card ${st}" onclick="abrirAnimal('${a._id}')">
         <strong>${a.nome.toUpperCase()}</strong>
-        <p>Espécie: ${a.especie||"-"}</p>
-        <p>Status: <span class="badge ${st}">${a.status||"-"}</span></p>
+        <p>Espécie: ${a.especie || "-"}</p>
+        <p>Status: <span class="badge ${st}">${a.status || "-"}</span></p>
       </div>`;
   });
 }
 
 async function load(){
-  const snap=await getDocs(collection(db,"animais"));
-  ANIMAIS=snap.docs.map(d=>({id:d.id,...d.data()}));
+  const snap = await db.collection("animais").get();
+  ANIMAIS = snap.docs.map(d=>({_id:d.id, ...d.data()}));
 
   [...new Set(ANIMAIS.map(a=>a.especie).filter(Boolean))]
     .sort()
     .forEach(e=>{
-      filtroEspecie.innerHTML+=`<option value="${e}">${e}</option>`;
+      filtroEspecie.innerHTML += `<option value="${e}">${e}</option>`;
     });
 
-  filtroEspecie.onchange=render;
-  filtroStatus.onchange=render;
+  filtroEspecie.onchange = render;
+  filtroStatus.onchange  = render;
   render();
 }
 
 load();
 </script>
+
+<script src="../login/logout.js"></script>
 
 </body>
 </html>
