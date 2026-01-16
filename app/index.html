@@ -25,8 +25,184 @@ firebase.initializeApp({
 <script src="../login/auth-guard.js"></script>
 
 <style>
-/* CSS INALTERADO – IGUAL AO SEU */
-</style>
+:root{
+  --marrom:#7b3f2a;
+  --bege:#f6efe7;
+  --verde:#2f6b2f;
+  --vermelho:#c0392b;
+  --amarelo:#e0a800;
+  --laranja:#e67e22;
+  --cinza:#666;
+  --logo:#D0B485;
+}
+
+*{
+  box-sizing:border-box;
+  font-family:'Inter',system-ui,-apple-system,Arial,Helvetica,sans-serif;
+}
+
+body{
+  margin:0;
+  background:var(--bege);
+  color:#333;
+}
+
+/* HEADER */
+header{
+  background:var(--logo);
+  padding:15px 10px;
+  text-align:center;
+  position:relative;
+}
+
+header img{
+  max-width:260px;
+  width:100%;
+}
+
+.admin-icon{
+  position:absolute;
+  top:10px;
+  right:10px;
+}
+
+.admin-icon img{
+  width:32px;
+  height:32px;
+}
+
+/* MENU */
+nav{
+  background:var(--marrom);
+  display:flex;
+  flex-wrap:wrap;
+  justify-content:center;
+  gap:4px;
+}
+
+nav a{
+  color:#fff;
+  text-decoration:none;
+  font-weight:600;
+  font-size:15px;
+  padding:12px 14px;
+  border-radius:10px;
+  display:flex;
+  align-items:center;
+  gap:6px;
+  opacity:.85;
+}
+
+nav a:hover{
+  background:rgba(255,255,255,.12);
+  opacity:1;
+}
+
+nav a.ativo{
+  background:rgba(255,255,255,.18);
+  font-weight:800;
+}
+
+/* CONTAINER */
+.container{
+  max-width:900px;
+  margin:20px auto;
+  padding:0 15px;
+}
+
+h2{
+  margin:28px 0 12px;
+  color:var(--marrom);
+}
+
+/* CLIMA */
+.clima-bar{
+  background:#fff;
+  margin:12px auto 16px;
+  padding:10px;
+  border-radius:10px;
+  box-shadow:0 1px 4px rgba(0,0,0,.08);
+  text-align:center;
+  cursor:pointer;
+}
+
+/* ALERTA */
+.alerta-rapido{
+  display:block;
+  margin:0 auto 20px;
+  padding:12px;
+  border-radius:12px;
+  font-weight:700;
+  text-align:center;
+}
+
+.alerta-ok{
+  background:#eaf6ec;
+  color:var(--verde);
+}
+
+.alerta-on{
+  background:#fdecea;
+  color:var(--vermelho);
+}
+
+/* CARDS */
+.card{
+  background:#fff;
+  padding:15px;
+  margin-bottom:12px;
+  border-left:6px solid var(--verde);
+  border-radius:12px;
+}
+
+.card.ok{border-color:var(--verde)}
+.card.atencao{border-color:var(--amarelo)}
+.card.alerta{border-color:var(--laranja)}
+.card.urgente,
+.card.atrasada{border-color:var(--vermelho)}
+.card.pendente{border-color:var(--amarelo)}
+
+.card strong{
+  font-size:17px;
+  font-weight:800;
+}
+
+.card .dias{
+  font-size:18px;
+  font-weight:800;
+  margin:6px 0;
+}
+
+.card .data{
+  font-size:13px;
+  color:var(--cinza);
+}
+
+.card .msg{
+  font-weight:700;
+  margin-top:4px;
+}
+
+/* MODAL CLIMA */
+#modalClima{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.45);
+  display:none;
+  align-items:center;
+  justify-content:center;
+}
+
+#modalClima .box{
+  background:#fff;
+  width:90%;
+  max-width:420px;
+  border-radius:16px;
+  padding:0;
+  overflow:hidden;
+}
+<style>
+  
 </head>
 
 <body>
