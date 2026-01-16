@@ -1,68 +1,88 @@
-if (!firebase.apps.length) {
-  firebase.initializeApp({
-    apiKey: "AIzaSyCW-CuFDrOLO-dteckl_GrPTocmyS-IrzY",
-    authDomain: "sitio-corrego-do-pinhal.firebaseapp.com",
-    projectId: "sitio-corrego-do-pinhal"
-  });
-}
+// auth-guard.js
+// Guard global de autenticação e vínculo com config/usuarios
 
-const auth = firebase.auth();
-const db = firebase.firestore();
+(function () {
 
-auth.onAuthStateChanged(async user => {
-  if (!user) {
-    window.location.replace("login.html");
-    return;
+  if (!firebase.apps.length) {
+    firebase.initializeApp({
+      apiKey: "AIzaSyCW-CuFDrOLO-dteckl_GrPTocmyS-IrzY",
+      authDomain: "sitio-corrego-do-pinhal.firebaseapp.com",
+      projectId: "sitio-corrego-do-pinhal"
+    });
   }
 
-  try {
-    const uid = user.uid;
-    const ref = db.collection("usuarios").doc(uid);
-    const doc = await ref.get();
+  const auth = firebase.auth();
+  const db = firebase.firestore();
 
-    // 🟡 PRIMEIRO LOGIN → CRIA PERFIL SE NÃO EXISTIR
-    if (!doc.exists) {
-      await ref.set({
-        nome: user.displayName || "",
-        email: user.email,
-        papel: "leitura",
-        ativo: true,
-        pendente: true,
-        criado_em: firebase.firestore.FieldValue.serverTimestamp(),
-        ultimo_login: firebase.firestore.FieldValue.serverTimestamp()
-      });
-      return; // deixa entrar, perfil já existe agora
-    }
-
-    const perfil = doc.data();
-
-    if (!perfil.ativo) {
-      alert("Usuário desativado.");
-      await auth.signOut();
-      window.location.replace("login.html");
+  auth.onAuthStateChanged(async (user) => {
+    if (!user) {
+      window.location.replace("/login/login.html");
       return;
     }
 
-    // Controle de papel
-    if (window.PERMISSAO_MINIMA) {
-      const hierarquia = { admin: 3, operador: 2, leitura: 1 };
-      if ((hierarquia[perfil.papel] || 0) < hierarquia[window.PERMISSAO_MINIMA]) {
-        alert("Você não tem permissão para acessar esta página.");
-        window.location.replace("index.html");
+    try {
+      const uid = user.uid;
+      const email = user.email || "";
+
+      const usuariosRef = db.collection("config").doc("usuarios");
+      const usuariosSnap = await usuariosRef.get();
+
+      let lista = usuariosSnap.exists ? (usuariosSnap.data().lista || []) : [];
+
+      // 🔎 procura por uid
+      let usuario = lista.find(u => u.uid === uid);
+
+      // 🔎 fallback: procura por email (usuários antigos)
+      if (!usuario && email) {
+        usuario = lista.find(u => u.email === email);
+
+        if (usuario) {
+          // preenche uid automaticamente
+          usuario.uid = uid;
+          await usuariosRef.set({ lista }, { merge: true });
+        }
+      }
+
+      // 🟡 primeiro login → cria INATIVO
+      if (!usuario) {
+        usuario = {
+          uid,
+          nome: user.displayName || email.split("@")[0] || "Usuário",
+          email,
+          grupo: "leitor",
+          ativo: false,
+          criado_em: firebase.firestore.FieldValue.serverTimestamp()
+        };
+
+        lista.push(usuario);
+        await usuariosRef.set({ lista }, { merge: true });
+
+        alert(
+          "Seu acesso foi registrado, mas ainda não foi liberado.\n" +
+          "Aguarde o administrador."
+        );
+
+        await auth.signOut();
+        window.location.replace("/login/login.html");
         return;
       }
+
+      // 🚫 usuário inativo
+      if (usuario.ativo !== true) {
+        alert("Acesso bloqueado. Usuário desativado.");
+        await auth.signOut();
+        window.location.replace("/login/login.html");
+        return;
+      }
+
+      // ✅ usuário válido
+      console.log("Usuário autenticado:", usuario.nome, usuario.grupo);
+
+    } catch (e) {
+      console.error("Erro no auth-guard:", e);
+      await auth.signOut();
+      window.location.replace("/login/login.html");
     }
+  });
 
-    // Atualiza último login
-    await ref.update({
-      ultimo_login: firebase.firestore.FieldValue.serverTimestamp()
-    });
-
-    console.log("Acesso liberado:", perfil.nome, perfil.papel);
-
-  } catch (e) {
-    console.error("Erro no auth-guard:", e);
-    await auth.signOut();
-    window.location.replace("login.html");
-  }
-});
+})();
