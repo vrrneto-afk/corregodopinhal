@@ -181,8 +181,20 @@ const menu=document.getElementById("menu");
 const clima=document.getElementById("clima");
 const conteudo=document.getElementById("conteudo");
 const alertaRapido=document.getElementById("alertaRapido");
+const modalClima=document.getElementById("modalClima");
 
 fetch("../menu/menu.html").then(r=>r.text()).then(h=>menu.innerHTML=h);
+
+/* ===== MODAL CLIMA (AJUSTE 1) ===== */
+clima.addEventListener("click",()=>{
+  modalClima.style.display="flex";
+});
+modalClima.addEventListener("click",(e)=>{
+  if(e.target===modalClima){
+    modalClima.style.display="none";
+  }
+});
+/* ================================= */
 
 /* DATAS */
 const hoje=new Date();
@@ -275,6 +287,7 @@ async function loadIndex(){
 
   vac.filter(v=>v.status!==CFG.vacinas.status.finalizada)
     .forEach(v=>{
+      const animal = ani.find(a=>a._id===v.id_animal);
       const reap=parse(v.data_aplicacao);
       reap.setDate(reap.getDate()+Number(v.repeticao_dias));
       const dias=diff(hojeZ,reap);
@@ -282,6 +295,7 @@ async function loadIndex(){
       conteudo.innerHTML+=`
       <div class="card ${dias<0?"atrasada":"pendente"}">
         <strong>💉 ${v.nome_vacina}</strong>
+        ${animal?`<p><strong>🐄 ${animal.nome.toUpperCase()}</strong></p>`:""}
         <p class="dias">${dias<0?`${CFG.vacinas.status.atrasada} há ${Math.abs(dias)} dias`:`${CFG.vacinas.status.pendente} em ${dias} dias`}</p>
         <p class="data">📅 ${reap.toLocaleDateString("pt-BR")}</p>
       </div>`;
