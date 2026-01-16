@@ -5,10 +5,13 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>Sítio Córrego do Pinhal</title>
 
-<link rel="manifest" href="manifest.json">
+<link rel="manifest" href="../manifest.json">
 <meta name="theme-color" content="#7b3f2a">
 
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<!-- 🔐 AUTH GLOBAL (OBRIGATÓRIO) -->
+<script src="../login/auth-guard.js"></script>
+
+<!-- FIREBASE SDK (SEM initializeApp aqui) -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
 <style>
@@ -100,10 +103,7 @@ h2{margin:28px 0 12px;color:var(--marrom)}
 .card strong{font-size:17px;font-weight:800}
 .card .dias{font-size:18px;font-weight:800;margin:6px 0}
 .card .data{font-size:13px;color:var(--cinza)}
-.card .msg{
-  font-weight:700;
-  margin-top:4px;
-}
+.card .msg{font-weight:700;margin-top:4px}
 
 /* MODAL */
 #modalClima{
@@ -119,7 +119,6 @@ h2{margin:28px 0 12px;color:var(--marrom)}
   width:90%;
   max-width:420px;
   border-radius:16px;
-  padding:0;
   overflow:hidden;
 }
 </style>
@@ -128,9 +127,9 @@ h2{margin:28px 0 12px;color:var(--marrom)}
 <body>
 
 <header>
-  <img src="logo.png">
-  <a href="login.html" class="admin-icon">
-    <img src="icone-admin.png">
+  <img src="../logo.png">
+  <a href="../login/login.html" class="admin-icon">
+    <img src="../icon/icone-admin.png">
   </a>
 </header>
 
@@ -160,15 +159,12 @@ const alertaRapido=document.getElementById("alertaRapido");
 const conteudo=document.getElementById("conteudo");
 
 /* MENU */
-fetch("menu.html").then(r=>r.text()).then(h=>menu.innerHTML=h);
+fetch("../menu/menu.html")
+  .then(r=>r.text())
+  .then(h=>menu.innerHTML=h);
 
-/* FIREBASE */
-firebase.initializeApp({
-  apiKey:"AIzaSyCW-CuFDrOLO-dteckl_GrPTocmyS-IrzY",
-  authDomain:"sitio-corrego-do-pinhal.firebaseapp.com",
-  projectId:"sitio-corrego-do-pinhal"
-});
-const db=firebase.firestore();
+/* FIRESTORE */
+const db = firebase.firestore();
 
 /* DATAS */
 const hoje=new Date();
