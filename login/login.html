@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
 
-<!-- FIREBASE SDK -->
+<!-- 🔥 Firebase SDK (COMPAT) -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 
@@ -41,7 +41,7 @@ body{
 }
 .login-box img{max-width:240px;margin-bottom:20px;}
 .login-box h2{margin:0 0 6px;color:var(--marrom);font-size:22px;font-weight:800;}
-.login-box p{margin:0 0 16px;font-size:14px;color:#5a2b1e;}
+.login-box p{margin:0 0 22px;font-size:14px;color:#5a2b1e;}
 .login-box input{
   width:100%;
   padding:12px;
@@ -62,18 +62,18 @@ body{
   cursor:pointer;
 }
 .login-box button:hover{opacity:.9;}
-.link{
-  margin-top:12px;
-  font-size:14px;
-  color:var(--marrom);
-  cursor:pointer;
-  text-decoration:underline;
-}
 .erro{
-  margin-top:12px;
+  margin-top:14px;
   color:var(--vermelho);
   font-size:14px;
   display:none;
+}
+.link{
+  margin-top:12px;
+  display:block;
+  font-size:14px;
+  color:#5a2b1e;
+  cursor:pointer;
 }
 </style>
 </head>
@@ -81,7 +81,7 @@ body{
 <body>
 
 <div class="login-box">
-  <img src="../logo.png">
+  <img src="../logo.png" alt="Sítio Córrego do Pinhal">
   <h2>Acesso ao Sistema</h2>
   <p>Entre com seu e-mail e senha</p>
 
@@ -89,12 +89,13 @@ body{
   <input id="senha" type="password" placeholder="Senha">
 
   <button onclick="login()">Entrar</button>
+  <span class="link" onclick="recuperarSenha()">Esqueci minha senha</span>
 
-  <div class="link" onclick="resetSenha()">Esqueci minha senha</div>
   <div id="erro" class="erro"></div>
 </div>
 
 <script>
+/* 🔥 Firebase INIT (UMA ÚNICA VEZ) */
 firebase.initializeApp({
   apiKey: "AIzaSyCW-CuFDrOLO-dteckl_GrPTocmyS-IrzY",
   authDomain: "sitio-corrego-do-pinhal.firebaseapp.com",
@@ -104,6 +105,7 @@ firebase.initializeApp({
 const auth = firebase.auth();
 const erro = document.getElementById("erro");
 
+/* LOGIN */
 async function login(){
   erro.style.display = "none";
 
@@ -118,7 +120,8 @@ async function login(){
 
   try{
     await auth.signInWithEmailAndPassword(email, senha);
-    // auth-guard redireciona
+    // ⚠️ NÃO redireciona aqui
+    // auth-guard.js cuida disso
   }catch(e){
     console.error(e);
     erro.innerText = "E-mail ou senha inválidos.";
@@ -126,23 +129,15 @@ async function login(){
   }
 }
 
-async function resetSenha(){
+/* RECUPERAÇÃO DE SENHA */
+async function recuperarSenha(){
   const email = document.getElementById("email").value.trim();
-
   if(!email){
-    erro.innerText = "Informe seu e-mail para redefinir a senha.";
-    erro.style.display = "block";
+    alert("Informe seu e-mail.");
     return;
   }
-
-  try{
-    await auth.sendPasswordResetEmail(email);
-    alert("E-mail de redefinição enviado.");
-  }catch(e){
-    console.error(e);
-    erro.innerText = "Erro ao enviar e-mail de redefinição.";
-    erro.style.display = "block";
-  }
+  await auth.sendPasswordResetEmail(email);
+  alert("E-mail de redefinição enviado.");
 }
 </script>
 
