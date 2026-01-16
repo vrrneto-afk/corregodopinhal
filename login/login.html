@@ -79,7 +79,29 @@ async function loginGoogle(){
 }
 </script>
 
-<script src="auth-guard.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+
+<script>
+firebase.initializeApp({
+  apiKey: "AIzaSyCW-CuFDrOLO-dteckl_GrPTocmyS-IrzY",
+  authDomain: "sitio-corrego-do-pinhal.firebaseapp.com",
+  projectId: "sitio-corrego-do-pinhal"
+});
+
+const auth = firebase.auth();
+
+async function loginGoogle(){
+  try{
+    const provider = new firebase.auth.GoogleAuthProvider();
+    await auth.signInWithPopup(provider);
+    // NÃO REDIRECIONA AQUI
+  }catch(e){
+    alert("Erro ao autenticar");
+    console.error(e);
+  }
+}
+</script>
 
 </body>
 </html>
