@@ -77,6 +77,11 @@
 
       // ✅ usuário válido
       console.log("Usuário autenticado:", usuario.nome, usuario.grupo);
+      // Se está na tela de login, redireciona para o app
+      if (window.location.pathname.includes("/login/")) {
+      window.location.replace("../app/index.html");
+    }
+
 
     } catch (e) {
       console.error("Erro no auth-guard:", e);
