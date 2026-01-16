@@ -9,6 +9,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
 
+<!-- FIREBASE SDK (UMA ÚNICA VEZ) -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 
@@ -22,12 +23,19 @@
 }
 *{box-sizing:border-box;font-family:'Inter',system-ui,Arial;}
 body{
-  margin:0;min-height:100vh;background:var(--bege);
-  display:flex;align-items:center;justify-content:center;
+  margin:0;
+  min-height:100vh;
+  background:var(--bege);
+  display:flex;
+  align-items:center;
+  justify-content:center;
 }
 .login-box{
-  background:var(--logo);max-width:420px;width:100%;
-  padding:36px 28px;border-radius:18px;
+  background:var(--logo);
+  max-width:420px;
+  width:100%;
+  padding:36px 28px;
+  border-radius:18px;
   box-shadow:0 8px 20px rgba(0,0,0,.18);
   text-align:center;
 }
@@ -35,12 +43,23 @@ body{
 .login-box h2{margin:0 0 6px;color:var(--marrom);font-size:22px;font-weight:800;}
 .login-box p{margin:0 0 22px;font-size:14px;color:#5a2b1e;}
 .login-box button{
-  width:100%;padding:14px;border:none;border-radius:12px;
-  background:var(--verde);color:#fff;font-size:16px;font-weight:800;
+  width:100%;
+  padding:14px;
+  border:none;
+  border-radius:12px;
+  background:var(--verde);
+  color:#fff;
+  font-size:16px;
+  font-weight:800;
   cursor:pointer;
 }
 .login-box button:hover{opacity:.9;}
-.erro{margin-top:14px;color:var(--vermelho);font-size:14px;display:none;}
+.erro{
+  margin-top:14px;
+  color:var(--vermelho);
+  font-size:14px;
+  display:none;
+}
 </style>
 </head>
 
@@ -56,6 +75,7 @@ body{
 </div>
 
 <script>
+/* 🔥 Firebase init (UMA VEZ) */
 firebase.initializeApp({
   apiKey: "AIzaSyCW-CuFDrOLO-dteckl_GrPTocmyS-IrzY",
   authDomain: "sitio-corrego-do-pinhal.firebaseapp.com",
@@ -65,40 +85,20 @@ firebase.initializeApp({
 const auth = firebase.auth();
 const erro = document.getElementById("erro");
 
+/* LOGIN GOOGLE */
 async function loginGoogle(){
   erro.style.display = "none";
-  try{
-    const provider = new firebase.auth.GoogleAuthProvider();
-    await auth.signInWithPopup(provider);
-    // auth-guard decide o fluxo
-  }catch(e){
-    console.error(e);
-    erro.innerText = "Erro ao autenticar com Google.";
-    erro.style.display = "block";
-  }
-}
-</script>
+  erro.innerText = "";
 
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-
-<script>
-firebase.initializeApp({
-  apiKey: "AIzaSyCW-CuFDrOLO-dteckl_GrPTocmyS-IrzY",
-  authDomain: "sitio-corrego-do-pinhal.firebaseapp.com",
-  projectId: "sitio-corrego-do-pinhal"
-});
-
-const auth = firebase.auth();
-
-async function loginGoogle(){
   try{
     const provider = new firebase.auth.GoogleAuthProvider();
     await auth.signInWithPopup(provider);
     // NÃO REDIRECIONA AQUI
+    // auth-guard.js decide o fluxo
   }catch(e){
-    alert("Erro ao autenticar");
     console.error(e);
+    erro.innerText = "Erro ao autenticar com Google.";
+    erro.style.display = "block";
   }
 }
 </script>
