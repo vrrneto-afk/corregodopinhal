@@ -36,16 +36,8 @@ firebase.initializeApp({
   --logo:#D0B485;
 }
 
-*{
-  box-sizing:border-box;
-  font-family:'Inter',system-ui,-apple-system,Arial,Helvetica,sans-serif;
-}
-
-body{
-  margin:0;
-  background:var(--bege);
-  color:#333;
-}
+*{box-sizing:border-box;font-family:'Inter',system-ui,-apple-system,Arial,Helvetica,sans-serif}
+body{margin:0;background:var(--bege);color:#333}
 
 /* HEADER */
 header{
@@ -54,22 +46,9 @@ header{
   text-align:center;
   position:relative;
 }
-
-header img{
-  max-width:260px;
-  width:100%;
-}
-
-.admin-icon{
-  position:absolute;
-  top:10px;
-  right:10px;
-}
-
-.admin-icon img{
-  width:32px;
-  height:32px;
-}
+header img{max-width:260px;width:100%}
+.admin-icon{position:absolute;top:10px;right:10px}
+.admin-icon img{width:32px;height:32px}
 
 /* MENU */
 nav{
@@ -79,7 +58,6 @@ nav{
   justify-content:center;
   gap:4px;
 }
-
 nav a{
   color:#fff;
   text-decoration:none;
@@ -92,28 +70,12 @@ nav a{
   gap:6px;
   opacity:.85;
 }
-
-nav a:hover{
-  background:rgba(255,255,255,.12);
-  opacity:1;
-}
-
-nav a.ativo{
-  background:rgba(255,255,255,.18);
-  font-weight:800;
-}
+nav a:hover{background:rgba(255,255,255,.12);opacity:1}
+nav a.ativo{background:rgba(255,255,255,.18);font-weight:800}
 
 /* CONTAINER */
-.container{
-  max-width:900px;
-  margin:20px auto;
-  padding:0 15px;
-}
-
-h2{
-  margin:28px 0 12px;
-  color:var(--marrom);
-}
+.container{max-width:900px;margin:20px auto;padding:0 15px}
+h2{margin:28px 0 12px;color:var(--marrom)}
 
 /* CLIMA */
 .clima-bar{
@@ -135,7 +97,6 @@ h2{
   font-weight:700;
   text-align:center;
 }
-
 .alerta-ok{background:#eaf6ec;color:var(--verde)}
 .alerta-on{background:#fdecea;color:var(--vermelho)}
 
@@ -147,7 +108,6 @@ h2{
   border-left:6px solid var(--verde);
   border-radius:12px;
 }
-
 .card.ok{border-color:var(--verde)}
 .card.atencao{border-color:var(--amarelo)}
 .card.alerta{border-color:var(--laranja)}
@@ -160,7 +120,7 @@ h2{
 .card .data{font-size:13px;color:var(--cinza)}
 .card .msg{font-weight:700;margin-top:4px}
 
-/* MODAL CLIMA */
+/* MODAL */
 #modalClima{
   position:fixed;
   inset:0;
@@ -169,13 +129,11 @@ h2{
   align-items:center;
   justify-content:center;
 }
-
 #modalClima .box{
   background:#fff;
   width:90%;
   max-width:420px;
   border-radius:16px;
-  padding:0;
   overflow:hidden;
 }
 </style>
@@ -209,18 +167,31 @@ h2{
 </div>
 
 <script>
-const db = firebase.firestore();
-const menu = document.getElementById("menu");
-const clima = document.getElementById("clima");
-const conteudo = document.getElementById("conteudo");
-const alertaRapido = document.getElementById("alertaRapido");
+/* ================== CONTROLE DE GRUPO ================== */
+const GRUPOS_PERMITIDOS = ["admin","gerente","leitor"];
 
-/* MENU */
+const esperarUsuario = setInterval(()=>{
+  if(window.USUARIO_ATUAL){
+    clearInterval(esperarUsuario);
+    if(!GRUPOS_PERMITIDOS.includes(window.USUARIO_ATUAL.grupo)){
+      alert("Você não tem permissão para acessar esta página.");
+      location.replace("../login/login.html");
+    }
+  }
+},50);
+/* ======================================================= */
+
+const db=firebase.firestore();
+const menu=document.getElementById("menu");
+const clima=document.getElementById("clima");
+const conteudo=document.getElementById("conteudo");
+const alertaRapido=document.getElementById("alertaRapido");
+
 fetch("../menu/menu.html").then(r=>r.text()).then(h=>menu.innerHTML=h);
 
 /* DATAS */
-const hoje = new Date();
-const hojeZ = new Date(hoje.getFullYear(), hoje.getMonth(), hoje.getDate());
+const hoje=new Date();
+const hojeZ=new Date(hoje.getFullYear(),hoje.getMonth(),hoje.getDate());
 
 function parse(d){
   if(!d) return null;
@@ -231,28 +202,21 @@ function parse(d){
 function addM(d,m){const x=new Date(d);x.setMonth(x.getMonth()+m);return x;}
 function diff(a,b){return Math.floor((b-a)/86400000);}
 
-/* PRIORIDADE POR CLASSE – REGRA DEFINITIVA */
-const PRIORIDADE_CLASSE = {
-  urgente: 1,
-  alerta: 2,
-  atencao: 3,
-  ok: 4
-};
-
 /* CONFIGS */
 let CFG={};
 
 async function loadConfigs(){
-  const snaps = await Promise.all([
+  const [c1,c2,c3]=await Promise.all([
     db.collection("config").doc("clima").get(),
     db.collection("config").doc("vacas").get(),
     db.collection("config").doc("vacinas").get()
   ]);
-  CFG.clima=snaps[0].data();
-  CFG.vacas=snaps[1].data();
-  CFG.vacinas=snaps[2].data();
+  CFG.clima=c1.data();
+  CFG.vacas=c2.data();
+  CFG.vacinas=c3.data();
 }
 
+/* CLIMA */
 async function loadClima(){
   const c=CFG.clima;
   const url=`https://api.open-meteo.com/v1/forecast?latitude=${c.latitude}&longitude=${c.longitude}&current_weather=true&hourly=precipitation_probability&timezone=${c.timezone}`;
@@ -273,16 +237,20 @@ async function loadClima(){
   clima.innerHTML=`☀️ ${c.cidade} – ${c.regiao} • ${Math.round(d.current_weather.temperature)}°C<br>${texto}`;
 }
 
+/* ALERTAS */
 async function loadAlertas(){
   const s=await db.collection("lembretes").get();
   alertaRapido.className=s.size?"alerta-rapido alerta-on":"alerta-rapido alerta-ok";
   alertaRapido.innerText=s.size?`🔔 ${s.size} itens pendentes para comprar`:"🔔 Nenhum alerta no momento";
 }
 
+/* INDEX */
 async function loadIndex(){
   conteudo.innerHTML="";
+
   const ani=(await db.collection("animais").get()).docs.map(d=>({_id:d.id,...d.data()}));
   const eve=(await db.collection("eventos").get()).docs.map(d=>d.data());
+  const vac=(await db.collection("vacinas").get()).docs.map(d=>d.data());
 
   conteudo.innerHTML+="<h2>🐄 Vacas a Criar</h2>";
 
@@ -293,17 +261,11 @@ async function loadIndex(){
       return {v:ani.find(a=>a._id===c.id_animal),prev,dias};
     })
     .filter(x=>x.v)
+    .sort((a,b)=>a.dias-b.dias)
     .forEach(v=>{
-      const regrasValidas = CFG.vacas.prenhez_regras
-        .filter(r=>r.ativa!==false && v.dias>=r.dias_min);
-
-      const regra = regrasValidas
-        .sort((a,b)=>{
-          const pA = PRIORIDADE_CLASSE[a.classe] ?? 99;
-          const pB = PRIORIDADE_CLASSE[b.classe] ?? 99;
-          if(pA !== pB) return pA - pB;
-          return b.dias_min - a.dias_min;
-        })[0];
+      const regra=CFG.vacas.prenhez_regras
+        .filter(r=>r.ativa!==false && v.dias>=r.dias_min)
+        .sort((a,b)=>b.dias_min-a.dias_min)[0];
 
       conteudo.innerHTML+=`
       <div class="card ${regra?.classe||"ok"}">
@@ -311,6 +273,22 @@ async function loadIndex(){
         <p class="dias">⏳ Faltam ${v.dias} dias</p>
         ${regra?.mensagem?`<p class="msg">${regra.mensagem}</p>`:""}
         <p class="data">Previsão: ${v.prev.toLocaleDateString("pt-BR")}</p>
+      </div>`;
+    });
+
+  conteudo.innerHTML+="<h2>💉 Vacinas pendentes</h2>";
+
+  vac.filter(v=>v.status!==CFG.vacinas.status.finalizada)
+    .forEach(v=>{
+      const reap=parse(v.data_aplicacao);
+      reap.setDate(reap.getDate()+Number(v.repeticao_dias));
+      const dias=diff(hojeZ,reap);
+
+      conteudo.innerHTML+=`
+      <div class="card ${dias<0?"atrasada":"pendente"}">
+        <strong>💉 ${v.nome_vacina}</strong>
+        <p class="dias">${dias<0?`${CFG.vacinas.status.atrasada} há ${Math.abs(dias)} dias`:`${CFG.vacinas.status.pendente} em ${dias} dias`}</p>
+        <p class="data">📅 ${reap.toLocaleDateString("pt-BR")}</p>
       </div>`;
     });
 }
