@@ -1,11 +1,11 @@
 // auth-guard.js
-// Guardião FINAL de autenticação e vínculo com Firestore
+// Guardião global de autenticação e autorização
 
-(function () {
+(function(){
 
-  const aguardar = setInterval(() => {
+  const esperarFirebase = setInterval(() => {
     if (window.firebase && firebase.auth && firebase.firestore) {
-      clearInterval(aguardar);
+      clearInterval(esperarFirebase);
       iniciar();
     }
   }, 50);
@@ -13,11 +13,11 @@
   function iniciar(){
 
     const auth = firebase.auth();
-    const db   = firebase.firestore();
+    const db = firebase.firestore();
 
     auth.onAuthStateChanged(async (user) => {
 
-      /* ❌ NÃO LOGADO */
+      // ❌ NÃO LOGADO → LOGIN
       if (!user) {
         if (!location.pathname.includes("/login/")) {
           location.replace("../login/login.html");
@@ -25,58 +25,48 @@
         return;
       }
 
-      const uid   = user.uid;
-      const email = user.email || "";
+      const uid = user.uid;
 
-      const ref  = db.collection("usuarios").doc(uid);
-      const snap = await ref.get();
+      try{
+        const ref = db.collection("usuarios").doc(uid);
+        const snap = await ref.get();
 
-      /* 🆕 PRIMEIRO LOGIN → CRIA PERFIL */
-      if (!snap.exists) {
-        await ref.set({
-          nome: user.displayName || email.split("@")[0],
-          email: email,
-          papel: "leitor",
-          ativo: true,
-          pendente: false,
-          criado_em: firebase.firestore.FieldValue.serverTimestamp(),
+        // 🚫 NÃO CADASTRADO NO FIRESTORE
+        if (!snap.exists) {
+          alert("Usuário não autorizado.");
+          await auth.signOut();
+          location.replace("../login/login.html");
+          return;
+        }
+
+        const dados = snap.data();
+
+        // 🚫 INATIVO
+        if (dados.ativo !== true) {
+          alert("Usuário desativado.");
+          await auth.signOut();
+          location.replace("../login/login.html");
+          return;
+        }
+
+        // ✅ OK
+        await ref.update({
           ultimo_login: firebase.firestore.FieldValue.serverTimestamp()
         });
 
-        location.replace("../app/index.html");
-        return;
-      }
+        window.USUARIO_ATUAL = dados;
 
-      const perfil = snap.data();
+        // 🔁 SE ESTIVER NO LOGIN → INDEX
+        if (location.pathname.includes("/login/")) {
+          location.replace("../app/index.html");
+        }
 
-      /* 🚫 BLOQUEIOS */
-      if (perfil.ativo !== true) {
-        alert("Usuário desativado.");
+      }catch(e){
+        console.error(e);
+        alert("Erro de verificação de acesso.");
         await auth.signOut();
         location.replace("../login/login.html");
-        return;
       }
-
-      if (perfil.pendente === true) {
-        alert("Acesso pendente de liberação.");
-        await auth.signOut();
-        location.replace("../login/login.html");
-        return;
-      }
-
-      /* 🔄 ATUALIZA ÚLTIMO LOGIN */
-      await ref.update({
-        ultimo_login: firebase.firestore.FieldValue.serverTimestamp()
-      });
-
-      /* ✅ USUÁRIO VÁLIDO */
-      window.USUARIO_ATUAL = perfil;
-
-      /* 🔁 SE ESTIVER NO LOGIN → ENTRA NO APP */
-      if (location.pathname.includes("/login/")) {
-        location.replace("../app/index.html");
-      }
-
     });
   }
 
