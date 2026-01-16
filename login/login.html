@@ -7,22 +7,23 @@
 
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
 
-<!-- Firebase primeiro -->
+<!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
 <script>
-firebase.initializeApp({
-  apiKey: "AIzaSyCW-CuFDrOLO-dteckl_GrPTocmyS-IrzY",
-  authDomain: "sitio-corrego-do-pinhal.firebaseapp.com",
-  projectId: "sitio-corrego-do-pinhal"
-});
+if (!firebase.apps.length) {
+  firebase.initializeApp({
+    apiKey: "AIzaSyCW-CuFDrOLO-dteckl_GrPTocmyS-IrzY",
+    authDomain: "sitio-corrego-do-pinhal.firebaseapp.com",
+    projectId: "sitio-corrego-do-pinhal"
+  });
+}
 </script>
 
-<!-- AGORA SIM o guard -->
+<!-- Guard global (login pode usar normalmente) -->
 <script src="../login/auth-guard.js"></script>
-
 
 <style>
 :root{
@@ -105,12 +106,6 @@ body{
 </div>
 
 <script>
-firebase.initializeApp({
-  apiKey: "AIzaSyCW-CuFDrOLO-dteckl_GrPTocmyS-IrzY",
-  authDomain: "sitio-corrego-do-pinhal.firebaseapp.com",
-  projectId: "sitio-corrego-do-pinhal"
-});
-
 const auth = firebase.auth();
 const erro = document.getElementById("erro");
 
@@ -121,7 +116,7 @@ async function login(){
       document.getElementById("email").value,
       document.getElementById("senha").value
     );
-    // 🔥 NÃO REDIRECIONA AQUI
+    // Redirecionamento é feito pelo auth-guard
   }catch(e){
     erro.innerText = "E-mail ou senha inválidos.";
     erro.style.display = "block";
