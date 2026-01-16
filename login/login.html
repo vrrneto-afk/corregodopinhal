@@ -9,12 +9,12 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
 
-<!-- 🔥 FIREBASE SDK (UMA ÚNICA VEZ) -->
+<!-- FIREBASE SDK -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
-<!-- 🔐 AUTH GUARD GLOBAL -->
+<!-- AUTH GUARD -->
 <script src="auth-guard.js"></script>
 
 <style>
@@ -57,20 +57,14 @@ body{
   font-weight:800;
   cursor:pointer;
 }
-.login-box button:hover{opacity:.9;}
-.erro{
-  margin-top:14px;
-  color:var(--vermelho);
-  font-size:14px;
-  display:none;
-}
+.erro{margin-top:14px;color:var(--vermelho);font-size:14px;display:none;}
 </style>
 </head>
 
 <body>
 
 <div class="login-box">
-  <img src="../logo.png" alt="Sítio Córrego do Pinhal">
+  <img src="../logo.png">
   <h2>Acesso ao Sistema</h2>
   <p>Entre com sua conta Google</p>
 
@@ -79,7 +73,6 @@ body{
 </div>
 
 <script>
-/* 🔥 Firebase init (UMA VEZ) */
 if (!firebase.apps.length) {
   firebase.initializeApp({
     apiKey: "AIzaSyCW-CuFDrOLO-dteckl_GrPTocmyS-IrzY",
@@ -91,22 +84,23 @@ if (!firebase.apps.length) {
 const auth = firebase.auth();
 const erro = document.getElementById("erro");
 
-/* LOGIN GOOGLE */
-async function loginGoogle(){
+/* 🔁 LOGIN CORRETO PARA MOBILE */
+function loginGoogle(){
   erro.style.display = "none";
-  erro.innerText = "";
+  const provider = new firebase.auth.GoogleAuthProvider();
+  auth.signInWithRedirect(provider);
+}
 
-  try{
-    const provider = new firebase.auth.GoogleAuthProvider();
-    await auth.signInWithPopup(provider);
-    // ❗ NÃO REDIRECIONA
-    // auth-guard.js cuida de tudo
-  }catch(e){
+/* 🔁 RETORNO DO REDIRECT */
+auth.getRedirectResult()
+  .then(() => {
+    // auth-guard assume daqui
+  })
+  .catch(e => {
     console.error(e);
     erro.innerText = "Erro ao autenticar com Google.";
     erro.style.display = "block";
-  }
-}
+  });
 </script>
 
 </body>
