@@ -53,3 +53,15 @@ nav a.ativo::after{
   background:#fff;
   border-radius:10px;
 }
+
+/* ===== BOTÃO SAIR ===== */
+nav a.logout{
+  background: rgba(192, 57, 43, 0.18);
+  color: #fff;
+  font-weight: 800;
+}
+
+nav a.logout:hover{
+  background: rgba(192, 57, 43, 0.32);
+}
+
