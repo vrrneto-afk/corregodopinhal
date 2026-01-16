@@ -136,15 +136,8 @@ h2{
   text-align:center;
 }
 
-.alerta-ok{
-  background:#eaf6ec;
-  color:var(--verde);
-}
-
-.alerta-on{
-  background:#fdecea;
-  color:var(--vermelho);
-}
+.alerta-ok{background:#eaf6ec;color:var(--verde)}
+.alerta-on{background:#fdecea;color:var(--vermelho)}
 
 /* CARDS */
 .card{
@@ -162,26 +155,10 @@ h2{
 .card.atrasada{border-color:var(--vermelho)}
 .card.pendente{border-color:var(--amarelo)}
 
-.card strong{
-  font-size:17px;
-  font-weight:800;
-}
-
-.card .dias{
-  font-size:18px;
-  font-weight:800;
-  margin:6px 0;
-}
-
-.card .data{
-  font-size:13px;
-  color:var(--cinza);
-}
-
-.card .msg{
-  font-weight:700;
-  margin-top:4px;
-}
+.card strong{font-size:17px;font-weight:800}
+.card .dias{font-size:18px;font-weight:800;margin:6px 0}
+.card .data{font-size:13px;color:var(--cinza)}
+.card .msg{font-weight:700;margin-top:4px}
 
 /* MODAL CLIMA */
 #modalClima{
@@ -201,8 +178,7 @@ h2{
   padding:0;
   overflow:hidden;
 }
-<style>
-  
+</style>
 </head>
 
 <body>
@@ -255,8 +231,8 @@ function parse(d){
 function addM(d,m){const x=new Date(d);x.setMonth(x.getMonth()+m);return x;}
 function diff(a,b){return Math.floor((b-a)/86400000);}
 
-/* LOAD CONFIGS */
-let CFG = {};
+/* CONFIGS */
+let CFG={};
 
 async function loadConfigs(){
   const snaps = await Promise.all([
@@ -264,46 +240,39 @@ async function loadConfigs(){
     db.collection("config").doc("vacas").get(),
     db.collection("config").doc("vacinas").get()
   ]);
-
-  CFG.clima   = snaps[0].data();
-  CFG.vacas   = snaps[1].data();
-  CFG.vacinas = snaps[2].data();
+  CFG.clima=snaps[0].data();
+  CFG.vacas=snaps[1].data();
+  CFG.vacinas=snaps[2].data();
 }
 
-/* CLIMA */
 async function loadClima(){
-  const c = CFG.clima;
+  const c=CFG.clima;
+  const url=`https://api.open-meteo.com/v1/forecast?latitude=${c.latitude}&longitude=${c.longitude}&current_weather=true&hourly=precipitation_probability&timezone=${c.timezone}`;
+  const d=await (await fetch(url)).json();
 
-  const url = `https://api.open-meteo.com/v1/forecast?latitude=${c.latitude}&longitude=${c.longitude}&current_weather=true&hourly=precipitation_probability&timezone=${c.timezone}`;
-  const r = await fetch(url);
-  const d = await r.json();
-
-  let texto = c.textos.sem_chuva;
-  const agora = new Date();
+  let texto=c.textos.sem_chuva;
+  const agora=new Date();
 
   for(let i=0;i<d.hourly.time.length;i++){
-    const h = new Date(d.hourly.time[i]);
-    const min = (h-agora)/60000;
+    const h=new Date(d.hourly.time[i]);
+    const min=(h-agora)/60000;
     if(min>0 && min<=c.janela_previsao_minutos && d.hourly.precipitation_probability[i]>=c.limite_chuva_percentual){
-      texto = `${c.textos.chuva_em} ${Math.round(min)} minutos.`;
+      texto=`${c.textos.chuva_em} ${Math.round(min)} minutos.`;
       break;
     }
   }
 
-  clima.innerHTML = `☀️ ${c.cidade} – ${c.regiao} • ${Math.round(d.current_weather.temperature)}°C<br>${texto}`;
+  clima.innerHTML=`☀️ ${c.cidade} – ${c.regiao} • ${Math.round(d.current_weather.temperature)}°C<br>${texto}`;
 }
 
-/* ALERTAS */
 async function loadAlertas(){
-  const s = await db.collection("lembretes").get();
-  alertaRapido.className = s.size ? "alerta-rapido alerta-on" : "alerta-rapido alerta-ok";
-  alertaRapido.innerText = s.size ? `🔔 ${s.size} itens pendentes para comprar` : "🔔 Nenhum alerta no momento";
+  const s=await db.collection("lembretes").get();
+  alertaRapido.className=s.size?"alerta-rapido alerta-on":"alerta-rapido alerta-ok";
+  alertaRapido.innerText=s.size?`🔔 ${s.size} itens pendentes para comprar`:"🔔 Nenhum alerta no momento";
 }
 
-/* INDEX */
 async function loadIndex(){
   conteudo.innerHTML="";
-
   const ani=(await db.collection("animais").get()).docs.map(d=>({_id:d.id,...d.data()}));
   const eve=(await db.collection("eventos").get()).docs.map(d=>d.data());
   const vac=(await db.collection("vacinas").get()).docs.map(d=>d.data());
@@ -312,23 +281,23 @@ async function loadIndex(){
 
   eve.filter(e=>e.tipo_evento==="cobertura")
     .map(c=>{
-      const prev = addM(parse(c.data_evento), CFG.vacas.gestacao_meses);
-      const dias = diff(hojeZ, prev);
-      return {v:ani.find(a=>a._id===c.id_animal), prev, dias};
+      const prev=addM(parse(c.data_evento),CFG.vacas.gestacao_meses);
+      const dias=diff(hojeZ,prev);
+      return {v:ani.find(a=>a._id===c.id_animal),prev,dias};
     })
     .filter(x=>x.v)
     .forEach(v=>{
-      const regra = CFG.vacas.prenhez_regras
+      const regra=CFG.vacas.prenhez_regras
         .filter(r=>r.ativa!==false && v.dias>=r.dias_min)
         .sort((a,b)=>b.dias_min-a.dias_min)[0];
 
       conteudo.innerHTML+=`
-        <div class="card ${regra?.classe||"ok"}">
-          <strong>🐄 ${v.v.nome.toUpperCase()}</strong>
-          <p class="dias">⏳ Faltam ${v.dias} dias</p>
-          ${regra?.mensagem?`<p class="msg">${regra.mensagem}</p>`:""}
-          <p class="data">Previsão: ${v.prev.toLocaleDateString("pt-BR")}</p>
-        </div>`;
+      <div class="card ${regra?.classe||"ok"}">
+        <strong>🐄 ${v.v.nome.toUpperCase()}</strong>
+        <p class="dias">⏳ Faltam ${v.dias} dias</p>
+        ${regra?.mensagem?`<p class="msg">${regra.mensagem}</p>`:""}
+        <p class="data">Previsão: ${v.prev.toLocaleDateString("pt-BR")}</p>
+      </div>`;
     });
 
   conteudo.innerHTML+="<h2>💉 Vacinas pendentes</h2>";
@@ -340,15 +309,15 @@ async function loadIndex(){
       const dias=diff(hojeZ,reap);
 
       conteudo.innerHTML+=`
-        <div class="card ${dias<0?"atrasada":"pendente"}">
-          <strong>💉 ${v.nome_vacina}</strong>
-          <p class="dias">${dias<0?`${CFG.vacinas.status.atrasada} há ${Math.abs(dias)} dias`:`${CFG.vacinas.status.pendente} em ${dias} dias`}</p>
-          <p class="data">📅 ${reap.toLocaleDateString("pt-BR")}</p>
-        </div>`;
+      <div class="card ${dias<0?"atrasada":"pendente"}">
+        <strong>💉 ${v.nome_vacina}</strong>
+        <p class="dias">${dias<0?`${CFG.vacinas.status.atrasada} há ${Math.abs(dias)} dias`:`${CFG.vacinas.status.pendente} em ${dias} dias`}</p>
+        <p class="data">📅 ${reap.toLocaleDateString("pt-BR")}</p>
+      </div>`;
     });
 }
 
-(async ()=>{
+(async()=>{
   await loadConfigs();
   await loadClima();
   await loadAlertas();
