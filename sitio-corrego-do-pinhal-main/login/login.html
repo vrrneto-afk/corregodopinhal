@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Área Administrativa – Sítio Córrego do Pinhal</title>
+<title>Login – Sítio Córrego do Pinhal</title>
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -11,7 +11,6 @@
 
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
 <style>
 :root{
@@ -48,12 +47,11 @@ body{
 <body>
 
 <div class="login-box">
-  <img src="logo.png" alt="Sítio Córrego do Pinhal">
-  <h2>Área Administrativa</h2>
-  <p>Acesso restrito</p>
+  <img src="/logo.png" alt="Sítio Córrego do Pinhal">
+  <h2>Acesso ao Sistema</h2>
+  <p>Entre com sua conta Google</p>
 
   <button onclick="loginGoogle()">Entrar com Google</button>
-
   <div id="erro" class="erro"></div>
 </div>
 
@@ -69,12 +67,10 @@ const erro = document.getElementById("erro");
 
 async function loginGoogle(){
   erro.style.display = "none";
-  erro.innerText = "";
-
   try{
     const provider = new firebase.auth.GoogleAuthProvider();
     await auth.signInWithPopup(provider);
-    location.replace("cadastro_animais.html");
+    // auth-guard decide o fluxo
   }catch(e){
     console.error(e);
     erro.innerText = "Erro ao autenticar com Google.";
