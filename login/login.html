@@ -9,9 +9,13 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
 
-<!-- FIREBASE SDK (UMA ÚNICA VEZ) -->
+<!-- 🔥 FIREBASE SDK (UMA ÚNICA VEZ) -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+<!-- 🔐 AUTH GUARD GLOBAL -->
+<script src="auth-guard.js"></script>
 
 <style>
 :root{
@@ -76,11 +80,13 @@ body{
 
 <script>
 /* 🔥 Firebase init (UMA VEZ) */
-firebase.initializeApp({
-  apiKey: "AIzaSyCW-CuFDrOLO-dteckl_GrPTocmyS-IrzY",
-  authDomain: "sitio-corrego-do-pinhal.firebaseapp.com",
-  projectId: "sitio-corrego-do-pinhal"
-});
+if (!firebase.apps.length) {
+  firebase.initializeApp({
+    apiKey: "AIzaSyCW-CuFDrOLO-dteckl_GrPTocmyS-IrzY",
+    authDomain: "sitio-corrego-do-pinhal.firebaseapp.com",
+    projectId: "sitio-corrego-do-pinhal"
+  });
+}
 
 const auth = firebase.auth();
 const erro = document.getElementById("erro");
@@ -93,8 +99,8 @@ async function loginGoogle(){
   try{
     const provider = new firebase.auth.GoogleAuthProvider();
     await auth.signInWithPopup(provider);
-    // NÃO REDIRECIONA AQUI
-    // auth-guard.js decide o fluxo
+    // ❗ NÃO REDIRECIONA
+    // auth-guard.js cuida de tudo
   }catch(e){
     console.error(e);
     erro.innerText = "Erro ao autenticar com Google.";
