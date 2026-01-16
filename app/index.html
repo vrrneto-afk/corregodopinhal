@@ -9,7 +9,6 @@
 <meta name="theme-color" content="#7b3f2a">
 
 <!-- FIREBASE -->
-<script src="../login/auth-guard.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
@@ -21,6 +20,9 @@ firebase.initializeApp({
   projectId: "sitio-corrego-do-pinhal"
 });
 </script>
+
+<!-- GUARDIÃO DE AUTENTICAÇÃO -->
+<script src="../login/auth-guard.js"></script>
 
 <style>
 :root{
@@ -170,12 +172,7 @@ const conteudo=document.getElementById("conteudo");
 /* MENU */
 fetch("../menu/menu.html").then(r=>r.text()).then(h=>menu.innerHTML=h);
 
-/* FIREBASE */
-firebase.initializeApp({
-  apiKey:"AIzaSyCW-CuFDrOLO-dteckl_GrPTocmyS-IrzY",
-  authDomain:"sitio-corrego-do-pinhal.firebaseapp.com",
-  projectId:"sitio-corrego-do-pinhal"
-});
+/* FIRESTORE */
 const db=firebase.firestore();
 
 /* DATAS */
@@ -291,6 +288,9 @@ loadClima();
 loadAlertas();
 loadIndex();
 </script>
+
+<!-- LOGOUT -->
+<script src="../login/logout.js"></script>
 
 </body>
 </html>
