@@ -21,7 +21,15 @@ firebase.initializeApp({
 });
 </script>
 
-<!-- AUTH GUARD -->
+<!-- IDENTIFICAÇÃO DA PÁGINA -->
+<script>
+  window.PERMISSAO_PAGINA = {
+    area: "app",
+    chave: "inicio"
+  };
+</script>
+
+<!-- AUTH GUARD GLOBAL -->
 <script src="../login/auth-guard.js"></script>
 
 <style>
@@ -167,26 +175,7 @@ h2{margin:28px 0 12px;color:var(--marrom)}
 </div>
 
 <script>
-/* ================== CONTROLE DE PERMISSÃO (CONFIG/GRUPOS) ================== */
 const db = firebase.firestore();
-
-const esperarUsuario = setInterval(async ()=>{
-  if(window.USUARIO_ATUAL){
-    clearInterval(esperarUsuario);
-
-    const grupoUsuario = window.USUARIO_ATUAL.grupo;
-    const snap = await db.collection("config").doc("grupos").get();
-    const grupos = snap.data()?.lista || [];
-
-    const grupoCfg = grupos.find(g => g.id === grupoUsuario);
-
-    if(!grupoCfg || grupoCfg.permissoes?.app?.inicio !== true){
-      alert("Você não tem permissão para acessar esta página.");
-      location.replace("../login/login.html");
-    }
-  }
-},50);
-/* ======================================================================== */
 
 const menu=document.getElementById("menu");
 const clima=document.getElementById("clima");
