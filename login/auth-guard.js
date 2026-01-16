@@ -40,7 +40,9 @@
           return;
         }
 
-        const grupoUsuario = dadosUsuario.grupo;
+        // ✅ CAMPO CORRETO
+        const grupoUsuario = dadosUsuario.papel;
+
         if (!grupoUsuario) {
           await bloquear("Grupo de usuário não definido.");
           return;
