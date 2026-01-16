@@ -12,10 +12,6 @@
 <!-- FIREBASE SDK -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-
-<!-- AUTH GUARD -->
-<script src="auth-guard.js"></script>
 
 <style>
 :root{
@@ -45,7 +41,15 @@ body{
 }
 .login-box img{max-width:240px;margin-bottom:20px;}
 .login-box h2{margin:0 0 6px;color:var(--marrom);font-size:22px;font-weight:800;}
-.login-box p{margin:0 0 22px;font-size:14px;color:#5a2b1e;}
+.login-box p{margin:0 0 16px;font-size:14px;color:#5a2b1e;}
+.login-box input{
+  width:100%;
+  padding:12px;
+  margin-bottom:12px;
+  border-radius:10px;
+  border:none;
+  font-size:15px;
+}
 .login-box button{
   width:100%;
   padding:14px;
@@ -57,7 +61,20 @@ body{
   font-weight:800;
   cursor:pointer;
 }
-.erro{margin-top:14px;color:var(--vermelho);font-size:14px;display:none;}
+.login-box button:hover{opacity:.9;}
+.link{
+  margin-top:12px;
+  font-size:14px;
+  color:var(--marrom);
+  cursor:pointer;
+  text-decoration:underline;
+}
+.erro{
+  margin-top:12px;
+  color:var(--vermelho);
+  font-size:14px;
+  display:none;
+}
 </style>
 </head>
 
@@ -66,41 +83,67 @@ body{
 <div class="login-box">
   <img src="../logo.png">
   <h2>Acesso ao Sistema</h2>
-  <p>Entre com sua conta Google</p>
+  <p>Entre com seu e-mail e senha</p>
 
-  <button onclick="loginGoogle()">Entrar com Google</button>
+  <input id="email" type="email" placeholder="E-mail">
+  <input id="senha" type="password" placeholder="Senha">
+
+  <button onclick="login()">Entrar</button>
+
+  <div class="link" onclick="resetSenha()">Esqueci minha senha</div>
   <div id="erro" class="erro"></div>
 </div>
 
 <script>
-if (!firebase.apps.length) {
-  firebase.initializeApp({
-    apiKey: "AIzaSyCW-CuFDrOLO-dteckl_GrPTocmyS-IrzY",
-    authDomain: "sitio-corrego-do-pinhal.firebaseapp.com",
-    projectId: "sitio-corrego-do-pinhal"
-  });
-}
+firebase.initializeApp({
+  apiKey: "AIzaSyCW-CuFDrOLO-dteckl_GrPTocmyS-IrzY",
+  authDomain: "sitio-corrego-do-pinhal.firebaseapp.com",
+  projectId: "sitio-corrego-do-pinhal"
+});
 
 const auth = firebase.auth();
 const erro = document.getElementById("erro");
 
-/* 🔁 LOGIN CORRETO PARA MOBILE */
-function loginGoogle(){
+async function login(){
   erro.style.display = "none";
-  const provider = new firebase.auth.GoogleAuthProvider();
-  auth.signInWithRedirect(provider);
+
+  const email = document.getElementById("email").value.trim();
+  const senha = document.getElementById("senha").value;
+
+  if(!email || !senha){
+    erro.innerText = "Informe e-mail e senha.";
+    erro.style.display = "block";
+    return;
+  }
+
+  try{
+    await auth.signInWithEmailAndPassword(email, senha);
+    // auth-guard redireciona
+  }catch(e){
+    console.error(e);
+    erro.innerText = "E-mail ou senha inválidos.";
+    erro.style.display = "block";
+  }
 }
 
-/* 🔁 RETORNO DO REDIRECT */
-auth.getRedirectResult()
-  .then(() => {
-    // auth-guard assume daqui
-  })
-  .catch(e => {
-    console.error(e);
-    erro.innerText = "Erro ao autenticar com Google.";
+async function resetSenha(){
+  const email = document.getElementById("email").value.trim();
+
+  if(!email){
+    erro.innerText = "Informe seu e-mail para redefinir a senha.";
     erro.style.display = "block";
-  });
+    return;
+  }
+
+  try{
+    await auth.sendPasswordResetEmail(email);
+    alert("E-mail de redefinição enviado.");
+  }catch(e){
+    console.error(e);
+    erro.innerText = "Erro ao enviar e-mail de redefinição.";
+    erro.style.display = "block";
+  }
+}
 </script>
 
 </body>
