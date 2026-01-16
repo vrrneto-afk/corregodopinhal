@@ -8,10 +8,11 @@
 <link rel="manifest" href="../manifest.json">
 <meta name="theme-color" content="#7b3f2a">
 
-<!-- 🔐 AUTH GLOBAL (OBRIGATÓRIO) -->
+<!-- 🔐 AUTH GLOBAL (OBRIGATÓRIO EM TODA PÁGINA PROTEGIDA) -->
 <script src="../login/auth-guard.js"></script>
 
-<!-- FIREBASE SDK (SEM initializeApp aqui) -->
+<!-- 🔥 FIREBASE SDKs (SEM initializeApp aqui) -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
 <style>
@@ -25,14 +26,36 @@
   --cinza:#666;
   --logo:#D0B485;
 }
-*{box-sizing:border-box;font-family:'Inter',system-ui,-apple-system,Arial,Helvetica,sans-serif}
-body{margin:0;background:var(--bege);color:#333}
+*{
+  box-sizing:border-box;
+  font-family:'Inter',system-ui,-apple-system,Arial,Helvetica,sans-serif
+}
+body{
+  margin:0;
+  background:var(--bege);
+  color:#333
+}
 
 /* HEADER */
-header{background:var(--logo);padding:15px 10px;text-align:center;position:relative}
-header img{max-width:260px;width:100%}
-.admin-icon{position:absolute;top:10px;right:10px}
-.admin-icon img{width:32px;height:32px}
+header{
+  background:var(--logo);
+  padding:15px 10px;
+  text-align:center;
+  position:relative
+}
+header img{
+  max-width:260px;
+  width:100%
+}
+.admin-icon{
+  position:absolute;
+  top:10px;
+  right:10px
+}
+.admin-icon img{
+  width:32px;
+  height:32px
+}
 
 /* MENU */
 nav{
@@ -40,7 +63,7 @@ nav{
   display:flex;
   flex-wrap:wrap;
   justify-content:center;
-  gap:4px;
+  gap:4px
 }
 nav a{
   color:#fff;
@@ -52,16 +75,23 @@ nav a{
   display:flex;
   align-items:center;
   gap:6px;
-  opacity:.85;
+  opacity:.85
 }
 nav a.ativo{
   background:rgba(255,255,255,.18);
-  font-weight:800;
+  font-weight:800
 }
 
 /* CONTAINER */
-.container{max-width:900px;margin:20px auto;padding:0 15px}
-h2{margin:28px 0 12px;color:var(--marrom)}
+.container{
+  max-width:900px;
+  margin:20px auto;
+  padding:0 15px
+}
+h2{
+  margin:28px 0 12px;
+  color:var(--marrom)
+}
 
 /* CLIMA */
 .clima-bar{
@@ -71,7 +101,7 @@ h2{margin:28px 0 12px;color:var(--marrom)}
   border-radius:10px;
   box-shadow:0 1px 4px rgba(0,0,0,.08);
   text-align:center;
-  cursor:pointer;
+  cursor:pointer
 }
 
 /* ALERTA */
@@ -81,10 +111,16 @@ h2{margin:28px 0 12px;color:var(--marrom)}
   padding:12px;
   border-radius:12px;
   font-weight:700;
-  text-align:center;
+  text-align:center
 }
-.alerta-ok{background:#eaf6ec;color:var(--verde)}
-.alerta-on{background:#fdecea;color:var(--vermelho)}
+.alerta-ok{
+  background:#eaf6ec;
+  color:var(--verde)
+}
+.alerta-on{
+  background:#fdecea;
+  color:var(--vermelho)
+}
 
 /* CARDS */
 .card{
@@ -92,7 +128,7 @@ h2{margin:28px 0 12px;color:var(--marrom)}
   padding:15px;
   margin-bottom:12px;
   border-left:6px solid var(--verde);
-  border-radius:12px;
+  border-radius:12px
 }
 .card.ok{border-color:var(--verde)}
 .card.atencao{border-color:var(--amarelo)}
@@ -100,10 +136,23 @@ h2{margin:28px 0 12px;color:var(--marrom)}
 .card.urgente,
 .card.atrasada{border-color:var(--vermelho)}
 .card.pendente{border-color:var(--amarelo)}
-.card strong{font-size:17px;font-weight:800}
-.card .dias{font-size:18px;font-weight:800;margin:6px 0}
-.card .data{font-size:13px;color:var(--cinza)}
-.card .msg{font-weight:700;margin-top:4px}
+.card strong{
+  font-size:17px;
+  font-weight:800
+}
+.card .dias{
+  font-size:18px;
+  font-weight:800;
+  margin:6px 0
+}
+.card .data{
+  font-size:13px;
+  color:var(--cinza)
+}
+.card .msg{
+  font-weight:700;
+  margin-top:4px
+}
 
 /* MODAL */
 #modalClima{
@@ -112,14 +161,14 @@ h2{margin:28px 0 12px;color:var(--marrom)}
   background:rgba(0,0,0,.45);
   display:none;
   align-items:center;
-  justify-content:center;
+  justify-content:center
 }
 #modalClima .box{
   background:#fff;
   width:90%;
   max-width:420px;
   border-radius:16px;
-  overflow:hidden;
+  overflow:hidden
 }
 </style>
 </head>
@@ -136,13 +185,17 @@ h2{margin:28px 0 12px;color:var(--marrom)}
 <div id="menu"></div>
 
 <div class="container">
-  <div id="clima" class="clima-bar">⏳ Carregando clima...</div>
+
+  <div id="clima" class="clima-bar">
+    ⏳ Carregando clima...
+  </div>
 
   <a id="alertaRapido" href="lembretes.html" class="alerta-rapido alerta-ok">
     🔔 Nenhum alerta no momento
   </a>
 
   <div id="conteudo"></div>
+
 </div>
 
 <div id="modalClima">
@@ -152,35 +205,42 @@ h2{margin:28px 0 12px;color:var(--marrom)}
 </div>
 
 <script>
-const menu=document.getElementById("menu");
-const clima=document.getElementById("clima");
-const modalClima=document.getElementById("modalClima");
-const alertaRapido=document.getElementById("alertaRapido");
-const conteudo=document.getElementById("conteudo");
+/* ELEMENTOS */
+const menu = document.getElementById("menu");
+const clima = document.getElementById("clima");
+const modalClima = document.getElementById("modalClima");
+const alertaRapido = document.getElementById("alertaRapido");
+const conteudo = document.getElementById("conteudo");
 
 /* MENU */
 fetch("../menu/menu.html")
-  .then(r=>r.text())
-  .then(h=>menu.innerHTML=h);
+  .then(r => r.text())
+  .then(h => menu.innerHTML = h);
 
 /* FIRESTORE */
 const db = firebase.firestore();
 
 /* DATAS */
-const hoje=new Date();
-const hojeZ=new Date(hoje.getFullYear(),hoje.getMonth(),hoje.getDate());
+const hoje = new Date();
+const hojeZ = new Date(hoje.getFullYear(), hoje.getMonth(), hoje.getDate());
 
 function parse(d){
   if(!d) return null;
-  if(d.seconds) return new Date(d.seconds*1000);
-  if(typeof d==="string"){
-    const p=d.split("-");
-    return new Date(p[0],p[1]-1,p[2]);
+  if(d.seconds) return new Date(d.seconds * 1000);
+  if(typeof d === "string"){
+    const p = d.split("-");
+    return new Date(p[0], p[1]-1, p[2]);
   }
   return null;
 }
-function addM(d,m){const x=new Date(d);x.setMonth(x.getMonth()+m);return x;}
-function diff(a,b){return Math.floor((b-a)/86400000);}
+function addM(d, m){
+  const x = new Date(d);
+  x.setMonth(x.getMonth() + m);
+  return x;
+}
+function diff(a, b){
+  return Math.floor((b - a) / 86400000);
+}
 
 /* 🔴 REGRA DEFINITIVA – VACAS A CRIAR */
 function regraCriacao(dias){
@@ -192,89 +252,92 @@ function regraCriacao(dias){
   return {classe:"urgente", msg:"🚨 Urgente – Preparar parto"};
 }
 
-/* CLIMA (RESUMO) */
+/* CLIMA */
 async function loadClima(){
-  const r=await fetch("https://api.open-meteo.com/v1/forecast?latitude=-21.3127&longitude=-46.3721&current_weather=true&hourly=precipitation_probability&timezone=America/Sao_Paulo");
-  const d=await r.json();
+  const r = await fetch("https://api.open-meteo.com/v1/forecast?latitude=-21.3127&longitude=-46.3721&current_weather=true&hourly=precipitation_probability&timezone=America/Sao_Paulo");
+  const d = await r.json();
 
-  let texto="Nenhuma previsão de chuva para as próximas 2 horas.";
-  const agora=new Date();
+  let texto = "Nenhuma previsão de chuva para as próximas 2 horas.";
+  const agora = new Date();
 
   for(let i=0;i<d.hourly.time.length;i++){
-    const h=new Date(d.hourly.time[i]);
-    const diffMin=(h-agora)/60000;
-    if(diffMin>0 && diffMin<=120 && d.hourly.precipitation_probability[i]>30){
-      texto=`Chuva começando em ${Math.round(diffMin)} minutos.`;
+    const h = new Date(d.hourly.time[i]);
+    const diffMin = (h - agora) / 60000;
+    if(diffMin > 0 && diffMin <= 120 && d.hourly.precipitation_probability[i] > 30){
+      texto = `Chuva começando em ${Math.round(diffMin)} minutos.`;
       break;
     }
   }
 
-  clima.innerHTML=`☀️ Juréia – Monte Belo/MG • ${Math.round(d.current_weather.temperature)}°C<br>${texto}`;
+  clima.innerHTML = `☀️ Juréia – Monte Belo/MG • ${Math.round(d.current_weather.temperature)}°C<br>${texto}`;
 }
-clima.onclick=()=>modalClima.style.display="flex";
+clima.onclick = () => modalClima.style.display = "flex";
 
 /* ALERTAS */
 async function loadAlertas(){
-  const s=await db.collection("lembretes").get();
-  alertaRapido.className=s.size?"alerta-rapido alerta-on":"alerta-rapido alerta-ok";
-  alertaRapido.innerText=s.size?`🔔 ${s.size} itens pendentes para comprar`:"🔔 Nenhum alerta no momento";
+  const s = await db.collection("lembretes").get();
+  alertaRapido.className = s.size ? "alerta-rapido alerta-on" : "alerta-rapido alerta-ok";
+  alertaRapido.innerText = s.size
+    ? `🔔 ${s.size} itens pendentes para comprar`
+    : "🔔 Nenhum alerta no momento";
 }
 
 /* INDEX */
 async function loadIndex(){
-  conteudo.innerHTML="";
+  conteudo.innerHTML = "";
 
-  const ani=(await db.collection("animais").get()).docs.map(d=>({_id:d.id,...d.data()}));
-  const eve=(await db.collection("eventos").get()).docs.map(d=>d.data());
-  const vac=(await db.collection("vacinas").get()).docs.map(d=>d.data());
+  const ani = (await db.collection("animais").get()).docs.map(d => ({_id:d.id, ...d.data()}));
+  const eve = (await db.collection("eventos").get()).docs.map(d => d.data());
+  const vac = (await db.collection("vacinas").get()).docs.map(d => d.data());
 
-  conteudo.innerHTML+="<h2>🐄 Vacas a Criar</h2>";
+  conteudo.innerHTML += "<h2>🐄 Vacas a Criar</h2>";
 
   eve
-    .filter(e=>e.tipo_evento==="cobertura")
-    .map(c=>{
-      const prev=addM(parse(c.data_evento),9);
-      const dias=diff(hojeZ,prev);
-      return {v:ani.find(a=>a._id===c.id_animal),prev,dias};
+    .filter(e => e.tipo_evento === "cobertura")
+    .map(c => {
+      const prev = addM(parse(c.data_evento), 9);
+      const dias = diff(hojeZ, prev);
+      return {v: ani.find(a => a._id === c.id_animal), prev, dias};
     })
-    .filter(x=>x.v)
-    .sort((a,b)=>a.dias-b.dias)
-    .forEach(v=>{
-      const r=regraCriacao(v.dias);
-      conteudo.innerHTML+=`
+    .filter(x => x.v)
+    .sort((a,b) => a.dias - b.dias)
+    .forEach(v => {
+      const r = regraCriacao(v.dias);
+      conteudo.innerHTML += `
         <div class="card ${r.classe}">
           <strong>🐄 ${v.v.nome.toUpperCase()}</strong>
           <p class="dias">⏳ Faltam ${v.dias} dias</p>
-          ${r.msg?`<p class="msg">${r.msg}</p>`:""}
+          ${r.msg ? `<p class="msg">${r.msg}</p>` : ""}
           <p class="data">Previsão: ${v.prev.toLocaleDateString("pt-BR")}</p>
         </div>`;
     });
 
-  conteudo.innerHTML+="<h2>💉 Vacinas pendentes</h2>";
+  conteudo.innerHTML += "<h2>💉 Vacinas pendentes</h2>";
 
   const vacinasProcessadas = vac
-    .filter(v=>v.status!=="Finalizada" && v.data_aplicacao && Number(v.repeticao_dias)>0)
-    .map(v=>{
-      const reap=parse(v.data_aplicacao);
-      reap.setDate(reap.getDate()+Number(v.repeticao_dias));
-      return {...v,reap,dias:diff(hojeZ,reap)};
+    .filter(v => v.status !== "Finalizada" && v.data_aplicacao && Number(v.repeticao_dias) > 0)
+    .map(v => {
+      const reap = parse(v.data_aplicacao);
+      reap.setDate(reap.getDate() + Number(v.repeticao_dias));
+      return {...v, reap, dias: diff(hojeZ, reap)};
     });
 
-  const atrasadas = vacinasProcessadas.filter(v=>v.dias<0).sort((a,b)=>a.dias-b.dias);
-  const pendentes = vacinasProcessadas.filter(v=>v.dias>=0).sort((a,b)=>a.dias-b.dias);
+  const atrasadas = vacinasProcessadas.filter(v => v.dias < 0).sort((a,b) => a.dias - b.dias);
+  const pendentes = vacinasProcessadas.filter(v => v.dias >= 0).sort((a,b) => a.dias - b.dias);
 
-  [...atrasadas,...pendentes].forEach(v=>{
-    const a=ani.find(x=>x._id===v.id_animal);
-    conteudo.innerHTML+=`
-      <div class="card ${v.dias<0?"atrasada":"pendente"}">
+  [...atrasadas, ...pendentes].forEach(v => {
+    const a = ani.find(x => x._id === v.id_animal);
+    conteudo.innerHTML += `
+      <div class="card ${v.dias < 0 ? "atrasada" : "pendente"}">
         <strong>💉 ${v.nome_vacina}</strong>
-        <p class="dias">${v.dias<0?`⚠️ Atrasada há ${Math.abs(v.dias)} dias`:`⏳ Reaplicar em ${v.dias} dias`}</p>
-        <p class="data">🐄 ${(a?.nome||"-").toUpperCase()}</p>
+        <p class="dias">${v.dias < 0 ? `⚠️ Atrasada há ${Math.abs(v.dias)} dias` : `⏳ Reaplicar em ${v.dias} dias`}</p>
+        <p class="data">🐄 ${(a?.nome || "-").toUpperCase()}</p>
         <p class="data">📅 ${v.reap.toLocaleDateString("pt-BR")}</p>
       </div>`;
   });
 }
 
+/* INICIALIZAÇÃO */
 loadClima();
 loadAlertas();
 loadIndex();
