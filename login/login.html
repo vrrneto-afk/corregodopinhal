@@ -5,11 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Login – Sítio Córrego do Pinhal</title>
 
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
 
-<!-- 🔥 Firebase SDK (COMPAT) -->
+<!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 
@@ -44,7 +42,7 @@ body{
 .login-box p{margin:0 0 22px;font-size:14px;color:#5a2b1e;}
 .login-box input{
   width:100%;
-  padding:12px;
+  padding:14px;
   margin-bottom:12px;
   border-radius:10px;
   border:none;
@@ -62,18 +60,18 @@ body{
   cursor:pointer;
 }
 .login-box button:hover{opacity:.9;}
+.link{
+  margin-top:12px;
+  font-size:14px;
+  color:var(--marrom);
+  cursor:pointer;
+  text-decoration:underline;
+}
 .erro{
   margin-top:14px;
   color:var(--vermelho);
   font-size:14px;
   display:none;
-}
-.link{
-  margin-top:12px;
-  display:block;
-  font-size:14px;
-  color:#5a2b1e;
-  cursor:pointer;
 }
 </style>
 </head>
@@ -85,17 +83,15 @@ body{
   <h2>Acesso ao Sistema</h2>
   <p>Entre com seu e-mail e senha</p>
 
-  <input id="email" type="email" placeholder="E-mail">
-  <input id="senha" type="password" placeholder="Senha">
+  <input type="email" id="email" placeholder="E-mail">
+  <input type="password" id="senha" placeholder="Senha">
 
   <button onclick="login()">Entrar</button>
-  <span class="link" onclick="recuperarSenha()">Esqueci minha senha</span>
-
+  <div class="link" onclick="resetarSenha()">Esqueci minha senha</div>
   <div id="erro" class="erro"></div>
 </div>
 
 <script>
-/* 🔥 Firebase INIT (UMA ÚNICA VEZ) */
 firebase.initializeApp({
   apiKey: "AIzaSyCW-CuFDrOLO-dteckl_GrPTocmyS-IrzY",
   authDomain: "sitio-corrego-do-pinhal.firebaseapp.com",
@@ -105,35 +101,25 @@ firebase.initializeApp({
 const auth = firebase.auth();
 const erro = document.getElementById("erro");
 
-/* LOGIN */
 async function login(){
   erro.style.display = "none";
-
-  const email = document.getElementById("email").value.trim();
-  const senha = document.getElementById("senha").value;
-
-  if(!email || !senha){
-    erro.innerText = "Informe e-mail e senha.";
-    erro.style.display = "block";
-    return;
-  }
-
   try{
-    await auth.signInWithEmailAndPassword(email, senha);
-    // ⚠️ NÃO redireciona aqui
-    // auth-guard.js cuida disso
+    await auth.signInWithEmailAndPassword(
+      document.getElementById("email").value,
+      document.getElementById("senha").value
+    );
+    // 🔥 NÃO REDIRECIONA AQUI
   }catch(e){
-    console.error(e);
     erro.innerText = "E-mail ou senha inválidos.";
     erro.style.display = "block";
+    console.error(e);
   }
 }
 
-/* RECUPERAÇÃO DE SENHA */
-async function recuperarSenha(){
-  const email = document.getElementById("email").value.trim();
+async function resetarSenha(){
+  const email = document.getElementById("email").value;
   if(!email){
-    alert("Informe seu e-mail.");
+    alert("Informe o e-mail para redefinir a senha.");
     return;
   }
   await auth.sendPasswordResetEmail(email);
