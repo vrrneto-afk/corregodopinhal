@@ -1,81 +1,83 @@
 // auth-guard.js
-// Controle global de autenticação e permissões
+// Guardião FINAL de autenticação e vínculo com Firestore
 
-(function(){
+(function () {
 
-  function esperarFirebase(){
-    return new Promise(resolve=>{
-      const i=setInterval(()=>{
-        if(window.firebase && firebase.auth && firebase.firestore){
-          clearInterval(i);
-          resolve();
-        }
-      },50);
-    });
-  }
-
-  (async()=>{
-
-    await esperarFirebase();
-
-    if(!firebase.apps.length){
-      firebase.initializeApp({
-        apiKey:"AIzaSyCW-CuFDrOLO-dteckl_GrPTocmyS-IrzY",
-        authDomain:"sitio-corrego-do-pinhal.firebaseapp.com",
-        projectId:"sitio-corrego-do-pinhal"
-      });
+  const aguardar = setInterval(() => {
+    if (window.firebase && firebase.auth && firebase.firestore) {
+      clearInterval(aguardar);
+      iniciar();
     }
+  }, 50);
 
-    const auth=firebase.auth();
-    const db=firebase.firestore();
+  function iniciar(){
 
-    auth.onAuthStateChanged(async user=>{
+    const auth = firebase.auth();
+    const db   = firebase.firestore();
 
-      const estaNoLogin = location.pathname.includes("/login/");
+    auth.onAuthStateChanged(async (user) => {
 
-      // ❌ NÃO LOGADO
-      if(!user){
-        if(!estaNoLogin){
+      /* ❌ NÃO LOGADO */
+      if (!user) {
+        if (!location.pathname.includes("/login/")) {
           location.replace("../login/login.html");
         }
         return;
       }
 
-      const email = user.email;
+      const uid   = user.uid;
+      const email = user.email || "";
 
-      // 🔎 BUSCA USUÁRIO NO FIRESTORE
-      const ref=db.collection("config").doc("usuarios");
-      const snap=await ref.get();
+      const ref  = db.collection("usuarios").doc(uid);
+      const snap = await ref.get();
 
-      const lista = snap.exists ? snap.data().lista || [] : [];
-      const usuario = lista.find(u=>u.email===email);
+      /* 🆕 PRIMEIRO LOGIN → CRIA PERFIL */
+      if (!snap.exists) {
+        await ref.set({
+          nome: user.displayName || email.split("@")[0],
+          email: email,
+          papel: "leitor",
+          ativo: true,
+          pendente: false,
+          criado_em: firebase.firestore.FieldValue.serverTimestamp(),
+          ultimo_login: firebase.firestore.FieldValue.serverTimestamp()
+        });
 
-      // 🚫 NÃO CADASTRADO PELO ADM
-      if(!usuario){
-        alert("Usuário não cadastrado. Procure o administrador.");
-        await auth.signOut();
-        location.replace("../login/login.html");
+        location.replace("../app/index.html");
         return;
       }
 
-      // 🚫 INATIVO
-      if(usuario.ativo!==true){
+      const perfil = snap.data();
+
+      /* 🚫 BLOQUEIOS */
+      if (perfil.ativo !== true) {
         alert("Usuário desativado.");
         await auth.signOut();
         location.replace("../login/login.html");
         return;
       }
 
-      // ✅ USUÁRIO VÁLIDO
-      window.USUARIO_ATUAL = usuario;
+      if (perfil.pendente === true) {
+        alert("Acesso pendente de liberação.");
+        await auth.signOut();
+        location.replace("../login/login.html");
+        return;
+      }
 
-      // 🔁 LOGIN → APP
-      if(estaNoLogin){
+      /* 🔄 ATUALIZA ÚLTIMO LOGIN */
+      await ref.update({
+        ultimo_login: firebase.firestore.FieldValue.serverTimestamp()
+      });
+
+      /* ✅ USUÁRIO VÁLIDO */
+      window.USUARIO_ATUAL = perfil;
+
+      /* 🔁 SE ESTIVER NO LOGIN → ENTRA NO APP */
+      if (location.pathname.includes("/login/")) {
         location.replace("../app/index.html");
       }
 
     });
-
-  })();
+  }
 
 })();
