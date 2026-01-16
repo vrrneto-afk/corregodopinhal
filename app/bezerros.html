@@ -5,29 +5,45 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Bezerros – Sítio Córrego do Pinhal</title>
 
+<link rel="manifest" href="../manifest.json">
+<meta name="theme-color" content="#7b3f2a">
+
+<!-- FIREBASE -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+<script>
+firebase.initializeApp({
+  apiKey: "AIzaSyCW-CuFDrOLO-dteckl_GrPTocmyS-IrzY",
+  authDomain: "sitio-corrego-do-pinhal.firebaseapp.com",
+  projectId: "sitio-corrego-do-pinhal"
+});
+</script>
+
+<!-- IDENTIFICAÇÃO DA PÁGINA -->
+<script>
+  window.PERMISSAO_PAGINA = {
+    area: "app",
+    chave: "bezerros"
+  };
+</script>
+
+<!-- AUTH GUARD GLOBAL -->
+<script src="../login/auth-guard.js"></script>
 
 <style>
 :root{
   --marrom:#7b3f2a;
   --bege:#f6efe7;
   --verde:#2f6b2f;
-  --azul:#007bff;
+  --azul:#0d6efd;
   --cinza:#666;
   --logo:#D0B485;
 }
 
-*{
-  box-sizing:border-box;
-  font-family:'Inter',system-ui,-apple-system,Arial,Helvetica,sans-serif;
-}
-
-body{
-  margin:0;
-  background:var(--bege);
-  color:#333;
-}
+*{box-sizing:border-box;font-family:'Inter',system-ui,-apple-system,Arial,Helvetica,sans-serif}
+body{margin:0;background:var(--bege);color:#333}
 
 /* HEADER */
 header{
@@ -35,53 +51,7 @@ header{
   padding:15px 10px;
   text-align:center;
 }
-header img{
-  max-width:260px;
-  width:100%;
-}
-
-/* ===== MENU (IGUAL AO INDEX) ===== */
-nav{
-  background:var(--marrom);
-  display:flex;
-  flex-wrap:wrap;
-  justify-content:center;
-  gap:4px;
-}
-nav a{
-  color:#fff;
-  text-decoration:none;
-  font-weight:600;
-  font-size:15px;
-  padding:12px 14px;
-  border-radius:10px;
-  display:flex;
-  align-items:center;
-  gap:6px;
-  opacity:.85;
-  position:relative;
-  transition:.2s;
-}
-nav a span{font-size:18px}
-nav a:hover{
-  background:rgba(255,255,255,.12);
-  opacity:1;
-}
-nav a.ativo{
-  background:rgba(255,255,255,.18);
-  font-weight:800;
-  opacity:1;
-}
-nav a.ativo::after{
-  content:"";
-  position:absolute;
-  bottom:4px;
-  left:15%;
-  width:70%;
-  height:3px;
-  background:#fff;
-  border-radius:10px;
-}
+header img{max-width:260px;width:100%}
 
 /* CONTAINER */
 .container{
@@ -90,7 +60,6 @@ nav a.ativo::after{
   padding:0 15px;
 }
 
-/* TÍTULO */
 h2{
   margin:28px 0 12px;
   color:var(--marrom);
@@ -108,10 +77,6 @@ select{
   border:1.5px solid #ddd;
   margin-bottom:18px;
 }
-select:focus{
-  outline:none;
-  border-color:var(--marrom);
-}
 
 /* CARD */
 .card{
@@ -122,11 +87,6 @@ select:focus{
   border-radius:12px;
   box-shadow:0 2px 6px rgba(0,0,0,.06);
   cursor:pointer;
-  transition:.15s;
-}
-.card:hover{
-  background:#fdf9f4;
-  transform:translateY(-1px);
 }
 .card strong{
   font-size:17px;
@@ -153,7 +113,6 @@ select:focus{
 .badge.cria{background:var(--verde)}
 .badge.bezerro{background:var(--azul)}
 
-/* VAZIO */
 .vazio{
   text-align:center;
   color:#777;
@@ -166,16 +125,15 @@ select:focus{
 <body>
 
 <header>
-  <img src="logo.png">
+  <img src="../logo.png">
 </header>
 
-<!-- MENU EXTERNO -->
 <div id="menu"></div>
 
 <div class="container">
-  <h2>🐮 Bezerros / Crias</h2>
+  <h2 id="titulo">🐮 Bezerros / Crias</h2>
 
-  <select id="filtroTipo">
+  <select id="filtro">
     <option value="todos">Todos</option>
     <option value="cria">Crias</option>
     <option value="bezerro">Bezerros</option>
@@ -184,110 +142,102 @@ select:focus{
   <div id="lista"></div>
 </div>
 
-<!-- MENU -->
 <script>
-fetch("menu.html")
-  .then(r=>r.text())
-  .then(html=>{
-    document.getElementById("menu").innerHTML=html;
-    document.querySelectorAll("#menu a").forEach(a=>{
-      if(a.getAttribute("href")==="bezerros.html"){
-        a.classList.add("ativo");
-      }
-    });
-  });
-</script>
+const db = firebase.firestore();
+const lista = document.getElementById("lista");
+const filtro = document.getElementById("filtro");
+const titulo = document.getElementById("titulo");
 
-<script>
-firebase.initializeApp({
-  apiKey:"AIzaSyCW-CuFDrOLO-dteckl_GrPTocmyS-IrzY",
-  authDomain:"sitio-corrego-do-pinhal.firebaseapp.com",
-  projectId:"sitio-corrego-do-pinhal"
-});
-const db=firebase.firestore();
+fetch("../menu/menu.html")
+  .then(r=>r.text())
+  .then(html=>menu.innerHTML=html);
 
 function idadeDetalhada(data){
-  const n=new Date(data+"T00:00:00");
-  const h=new Date();
+  const n=new Date(data+"T00:00:00"),h=new Date();
   let a=h.getFullYear()-n.getFullYear();
   let m=h.getMonth()-n.getMonth();
   let d=h.getDate()-n.getDate();
   if(d<0){m--;d+=30}
   if(m<0){a--;m+=12}
-  return {texto:`${a} ano(s), ${m} mês(es) e ${d} dia(s)`, meses:a*12+m};
+  return {meses:a*12+m, texto:`${a} ano(s), ${m} mês(es) e ${d} dia(s)`};
 }
 
 function abrirAnimal(id){
-  location.href="animal.html?id="+encodeURIComponent(id);
+  location.href="../app/animal.html?id="+encodeURIComponent(id);
 }
 
 let LISTA=[];
+let CFG={};
+
+async function load(){
+  const cfgSnap = await db.collection("config").doc("bezerros").get();
+  CFG = cfgSnap.data();
+
+  titulo.innerText = "🐮 " + (CFG.textos?.titulo || "Bezerros / Crias");
+
+  const ani = (await db.collection("animais").get()).docs.map(d=>({_id:d.id,...d.data()}));
+
+  LISTA = ani
+    .filter(a=>a.status==="Ativo" && a.especie==="Bovino" && a.data_nascimento)
+    .map(a=>{
+      const i = idadeDetalhada(a.data_nascimento);
+      if(i.meses > CFG.idade_bezerro_meses) return null;
+
+      const mae = ani.find(m=>m._id===a.id_mae);
+      const pai = ani.find(p=>p._id===a.id_pai);
+
+      return {
+        ...a,
+        idadeTexto: i.texto,
+        idadeMeses: i.meses,
+        tipo: i.meses <= CFG.idade_cria_meses ? "Cria" : "Bezerro",
+        mae: mae?.nome || "-",
+        pai: pai?.nome || "-",
+        nascimento: new Date(a.data_nascimento+"T00:00:00").toLocaleDateString("pt-BR")
+      };
+    })
+    .filter(Boolean)
+    .sort((a,b)=>a.idadeMeses-b.idadeMeses);
+
+  render();
+}
 
 function render(){
-  const f=filtroTipo.value;
-  const l=document.getElementById("lista");
-  l.innerHTML="";
+  lista.innerHTML="";
+  const f=filtro.value;
 
-  const dados=LISTA.filter(a=>{
+  const dados = LISTA.filter(a=>{
     if(f==="cria") return a.tipo==="Cria";
     if(f==="bezerro") return a.tipo==="Bezerro";
     return true;
   });
 
   if(!dados.length){
-    l.innerHTML=`<div class="vazio">🐮 Nenhum animal encontrado.</div>`;
+    lista.innerHTML = `<div class="vazio">${CFG.textos?.vazio || "Nenhum animal encontrado."}</div>`;
     return;
   }
 
   dados.forEach(a=>{
-    l.innerHTML+=`
+    lista.innerHTML+=`
       <div class="card" onclick="abrirAnimal('${a._id}')">
         <strong>🐮 ${a.nome.toUpperCase()}
           <span class="badge ${a.tipo.toLowerCase()}">${a.tipo}</span>
         </strong>
         <p>Sexo: ${a.sexo==="M"?"Macho":"Fêmea"}</p>
         <p>Raça: ${a.raca||"-"}</p>
-        <p>Mãe: ${a.mae||"-"}</p>
-        <p>Pai: ${a.pai||"-"}</p>
+        <p>Mãe: ${a.mae}</p>
+        <p>Pai: ${a.pai}</p>
         <p>Idade: ${a.idadeTexto}</p>
         <p>Nascimento: ${a.nascimento}</p>
       </div>`;
   });
 }
 
-async function load(){
-  const ani=(await db.collection("animais").get()).docs.map(d=>({_id:d.id,...d.data()}));
-  const cfg=(await db.collection("config").get()).docs.map(d=>d.data());
-
-  const idadeCria=parseInt(cfg.find(c=>c.chave==="idade_cria_meses")?.valor||6);
-  const idadeBezerro=parseInt(cfg.find(c=>c.chave==="idade_bezerro_meses")?.valor||12);
-
-  LISTA=ani
-    .filter(a=>a.status==="Ativo"&&a.especie==="Bovino"&&a.data_nascimento)
-    .map(a=>{
-      const i=idadeDetalhada(a.data_nascimento);
-      if(i.meses>idadeBezerro)return null;
-      const mae=ani.find(m=>m._id===a.id_mae);
-      const pai=ani.find(p=>p._id===a.id_pai);
-      return{
-        ...a,
-        idadeTexto:i.texto,
-        idadeMeses:i.meses,
-        tipo:i.meses<=idadeCria?"Cria":"Bezerro",
-        mae:mae?.nome,
-        pai:pai?.nome,
-        nascimento:new Date(a.data_nascimento+"T00:00:00").toLocaleDateString("pt-BR")
-      };
-    })
-    .filter(Boolean)
-    .sort((a,b)=>a.idadeMeses-b.idadeMeses);
-
-  filtroTipo.onchange=render;
-  render();
-}
-
+filtro.onchange = render;
 load();
 </script>
+
+<script src="../login/logout.js"></script>
 
 </body>
 </html>
