@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Leite – Sítio Córrego do Pinhal</title>
+
+<link rel="stylesheet" href="menu.css">
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+<style>
+:root{
+  --marrom:#7b3f2a;
+  --bege:#f6efe7;
+  --verde:#2f6b2f;
+  --vermelho:#c0392b;
+  --cinza:#666;
+  --logo:#D0B485;
+}
+
+*{box-sizing:border-box;font-family:Inter,system-ui,Arial}
+body{margin:0;background:var(--bege);color:#333}
+
+header{background:var(--logo);padding:15px;text-align:center}
+header img{max-width:260px;width:100%}
+
+.container{max-width:900px;margin:18px auto;padding:0 15px}
+
+h2{color:var(--marrom);display:flex;gap:8px;align-items:center;margin-bottom:10px}
+
+/* CONTEXTO */
+.contexto{
+  background:#fff;
+  border-radius:14px;
+  padding:12px 14px;
+  margin-bottom:10px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  box-shadow:0 2px 6px rgba(0,0,0,.05)
+}
+.contexto span{color:var(--cinza);font-size:14px}
+
+/* CONTROLES */
+.controles{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+  margin-bottom:8px;
+}
+select{
+  padding:12px;
+  font-size:15px;
+  border-radius:12px;
+  border:1.5px solid #ddd;
+  background:#f2f2f2
+}
+#periodo{margin-bottom:12px}
+
+/* CARDS */
+.cards{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(160px,1fr));
+  gap:12px;
+  margin-bottom:18px;
+}
+.card{
+  background:#fff;
+  padding:14px;
+  border-left:6px solid var(--verde);
+  border-radius:14px;
+  box-shadow:0 2px 6px rgba(0,0,0,.05)
+}
+.card strong{font-size:21px}
+.card span{font-size:14px;color:var(--cinza)}
+.card small{
+  display:block;
+  margin-top:4px;
+  font-size:13px;
+}
+
+/* CORES DOS COMPARATIVOS */
+.comp-positivo{
+  color:var(--verde);
+  font-weight:600;
+}
+.comp-negativo{
+  color:var(--vermelho);
+  font-weight:600;
+}
+
+/* TABELA */
+table{
+  width:100%;
+  border-collapse:collapse;
+  background:#fff;
+  border-radius:14px;
+  overflow:hidden
+}
+th,td{
+  padding:10px;
+  text-align:center;
+  border-bottom:1px solid #eee;
+  font-size:14px
+}
+th{background:#efe3d3}
+tfoot td{font-weight:800;background:#efe3d3}
+
+/* RESUMO */
+.resumo{
+  background:#fff;
+  margin-top:18px;
+  padding:14px;
+  border-radius:14px;
+  box-shadow:0 2px 6px rgba(0,0,0,.05)
+}
+</style>
+</head>
+
+<body>
+
+<header><img src="logo.png"></header>
+<div id="menu"></div>
+
+<div class="container">
+<h2>🥛 Produção de Leite</h2>
+
+<div class="contexto">
+  <strong id="ctxMes"></strong>
+  <span id="ctxVisao"></span>
+</div>
+
+<div class="controles">
+  <select id="mes"></select>
+  <select id="ano"></select>
+</div>
+
+<select id="periodo">
+  <option value="mensal">Mensal</option>
+  <option value="bimestral">Bimestral</option>
+  <option value="trimestral">Trimestral</option>
+  <option value="semestral">Semestral</option>
+  <option value="anual">Anual</option>
+</select>
+
+<div class="cards">
+  <div class="card">
+    <strong id="cLitros">0</strong>
+    <span>Produção total</span>
+    <small id="dLitros"></small>
+  </div>
+
+  <div class="card">
+    <strong id="cValor">R$ 0,00</strong>
+    <span>Faturamento</span>
+    <small id="dValor"></small>
+  </div>
+
+  <div class="card">
+    <strong id="cMediaVaca">0.00</strong>
+    <span>Média / vaca</span>
+    <small id="dMedia"></small>
+  </div>
+
+  <div class="card">
+    <strong id="cDias">0</strong>
+    <span>Dias registrados</span>
+  </div>
+</div>
+
+<h3>📒 Caderneta Mensal</h3>
+
+<table>
+<thead>
+<tr><th>Data</th><th>Litros</th><th>Valor</th><th>Vacas</th><th>Média/vaca</th></tr>
+</thead>
+<tbody id="tbody"></tbody>
+<tfoot>
+<tr>
+  <td>Total</td>
+  <td id="tLitros">0</td>
+  <td id="tValor">R$ 0,00</td>
+  <td>-</td>
+  <td id="tMedia">0.00</td>
+</tr>
+</tfoot>
+</table>
+
+<div class="resumo" id="resumo"></div>
+</div>
+
+<script>
+fetch("menu.html").then(r=>r.text()).then(h=>{
+  menu.innerHTML=h;
+  document.querySelectorAll("#menu a").forEach(a=>{
+    if(a.getAttribute("href")==="leite.html") a.classList.add("ativo");
+  });
+});
+
+firebase.initializeApp({
+  apiKey:"AIzaSyCW-CuFDrOLO-dteckl_GrPTocmyS-IrzY",
+  authDomain:"sitio-corrego-do-pinhal.firebaseapp.com",
+  projectId:"sitio-corrego-do-pinhal"
+});
+const db=firebase.firestore();
+
+const meses=["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
+const moeda=v=>v.toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
+
+let rows=[];
+
+async function load(){
+  const snap=await db.collection("producao_leite").get();
+  rows=snap.docs.map(d=>d.data());
+
+  mes.innerHTML=meses.map((m,i)=>`<option value="${i+1}">${m}</option>`).join("");
+  ano.innerHTML=[...new Set(rows.map(r=>r.ano))].sort().map(a=>`<option>${a}</option>`).join("");
+
+  ano.value=Math.max(...rows.map(r=>r.ano));
+  mes.value=1;
+
+  mes.onchange=render;
+  ano.onchange=render;
+  periodo.onchange=render;
+
+  render();
+}
+
+function render(){
+  const m=+mes.value,a=+ano.value,p=periodo.value;
+
+  ctxMes.innerText=`${meses[m-1]} / ${a}`;
+  ctxVisao.innerText=`📊 Visão: ${periodo.options[periodo.selectedIndex].text}`;
+
+  let mesesBack={mensal:1,bimestral:2,trimestral:3,semestral:6,anual:12}[p];
+
+  const atual=rows.filter(r=>{
+    const diff=(a*12+m)-(r.ano*12+r.mes);
+    return diff>=0 && diff<mesesBack;
+  });
+
+  const anterior=rows.filter(r=>{
+    const diff=(a*12+m)-(r.ano*12+r.mes);
+    return diff>=mesesBack && diff<mesesBack*2;
+  });
+
+  const soma = arr => arr.reduce((s,r)=>s+r.litros_dia,0);
+  const somaV = arr => arr.reduce((s,r)=>s+r.valor_dia,0);
+  const mediaV = arr => {
+    const m=arr.map(r=>r.vacas_produzindo?r.litros_dia/r.vacas_produzindo:0);
+    return m.reduce((a,b)=>a+b,0)/(m.length||1);
+  };
+
+  const L=soma(atual), Lp=soma(anterior);
+  const V=somaV(atual), Vp=somaV(anterior);
+  const M=mediaV(atual), Mp=mediaV(anterior);
+
+  cLitros.innerText=L;
+  cValor.innerText=moeda(V);
+  cMediaVaca.innerText=M.toFixed(2);
+  cDias.innerText=atual.length;
+
+  function aplica(el,diff,txt){
+    el.className="";
+    if(diff<0){
+      el.classList.add("comp-negativo");
+      el.innerText=`▼ ${txt} vs período anterior`;
+    }else{
+      el.classList.add("comp-positivo");
+      el.innerText=`▲ ${txt} vs período anterior`;
+    }
+  }
+
+  if(Lp) aplica(dLitros,L-Lp,Math.abs(L-Lp));
+  else dLitros.innerText="";
+
+  if(Vp) aplica(dValor,V-Vp,moeda(Math.abs(V-Vp)));
+  else dValor.innerText="";
+
+  if(Mp) aplica(dMedia,M-Mp,Math.abs(M-Mp).toFixed(2));
+  else dMedia.innerText="";
+
+  const mensal=rows.filter(r=>r.mes===m&&r.ano===a).sort((a,b)=>a.dia-b.dia);
+  tbody.innerHTML="";
+
+  let TL=0,TV=0,TM=0;
+
+  mensal.forEach(r=>{
+    const med=r.vacas_produzindo?r.litros_dia/r.vacas_produzindo:0;
+    TL+=r.litros_dia;
+    TV+=r.valor_dia;
+    TM+=med;
+
+    tbody.innerHTML+=`
+      <tr>
+        <td>${String(r.dia).padStart(2,"0")}/${String(m).padStart(2,"0")}/${a}</td>
+        <td>${r.litros_dia}</td>
+        <td>${moeda(r.valor_dia)}</td>
+        <td>${r.vacas_produzindo}</td>
+        <td>${med.toFixed(2)}</td>
+      </tr>`;
+  });
+
+  tLitros.innerText=TL;
+  tValor.innerText=moeda(TV);
+  tMedia.innerText=(TM/(mensal.length||1)).toFixed(2);
+
+  resumo.innerHTML=`
+    <strong>📊 Resumo do mês</strong>
+    <p>• Dias registrados: ${mensal.length}</p>
+    <p>• Produção total: ${TL} L</p>
+    <p>• Média por vaca: ${tMedia.innerText} L</p>
+  `;
+}
+
+load();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cadastro de Leite</title>
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+<link rel="stylesheet" href="menu-adm.css">
+
+<style>
+:root{
+  --marrom:#7b3f2a;
+  --bege:#f6efe7;
+  --verde:#2f6b2f;
+  --vermelho:#b03a2e;
+  --logo:#D0B485;
+}
+*{box-sizing:border-box;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
+body{margin:0;background:var(--bege);display:none}
+header{background:var(--logo);padding:14px;text-align:center;font-weight:700;font-size:17px}
+.container{max-width:760px;margin:16px auto;padding:16px;background:#fff;border-radius:12px}
+label{font-weight:600;margin-top:10px;display:block;font-size:14px}
+input,select{
+  width:100%;
+  padding:10px 12px;
+  margin-top:4px;
+  border-radius:8px;
+  border:1px solid #ccc;
+  font-size:14px
+}
+table{width:100%;border-collapse:collapse;margin-top:10px}
+th,td{border:1px solid #ddd;padding:8px;text-align:center}
+th{background:#f2e8da}
+button{
+  width:100%;
+  padding:12px;
+  margin-top:14px;
+  border:none;
+  font-size:15px;
+  cursor:pointer;
+  border-radius:10px
+}
+.salvar{background:var(--verde);color:#fff}
+.excluir{background:var(--vermelho);color:#fff}
+</style>
+</head>
+
+<body>
+
+<div id="app" class="hidden">
+
+<header>🥛 Cadastro de Produção de Leite</header>
+<div id="menu-adm"></div>
+
+<div class="container">
+
+<label>Ano</label>
+<select id="ano"></select>
+
+<label>Mês</label>
+<select id="mes"></select>
+
+<label>Preço por litro (mês)</label>
+<input type="number" id="preco_mes" step="0.01">
+
+<table>
+  <thead>
+    <tr>
+      <th>Dia</th>
+      <th>Litros</th>
+      <th>Vacas</th>
+    </tr>
+  </thead>
+  <tbody id="tabelaDias"></tbody>
+</table>
+
+<button class="salvar" onclick="salvarMensal()">Salvar / Atualizar mês</button>
+<button class="excluir" onclick="excluirMes()">Excluir mês inteiro</button>
+
+</div>
+</div>
+
+<script>
+/* MENU */
+fetch("menu-adm.html")
+  .then(r=>r.text())
+  .then(h=>{
+    document.getElementById("menu-adm").innerHTML = h;
+    document.querySelectorAll(".menu-link").forEach(a=>{
+      if(a.getAttribute("href")==="cadastro_leite.html"){
+        a.classList.add("ativo");
+      }
+    });
+  });
+
+/* FIREBASE */
+firebase.initializeApp({
+  apiKey:"AIzaSyCW-CuFDrOLO-dteckl_GrPTocmyS-IrzY",
+  authDomain:"sitio-corrego-do-pinhal.firebaseapp.com",
+  projectId:"sitio-corrego-do-pinhal"
+});
+
+const auth = firebase.auth();
+const db   = firebase.firestore();
+
+function logout(){
+  auth.signOut().then(()=>location.href="index.html");
+}
+
+/* AUTH */
+auth.onAuthStateChanged(user=>{
+  if(user){
+    document.body.style.display="block";
+    app.classList.remove("hidden");
+    init();
+  }else{
+    location.href="index.html";
+  }
+});
+
+/* INIT */
+function init(){
+  const anoAtual = new Date().getFullYear();
+  ano.innerHTML="";
+  mes.innerHTML="";
+
+  for(let a=2020;a<=2035;a++){
+    ano.innerHTML+=`<option>${a}</option>`;
+  }
+  ano.value = anoAtual;
+
+  for(let m=1;m<=12;m++){
+    mes.innerHTML+=`<option value="${m}">${m}</option>`;
+  }
+
+  gerarTabela();
+  carregarMes();
+}
+
+/* TABELA */
+function gerarTabela(){
+  tabelaDias.innerHTML="";
+  for(let d=1;d<=31;d++){
+    tabelaDias.innerHTML+=`
+      <tr>
+        <td>${String(d).padStart(2,"0")}</td>
+        <td><input type="number" step="0.01" data-dia="${d}"></td>
+        <td><input type="number" data-vaca="${d}"></td>
+      </tr>
+    `;
+  }
+}
+
+/* CARREGA MÊS */
+ano.onchange = carregarMes;
+mes.onchange = carregarMes;
+
+async function carregarMes(){
+  gerarTabela();
+  preco_mes.value="";
+
+  const a = Number(ano.value);
+  const m = Number(mes.value);
+
+  const snap = await db.collection("producao_leite")
+    .where("ano","==",a)
+    .where("mes","==",m)
+    .get();
+
+  snap.docs.forEach(doc=>{
+    const r = doc.data();
+    const tr = [...tabelaDias.querySelectorAll("tr")]
+      .find(t=>Number(t.children[0].innerText)===r.dia);
+
+    if(tr){
+      tr.querySelector("[data-dia]").value = r.litros_dia;
+      tr.querySelector("[data-vaca]").value = r.vacas_produzindo;
+      if(!preco_mes.value){
+        preco_mes.value = r.preco_litro;
+      }
+    }
+  });
+}
+
+/* SALVAR / ATUALIZAR */
+async function salvarMensal(){
+  if(!preco_mes.value){
+    alert("Informe o preço do mês.");
+    return;
+  }
+
+  const a = Number(ano.value);
+  const m = Number(mes.value);
+  const p = Number(preco_mes.value);
+
+  const existentes = {};
+  const snap = await db.collection("producao_leite")
+    .where("ano","==",a)
+    .where("mes","==",m)
+    .get();
+
+  snap.docs.forEach(d=>existentes[d.data().dia]=d.id);
+
+  let algum = false;
+
+  for(const tr of tabelaDias.querySelectorAll("tr")){
+    const dia = Number(tr.children[0].innerText);
+    const litros = Number(tr.querySelector("[data-dia]").value||0);
+    const vacas  = Number(tr.querySelector("[data-vaca]").value||0);
+
+    if(litros<=0 || vacas<=0) continue;
+    algum = true;
+
+    const dados = {
+      ano:a,
+      mes:m,
+      dia,
+      litros_dia:litros,
+      vacas_produzindo:vacas,
+      preco_litro:p,
+      valor_dia:litros*p
+    };
+
+    if(existentes[dia]){
+      await db.collection("producao_leite").doc(existentes[dia]).update(dados);
+    }else{
+      await db.collection("producao_leite").add(dados);
+    }
+  }
+
+  if(!algum){
+    alert("Informe pelo menos um dia com litros e vacas.");
+    return;
+  }
+
+  alert("Mês salvo com sucesso.");
+  limparFormulario();
+}
+
+/* EXCLUIR MÊS */
+async function excluirMes(){
+  if(!confirm("Excluir todos os registros deste mês?")) return;
+
+  const a = Number(ano.value);
+  const m = Number(mes.value);
+
+  const snap = await db.collection("producao_leite")
+    .where("ano","==",a)
+    .where("mes","==",m)
+    .get();
+
+  for(const d of snap.docs){
+    await db.collection("producao_leite").doc(d.id).delete();
+  }
+
+  alert("Mês excluído com sucesso.");
+  limparFormulario();
+}
+
+/* LIMPAR FORMULÁRIO */
+function limparFormulario(){
+  preco_mes.value="";
+  gerarTabela();
+}
+</script>
+
+</body>
+</html>

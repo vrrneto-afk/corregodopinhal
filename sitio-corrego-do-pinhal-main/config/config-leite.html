@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Configuração – Leite</title>
+
+<!-- FIREBASE -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+<link rel="stylesheet" href="menu-adm.css">
+<link rel="stylesheet" href="config.css">
+
+<style>
+/* PADRÃO DEFINITIVO CHECKBOX */
+.label-check{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  font-weight:600;
+  margin-top:12px;
+}
+.label-check input{ margin:0 }
+</style>
+</head>
+
+<body>
+
+<div id="app" class="hidden">
+
+<header>⚙️ Configurações</header>
+<div id="menu-adm"></div>
+
+<div class="container">
+
+<h2>Configuração – Leite</h2>
+
+<!-- MOEDA -->
+<fieldset>
+  <h3 style="margin:0 0 10px;color:var(--marrom)">Moeda</h3>
+
+  <label>Código da moeda</label>
+  <input type="text" id="moeda_codigo">
+
+  <label>Locale</label>
+  <input type="text" id="moeda_locale">
+</fieldset>
+
+<!-- PERÍODOS -->
+<h3 style="margin-top:18px;color:var(--marrom)">Períodos disponíveis</h3>
+<div class="cards-grid" id="lista-periodos"></div>
+
+<!-- EDITOR PERÍODO -->
+<div id="editor" class="hidden">
+<fieldset>
+
+  <label>Nome do período</label>
+  <input type="text" id="periodo_id" placeholder="Ex: mensal">
+
+  <label class="label-check">
+    <input type="checkbox" id="periodo_ativo">
+    Período ativo
+  </label>
+
+</fieldset>
+
+<button class="salvar" onclick="salvarPeriodo()">💾 Salvar período</button>
+
+<button class="voltar hidden" id="btn-excluir" onclick="excluirPeriodo()">
+🗑️ Excluir período
+</button>
+
+<button class="voltar" onclick="cancelarPeriodo()">❌ Cancelar</button>
+</div>
+
+<!-- TEXTOS -->
+<fieldset>
+  <h3 style="margin:0 0 10px;color:var(--marrom)">Textos exibidos</h3>
+
+  <label>Texto – Faturamento</label>
+  <input type="text" id="texto_faturamento">
+
+  <label>Texto – Média por vaca</label>
+  <input type="text" id="texto_media">
+
+  <label>Texto – Produção total</label>
+  <input type="text" id="texto_producao">
+</fieldset>
+
+<button class="salvar" onclick="salvarTudo()">💾 Salvar configurações</button>
+
+<button class="voltar" onclick="location.href='config.html'">
+⬅ Voltar para Configurações
+</button>
+
+</div>
+</div>
+
+<script>
+/* MENU */
+fetch("menu-adm.html")
+.then(r=>r.text())
+.then(html=>{
+  document.getElementById("menu-adm").innerHTML = html;
+  document.querySelectorAll(".menu-link").forEach(a=>{
+    if(a.getAttribute("href")==="config.html") a.classList.add("ativo");
+  });
+});
+
+/* FIREBASE */
+firebase.initializeApp({
+  apiKey:"AIzaSyCW-CuFDrOLO-dteckl_GrPTocmyS-IrzY",
+  authDomain:"sitio-corrego-do-pinhal.firebaseapp.com",
+  projectId:"sitio-corrego-do-pinhal"
+});
+
+const auth = firebase.auth();
+const db   = firebase.firestore();
+
+let periodos = [];
+let editando = null;
+
+const lista_periodos = document.getElementById("lista-periodos");
+const btnExcluir     = document.getElementById("btn-excluir");
+
+/* AUTH */
+auth.onAuthStateChanged(u=>{
+  if(u){
+    document.body.style.display="block";
+    document.getElementById("app").classList.remove("hidden");
+    carregar();
+  }
+});
+
+/* LOAD */
+async function carregar(){
+  const snap = await db.collection("config").doc("leite").get();
+  if(!snap.exists) return;
+
+  const d = snap.data();
+
+  moeda_codigo.value = d.moeda?.codigo ?? "";
+  moeda_locale.value = d.moeda?.locale ?? "";
+
+  periodos = d.periodos || [];
+
+  texto_faturamento.value = d.textos?.faturamento ?? "";
+  texto_media.value       = d.textos?.media ?? "";
+  texto_producao.value    = d.textos?.producao ?? "";
+
+  renderizarPeriodos();
+}
+
+/* RENDER (✅ CORREÇÃO AQUI) */
+function renderizarPeriodos(){
+  lista_periodos.innerHTML="";
+
+  periodos.forEach((p,i)=>{
+    const b = document.createElement("button");
+    b.className="config-card";
+    b.onclick=()=>editarPeriodo(i);
+
+    b.innerHTML = `
+      <strong>${p.nome}</strong>
+      ${p.ativo === false ? "<span style='font-size:12px;opacity:.6'>(Inativo)</span>" : ""}
+    `;
+
+    lista_periodos.appendChild(b);
+  });
+
+  const novo = document.createElement("button");
+  novo.className="config-card";
+  novo.innerHTML="➕ Novo período";
+  novo.onclick=novoPeriodo;
+  lista_periodos.appendChild(novo);
+}
+
+/* EDITAR / NOVO */
+function novoPeriodo(){
+  editando = null;
+  periodo_id.value = "";
+  periodo_ativo.checked = true;
+  btnExcluir.classList.add("hidden");
+  editor.classList.remove("hidden");
+}
+
+function editarPeriodo(i){
+  editando = i;
+  const p = periodos[i];
+  periodo_id.value = p.nome;
+  periodo_ativo.checked = p.ativo !== false;
+  btnExcluir.classList.remove("hidden");
+  editor.classList.remove("hidden");
+}
+
+/* SALVAR PERÍODO */
+async function salvarPeriodo(){
+  const nome = periodo_id.value.trim();
+  if(!nome){
+    alert("Informe o nome do período.");
+    return;
+  }
+
+  const obj = {
+    nome: nome,
+    ativo: periodo_ativo.checked
+  };
+
+  if(editando === null) periodos.push(obj);
+  else periodos[editando] = obj;
+
+  await db.collection("config").doc("leite").update({ periodos });
+
+  alert("Período salvo com sucesso.");
+  cancelarPeriodo();
+  renderizarPeriodos();
+}
+
+/* EXCLUIR */
+async function excluirPeriodo(){
+  if(editando === null) return;
+  if(!confirm("Deseja excluir este período?")) return;
+
+  periodos.splice(editando,1);
+
+  await db.collection("config").doc("leite").update({ periodos });
+
+  alert("Período excluído com sucesso.");
+  cancelarPeriodo();
+  renderizarPeriodos();
+}
+
+/* CANCELAR */
+function cancelarPeriodo(){
+  editor.classList.add("hidden");
+  editando = null;
+}
+
+/* SAVE GERAL */
+async function salvarTudo(){
+  await db.collection("config").doc("leite").update({
+    moeda:{
+      codigo: moeda_codigo.value.trim(),
+      locale: moeda_locale.value.trim()
+    },
+    periodos: periodos,
+    textos:{
+      faturamento: texto_faturamento.value.trim(),
+      media: texto_media.value.trim(),
+      producao: texto_producao.value.trim()
+    }
+  });
+
+  alert("Configuração de leite salva com sucesso.");
+}
+</script>
+
+<script src="auth-adm.js"></script>
+</body>
+</html>

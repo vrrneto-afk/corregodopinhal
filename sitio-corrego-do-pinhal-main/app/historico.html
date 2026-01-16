@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Histórico – Sítio Córrego do Pinhal</title>
+
+<!-- MENU CSS (OBRIGATÓRIO) -->
+<link rel="stylesheet" href="menu.css">
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+<style>
+:root{
+  --marrom:#7b3f2a;
+  --bege:#f6efe7;
+  --verde:#2f6b2f;
+  --amarelo:#e0a800;
+  --cinza:#666;
+  --vermelho:#c0392b;
+  --logo:#D0B485;
+}
+
+*{
+  box-sizing:border-box;
+  font-family:'Inter',system-ui,-apple-system,Arial,Helvetica,sans-serif;
+}
+
+body{
+  margin:0;
+  background:var(--bege);
+  color:#333;
+}
+
+/* HEADER */
+header{
+  background:var(--logo);
+  padding:15px 10px;
+  text-align:center;
+}
+header img{
+  max-width:260px;
+  width:100%;
+}
+
+/* CONTAINER */
+.container{
+  max-width:900px;
+  margin:20px auto;
+  padding:0 15px;
+}
+
+h2{
+  margin:28px 0 14px;
+  color:var(--marrom);
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+
+/* FILTROS – IGUAL ANIMAIS */
+.filtros{
+  display:flex;
+  gap:10px;
+  flex-wrap:nowrap;
+  margin-bottom:20px;
+}
+.filtros select{
+  flex:1;
+  padding:12px;
+  font-size:15px;
+  border-radius:12px;
+  border:1.5px solid #ddd;
+}
+
+/* CARD */
+.card{
+  background:#fff;
+  padding:16px;
+  margin-bottom:14px;
+  border-left:6px solid var(--verde);
+  border-radius:12px;
+  box-shadow:0 2px 6px rgba(0,0,0,.06);
+  cursor:pointer;
+}
+.card.venda{border-color:var(--amarelo)}
+.card.falecimento{border-color:var(--vermelho)}
+
+.card strong{
+  font-size:16px;
+  font-weight:800;
+}
+.card p{
+  margin:4px 0;
+  font-size:14px;
+  color:var(--cinza);
+}
+
+.animal-nome{
+  font-weight:800;
+  text-transform:uppercase;
+}
+
+/* VAZIO */
+.vazio{
+  text-align:center;
+  color:#777;
+  margin-top:30px;
+  font-style:italic;
+}
+</style>
+</head>
+
+<body>
+
+<header>
+  <img src="logo.png">
+</header>
+
+<!-- MENU EXTERNO -->
+<div id="menu"></div>
+
+<div class="container">
+  <h2>📜 Histórico</h2>
+
+  <div class="filtros">
+    <select id="filtroEspecie">
+      <option value="todas">Todas as espécies</option>
+    </select>
+
+    <select id="filtroEvento">
+      <option value="todos">Todos os eventos</option>
+      <option value="cobertura">Panhou cria</option>
+      <option value="parto">Criou dia</option>
+      <option value="venda">Venda</option>
+      <option value="falecimento">Falecimento</option>
+    </select>
+  </div>
+
+  <div id="lista"></div>
+</div>
+
+<!-- MENU -->
+<script>
+fetch("menu.html")
+  .then(r=>r.text())
+  .then(html=>{
+    document.getElementById("menu").innerHTML = html;
+    document.querySelectorAll("#menu a").forEach(a=>{
+      if(a.getAttribute("href")==="historico.html"){
+        a.classList.add("ativo");
+      }
+    });
+  });
+</script>
+
+<script>
+firebase.initializeApp({
+  apiKey:"AIzaSyCW-CuFDrOLO-dteckl_GrPTocmyS-IrzY",
+  authDomain:"sitio-corrego-do-pinhal.firebaseapp.com",
+  projectId:"sitio-corrego-do-pinhal"
+});
+const db = firebase.firestore();
+
+function addMonths(data, meses){
+  const d = new Date(data);
+  d.setMonth(d.getMonth() + meses);
+  return d;
+}
+
+let ANIMAIS = [], EVENTOS = [];
+
+function abrirAnimal(id){
+  window.location.href = `animal.html?id=${id}`;
+}
+
+function render(){
+  lista.innerHTML = "";
+
+  EVENTOS
+    .filter(ev=>{
+      if(filtroEvento.value !== "todos" && ev.tipo_evento !== filtroEvento.value) return false;
+      return true;
+    })
+    .sort((a,b)=>new Date(b.data_evento) - new Date(a.data_evento))
+    .forEach(ev=>{
+      const animal = ANIMAIS.find(a=>a._id === ev.id_animal);
+      if(!animal) return;
+      if(filtroEspecie.value !== "todas" && animal.especie !== filtroEspecie.value) return;
+
+      if(ev.tipo_evento === "cobertura"){
+        const boi = ANIMAIS.find(a=>a._id === ev.id_relacionado);
+        const prev = addMonths(ev.data_evento, 9);
+
+        lista.innerHTML += `
+        <div class="card" onclick="abrirAnimal('${animal._id}')">
+          <strong>🐄 PANHOU CRIA</strong>
+          <p>Animal: <span class="animal-nome">${animal.nome}</span></p>
+          <p>Espécie: ${animal.especie}</p>
+          <p>Boi: ${boi?.nome || "Inseminação"}</p>
+          <p>Data: ${new Date(ev.data_evento).toLocaleDateString("pt-BR")}</p>
+          <p>Previsão do parto: ${prev.toLocaleDateString("pt-BR")}</p>
+        </div>`;
+      }
+
+      if(ev.tipo_evento === "parto"){
+        lista.innerHTML += `
+        <div class="card" onclick="abrirAnimal('${animal._id}')">
+          <strong>🐮 CRIOU DIA</strong>
+          <p>Animal: <span class="animal-nome">${animal.nome}</span></p>
+          <p>Espécie: ${animal.especie}</p>
+          <p>Data: ${new Date(ev.data_evento).toLocaleDateString("pt-BR")}</p>
+        </div>`;
+      }
+
+      if(ev.tipo_evento === "venda"){
+        lista.innerHTML += `
+        <div class="card venda" onclick="abrirAnimal('${animal._id}')">
+          <strong>💰 VENDIDO</strong>
+          <p>Animal: <span class="animal-nome">${animal.nome}</span></p>
+          <p>Espécie: ${animal.especie}</p>
+          <p>Data da venda: ${new Date(ev.data_evento).toLocaleDateString("pt-BR")}</p>
+        </div>`;
+      }
+
+      if(ev.tipo_evento === "falecimento"){
+        lista.innerHTML += `
+        <div class="card falecimento" onclick="abrirAnimal('${animal._id}')">
+          <strong>💀 FALECIMENTO</strong>
+          <p>Animal: <span class="animal-nome">${animal.nome}</span></p>
+          <p>Espécie: ${animal.especie}</p>
+          <p>Data: ${new Date(ev.data_evento).toLocaleDateString("pt-BR")}</p>
+        </div>`;
+      }
+    });
+
+  if(!lista.innerHTML){
+    lista.innerHTML = `<div class="vazio">📜 Nenhum evento encontrado.</div>`;
+  }
+}
+
+async function load(){
+  ANIMAIS = (await db.collection("animais").get()).docs.map(d=>({_id:d.id,...d.data()}));
+  EVENTOS = (await db.collection("eventos").get()).docs.map(d=>d.data());
+
+  // ESPÉCIES EM ORDEM ALFABÉTICA
+  [...new Set(ANIMAIS.map(a=>a.especie).filter(Boolean))]
+    .sort((a,b)=>a.localeCompare(b,"pt-BR"))
+    .forEach(e=>filtroEspecie.innerHTML += `<option>${e}</option>`);
+
+  // EVENTOS EM ORDEM ALFABÉTICA (mantendo "todos" no topo)
+  const eventosFixos = Array.from(filtroEvento.options)
+    .filter(o=>o.value!=="todos")
+    .sort((a,b)=>a.text.localeCompare(b.text,"pt-BR"));
+
+  filtroEvento.innerHTML = `<option value="todos">Todos os eventos</option>`;
+  eventosFixos.forEach(o=>filtroEvento.appendChild(o));
+
+  filtroEspecie.onchange = render;
+  filtroEvento.onchange = render;
+  render();
+}
+
+load();
+</script>
+
+</body>
+</html>

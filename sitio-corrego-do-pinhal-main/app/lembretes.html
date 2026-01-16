@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Lembretes – Sítio Córrego do Pinhal</title>
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+<style>
+:root{
+  --marrom:#7b3f2a;
+  --bege:#f6efe7;
+  --verde:#2f6b2f;
+  --vermelho:#c0392b;
+  --amarelo:#e0a800;
+  --cinza:#666;
+  --cinza-claro:#e6e1db;
+  --logo:#D0B485;
+}
+
+*{
+  box-sizing:border-box;
+  font-family:'Inter',system-ui,-apple-system,Arial,Helvetica,sans-serif;
+}
+
+body{
+  margin:0;
+  background:var(--bege);
+  color:#333;
+}
+
+/* HEADER */
+header{
+  background:var(--logo);
+  padding:15px 10px;
+  text-align:center;
+}
+header img{
+  max-width:260px;
+  width:100%;
+}
+
+/* MENU (necessário mesmo sendo externo) */
+nav{
+  background:var(--marrom);
+  display:flex;
+  flex-wrap:wrap;
+  justify-content:center;
+  gap:4px;
+}
+nav a{
+  color:#fff;
+  text-decoration:none;
+  font-weight:600;
+  font-size:15px;
+  padding:12px 14px;
+  border-radius:10px;
+  display:flex;
+  align-items:center;
+  gap:6px;
+  opacity:.85;
+  position:relative;
+  transition:.2s;
+}
+nav a span{
+  font-size:18px;
+}
+nav a:hover{
+  background:rgba(255,255,255,.12);
+  opacity:1;
+}
+nav a.ativo{
+  background:rgba(255,255,255,.22);
+  font-weight:800;
+  opacity:1;
+}
+nav a.ativo::after{
+  content:"";
+  position:absolute;
+  bottom:4px;
+  left:15%;
+  width:70%;
+  height:3px;
+  background:#fff;
+  border-radius:10px;
+}
+
+/* CONTAINER */
+.container{
+  max-width:900px;
+  margin:20px auto;
+  padding:0 15px;
+}
+
+/* TÍTULOS */
+h2{
+  margin:32px 0 12px;
+  color:var(--marrom);
+  font-size:20px;
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+
+/* FORM */
+.form{
+  background:#fff;
+  padding:16px;
+  border-radius:14px;
+  box-shadow:0 2px 6px rgba(0,0,0,.06);
+  margin-bottom:18px;
+}
+.form input{
+  width:100%;
+  padding:14px;
+  font-size:16px;
+  margin-bottom:12px;
+  border-radius:12px;
+  border:1.5px solid #ddd;
+}
+.form input:focus{
+  outline:none;
+  border-color:var(--marrom);
+}
+.form button{
+  width:100%;
+  padding:12px;
+  font-size:16px;
+  background:var(--verde);
+  color:#fff;
+  border:none;
+  border-radius:10px;
+  cursor:pointer;
+}
+
+/* CARDS – NEUTROS */
+.card{
+  background:#fff;
+  padding:14px;
+  margin-bottom:12px;
+  border-left:6px solid var(--cinza-claro);
+  border-radius:12px;
+  box-shadow:0 2px 6px rgba(0,0,0,.06);
+  display:flex;
+  justify-content:space-between;
+  gap:12px;
+}
+
+.card .texto{
+  font-size:16px;
+  font-weight:600;
+  line-height:1.35;
+  flex:1;
+  word-break:break-word;
+}
+
+.card .acoes{
+  display:flex;
+  gap:6px;
+  align-items:flex-start;
+}
+
+/* BOTÕES */
+.card button{
+  border:none;
+  padding:6px 10px;
+  border-radius:6px;
+  cursor:pointer;
+  font-size:13px;
+}
+
+.btn-edit{
+  background:#f0f0f0;
+  color:#333;
+}
+
+.btn-del{
+  background:var(--vermelho);
+  color:#fff;
+}
+</style>
+</head>
+
+<body>
+
+<header>
+  <img src="logo.png">
+</header>
+
+<!-- MENU EXTERNO -->
+<div id="menu"></div>
+
+<div class="container">
+
+<h2>📝 Lembretes de Compra</h2>
+
+<div class="form">
+  <input id="textoCompra" placeholder="Digite o item a comprar...">
+  <button onclick="salvar('compra')">➕ Adicionar item</button>
+</div>
+
+<div id="listaCompra"></div>
+
+<h2>⏰ Lembretes de Coisas a Fazer</h2>
+
+<div class="form">
+  <input id="textoTarefa" placeholder="Digite a tarefa a fazer...">
+  <button onclick="salvar('tarefa')">➕ Adicionar tarefa</button>
+</div>
+
+<div id="listaTarefa"></div>
+
+</div>
+
+<script>
+/* ===== MENU ===== */
+fetch("menu.html")
+  .then(r => r.text())
+  .then(html => {
+    document.getElementById("menu").innerHTML = html;
+
+    const atual = location.pathname.split("/").pop();
+    document.querySelectorAll("#menu a").forEach(a => {
+      if(a.getAttribute("href") === atual){
+        a.classList.add("ativo");
+      }
+    });
+  });
+
+/* ===== FIREBASE ===== */
+firebase.initializeApp({
+  apiKey:"AIzaSyCW-CuFDrOLO-dteckl_GrPTocmyS-IrzY",
+  authDomain:"sitio-corrego-do-pinhal.firebaseapp.com",
+  projectId:"sitio-corrego-do-pinhal"
+});
+
+const db=firebase.firestore();
+let editId=null;
+let editTipo=null;
+
+/* ===== FUNÇÕES ===== */
+async function carregar(){
+  const snap=await db.collection("lembretes").get();
+
+  listaCompra.innerHTML="";
+  listaTarefa.innerHTML="";
+
+  const dados=snap.docs.map(d=>({id:d.id,...d.data()}));
+
+  if(!dados.length){
+    listaCompra.innerHTML="<p style='color:#666'>Nenhum item cadastrado.</p>";
+    listaTarefa.innerHTML="<p style='color:#666'>Nenhuma tarefa cadastrada.</p>";
+    return;
+  }
+
+  dados.forEach(r=>{
+    const destino=r.tipo==="tarefa"?listaTarefa:listaCompra;
+    destino.innerHTML+=`
+      <div class="card">
+        <div class="texto">${r.texto}</div>
+        <div class="acoes">
+          <button class="btn-edit" onclick="editar('${r.id}','${r.tipo}','${r.texto.replace(/'/g,"\\'")}')">Editar</button>
+          <button class="btn-del" onclick="excluir('${r.id}')">Excluir</button>
+        </div>
+      </div>`;
+  });
+}
+
+async function salvar(tipo){
+  const input=tipo==="tarefa"?textoTarefa:textoCompra;
+  const valor=input.value.trim();
+  if(!valor) return alert("Digite um texto");
+
+  if(editId&&editTipo===tipo){
+    await db.collection("lembretes").doc(editId).update({texto:valor});
+    editId=null;
+    editTipo=null;
+  }else{
+    await db.collection("lembretes").add({
+      texto:valor,
+      tipo:tipo,
+      criado_em:firebase.firestore.FieldValue.serverTimestamp()
+    });
+  }
+
+  input.value="";
+  carregar();
+}
+
+function editar(id,tipo,valor){
+  editId=id;
+  editTipo=tipo;
+  const input=tipo==="tarefa"?textoTarefa:textoCompra;
+  input.value=valor;
+  input.focus();
+}
+
+async function excluir(id){
+  if(confirm("Excluir este item?")){
+    await db.collection("lembretes").doc(id).delete();
+    carregar();
+  }
+}
+
+carregar();
+</script>
+
+</body>
+</html>

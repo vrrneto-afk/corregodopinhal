@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cadastro de Farmácia</title>
+
+<!-- FIREBASE -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+<link rel="stylesheet" href="menu-adm.css">
+
+<style>
+:root{
+  --marrom:#7b3f2a;
+  --bege:#f6efe7;
+  --verde:#2f6b2f;
+  --vermelho:#b03a2e;
+  --logo:#D0B485;
+}
+*{box-sizing:border-box;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
+body{margin:0;background:var(--bege);display:none}
+header{background:var(--logo);padding:14px;text-align:center;font-weight:700;font-size:17px}
+.container{max-width:720px;margin:16px auto;padding:16px;background:#fff;border-radius:12px}
+label{font-weight:600;margin-top:10px;display:block;font-size:14px}
+input,select{width:100%;padding:10px 12px;margin-top:4px;border-radius:8px;border:1px solid #ccc;font-size:14px}
+button{width:100%;padding:12px;margin-top:14px;border:none;font-size:15px;cursor:pointer;border-radius:10px}
+.salvar{background:var(--verde);color:#fff}
+.excluir{background:var(--vermelho);color:#fff}
+.hidden{display:none}
+</style>
+</head>
+
+<body>
+
+<div id="app" class="hidden">
+
+<header>💊 Cadastro de Farmácia</header>
+<div id="menu-adm"></div>
+
+<div class="container">
+
+<label>Ação</label>
+<select id="acao">
+  <option value="novo">➕ Novo registro</option>
+  <option value="editar">✏️ Editar registro</option>
+</select>
+
+<div id="blocoEditar" class="hidden">
+  <label>Medicamento cadastrado</label>
+  <select id="existente"></select>
+</div>
+
+<label>Nome</label>
+<input id="nome">
+
+<label>Função</label>
+<input id="funcao">
+
+<label>Status</label>
+<select id="status">
+  <option>Ativo</option>
+  <option>Inativo</option>
+</select>
+
+<label>Quantidade em estoque</label>
+<input id="quantidade" type="number">
+
+<label>Data de compra</label>
+<input id="data_compra" type="date">
+
+<label>Validade</label>
+<input id="validade" type="date">
+
+<label>Tipo de dosagem</label>
+<select id="dosagem_tipo">
+  <option value="unica">Dose única</option>
+  <option value="peso">Por peso</option>
+</select>
+
+<input id="dosagem_valor" placeholder="Valor da dose">
+
+<select id="dosagem_unidade">
+  <option>ml</option>
+  <option>l</option>
+  <option>gr</option>
+  <option>mg</option>
+</select>
+
+<select id="peso_base" class="hidden">
+  <option value="1">1kg</option>
+  <option value="5">5kg</option>
+  <option value="10">10kg</option>
+  <option value="20">20kg</option>
+  <option value="50">50kg</option>
+  <option value="100">100kg</option>
+</select>
+
+<label>Via de aplicação</label>
+<select id="via">
+  <option>Intramuscular</option>
+  <option>Subcutânea</option>
+  <option>Oral</option>
+  <option>Intravenosa</option>
+</select>
+
+<button class="salvar" onclick="salvar()">💾 Salvar</button>
+<button class="excluir hidden" id="btnExcluir" onclick="excluir()">🗑️ Excluir</button>
+
+</div>
+</div>
+
+<script>
+/* MENU ADM */
+fetch("menu-adm.html")
+  .then(r=>r.text())
+  .then(html=>{
+    document.getElementById("menu-adm").innerHTML = html;
+    document.querySelectorAll(".menu-link").forEach(a=>{
+      if(a.getAttribute("href") === location.pathname.split("/").pop()){
+        a.classList.add("ativo");
+      }
+    });
+  });
+
+/* FIREBASE INIT */
+firebase.initializeApp({
+  apiKey:"AIzaSyCW-CuFDrOLO-dteckl_GrPTocmyS-IrzY",
+  authDomain:"sitio-corrego-do-pinhal.firebaseapp.com",
+  projectId:"sitio-corrego-do-pinhal"
+});
+
+const auth = firebase.auth();
+const db = firebase.firestore();
+
+/* LOGOUT */
+function logout(){
+  auth.signOut().then(()=>{
+    location.href = "index.html";
+  });
+}
+
+const acao=document.getElementById("acao");
+const blocoEditar=document.getElementById("blocoEditar");
+const existente=document.getElementById("existente");
+const btnExcluir=document.getElementById("btnExcluir");
+
+const dosagem_tipo=document.getElementById("dosagem_tipo");
+const peso_base=document.getElementById("peso_base");
+const nome = document.getElementById("nome");
+const funcao = document.getElementById("funcao");
+const status = document.getElementById("status");
+const quantidade = document.getElementById("quantidade");
+const data_compra = document.getElementById("data_compra");
+const validade = document.getElementById("validade");
+const dosagem_valor = document.getElementById("dosagem_valor");
+const dosagem_unidade = document.getElementById("dosagem_unidade");
+const via = document.getElementById("via");
+
+let medicamentos=[], atual=null;
+
+function limparFormulario(){
+  nome.value="";
+  funcao.value="";
+  status.value="Ativo";
+  quantidade.value="";
+  data_compra.value="";
+  validade.value="";
+  dosagem_tipo.value="unica";
+  dosagem_valor.value="";
+  dosagem_unidade.value="ml";
+  peso_base.value="1";
+  via.value="Intramuscular";
+  peso_base.classList.add("hidden");
+}
+
+dosagem_tipo.onchange=()=>{
+  peso_base.classList.toggle("hidden",dosagem_tipo.value!=="peso");
+};
+
+auth.onAuthStateChanged(user=>{
+  if(user){
+    document.body.style.display="block";
+    app.classList.remove("hidden");
+    carregar();
+  }
+});
+
+async function carregar(){
+  const snap=await db.collection("farmacia").get();
+  medicamentos=snap.docs.map(d=>({id:d.id,...d.data()}))
+    .sort((a,b)=>(a.nome||"").localeCompare(b.nome||"","pt-BR"));
+
+  existente.innerHTML='<option value="">Selecione</option>';
+  medicamentos.forEach(m=>{
+    existente.innerHTML+=`<option value="${m.id}">${m.nome}</option>`;
+  });
+}
+
+acao.onchange=()=>{
+  const editar=acao.value==="editar";
+  blocoEditar.classList.toggle("hidden",!editar);
+  btnExcluir.classList.toggle("hidden",!editar);
+  atual=null;
+  existente.value="";
+  if(!editar) limparFormulario();
+};
+
+existente.onchange=()=>{
+  atual=medicamentos.find(m=>m.id===existente.value);
+  if(!atual) return;
+
+  nome.value=atual.nome||"";
+  funcao.value=atual.funcao||"";
+  status.value=atual.status||"Ativo";
+  quantidade.value=atual.quantidade||0;
+  data_compra.value=atual.data_compra||"";
+  validade.value=atual.validade||"";
+  dosagem_tipo.value=atual.dosagem_tipo||"unica";
+  dosagem_valor.value=atual.dosagem_valor||"";
+  dosagem_unidade.value=atual.dosagem_unidade||"ml";
+  peso_base.value=atual.peso_base||"1";
+  via.value=atual.via||"Intramuscular";
+
+  peso_base.classList.toggle("hidden",dosagem_tipo.value!=="peso");
+};
+
+async function salvar(){
+  const dados={
+    nome:nome.value.trim(),
+    funcao:funcao.value.trim(),
+    status:status.value,
+    quantidade:Number(quantidade.value||0),
+    data_compra:data_compra.value,
+    validade:validade.value,
+    dosagem_tipo:dosagem_tipo.value,
+    dosagem_valor:dosagem_valor.value,
+    dosagem_unidade:dosagem_unidade.value,
+    peso_base:dosagem_tipo.value==="peso"?peso_base.value:"",
+    via:via.value,
+    origem_registro:"manual",
+    criado_por:auth.currentUser.email
+  };
+
+  if(acao.value==="editar" && atual){
+    await db.collection("farmacia").doc(atual.id).update(dados);
+  }else{
+    dados.criado_em=firebase.firestore.FieldValue.serverTimestamp();
+    await db.collection("farmacia").add(dados);
+  }
+
+  alert("Medicamento salvo com sucesso");
+  location.reload();
+}
+
+async function excluir(){
+  if(!atual){
+    alert("Nenhum medicamento selecionado.");
+    return;
+  }
+  if(confirm(`Excluir o medicamento "${atual.nome}"?`)){
+    await db.collection("farmacia").doc(atual.id).delete();
+    alert("Medicamento excluído com sucesso");
+    location.reload();
+  }
+}
+</script>
+
+</body>
+</html>

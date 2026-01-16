@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Relatório de Rebanho – Sítio Córrego do Pinhal</title>
+
+<link rel="stylesheet" href="menu.css">
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+<style>
+:root{
+  --marrom:#7b3f2a;
+  --bege:#f6efe7;
+  --verde:#2f6b2f;
+  --vermelho:#c0392b;
+  --amarelo:#e0a800;
+  --cinza:#666;
+  --logo:#D0B485;
+}
+
+*{box-sizing:border-box;font-family:Inter,system-ui,Arial}
+body{margin:0;background:var(--bege);color:#333}
+
+header{background:var(--logo);padding:15px;text-align:center}
+header img{max-width:260px;width:100%}
+
+.container{max-width:900px;margin:20px auto;padding:0 15px}
+h2,h3{color:var(--marrom)}
+
+.filtros{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+  margin-bottom:14px
+}
+select{
+  padding:12px;
+  border-radius:12px;
+  border:1.5px solid #ddd;
+  background:#f2f2f2;
+  font-size:15px
+}
+
+.cards{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
+  gap:12px;
+  margin-bottom:20px
+}
+.card{
+  background:#fff;
+  padding:14px;
+  border-left:6px solid var(--verde);
+  border-radius:14px;
+  box-shadow:0 2px 6px rgba(0,0,0,.05)
+}
+.card.alerta{border-left-color:var(--amarelo)}
+.card.negativo{border-left-color:var(--vermelho)}
+.card.amarelo{border-left-color:var(--amarelo)}
+.card strong{font-size:22px;display:block}
+.card span{font-size:14px;color:var(--cinza)}
+
+table{
+  width:100%;
+  border-collapse:collapse;
+  background:#fff;
+  border-radius:14px;
+  overflow:hidden
+}
+th,td{
+  padding:10px;
+  border-bottom:1px solid #eee;
+  font-size:14px;
+  text-align:center
+}
+th{background:#efe3d3}
+
+th.nome, td.nome { width:30%; text-align:left }
+th.idade, td.idade { width:20% }
+</style>
+</head>
+
+<body>
+
+<header><img src="logo.png"></header>
+<div id="menu"></div>
+
+<div class="container">
+
+<h2>🐾 Relatório de Rebanho</h2>
+
+<div class="filtros">
+  <select id="especie"></select>
+  <select id="visao">
+    <option value="geral">Visão geral</option>
+    <option value="anual">Visão anual</option>
+  </select>
+</div>
+
+<!-- RESUMO -->
+<div class="cards">
+  <div class="card"><strong id="cTotal">0</strong><span>Total de animais</span></div>
+  <div class="card"><strong id="cAtivos">0</strong><span>Ativos</span></div>
+  <div class="card amarelo"><strong id="cVendidos">0</strong><span>Vendidos / Doados</span></div>
+  <div class="card negativo"><strong id="cFalecidos">0</strong><span>Falecidos</span></div>
+</div>
+
+<!-- ESTRUTURA -->
+<h3>🧬 Estrutura do rebanho</h3>
+<div class="cards">
+  <div class="card"><strong id="cMachos">0</strong><span>Machos (total)</span></div>
+  <div class="card"><strong id="cFemeas">0</strong><span>Fêmeas (total)</span></div>
+  <div class="card"><strong id="cJovens">0</strong><span>Jovens</span></div>
+  <div class="card"><strong id="cAdultos">0</strong><span>Adultos</span></div>
+  <div class="card"><strong id="cMachosAtivos">0</strong><span>Machos ativos</span></div>
+  <div class="card"><strong id="cFemeasAtivas">0</strong><span>Fêmeas ativas</span></div>
+</div>
+
+<!-- ALERTAS -->
+<h3>🚨 Alertas</h3>
+<div class="cards">
+  <div class="card alerta" id="cardAlerta">
+    <strong id="alerta">Rebanho dentro do esperado</strong>
+    <span id="alertaDesc">Monitoramento automático</span>
+  </div>
+</div>
+
+<!-- TABELA -->
+<h3>📋 Detalhamento</h3>
+<table>
+<thead>
+<tr>
+  <th class="nome">Nome</th>
+  <th>Espécie</th>
+  <th>Sexo</th>
+  <th class="idade">Idade</th>
+  <th>Status</th>
+</tr>
+</thead>
+<tbody id="tbody"></tbody>
+</table>
+
+</div>
+
+<script>
+fetch("menu.html").then(r=>r.text()).then(h=>menu.innerHTML=h);
+
+firebase.initializeApp({
+  apiKey:"AIzaSyCW-CuFDrOLO-dteckl_GrPTocmyS-IrzY",
+  authDomain:"sitio-corrego-do-pinhal.firebaseapp.com",
+  projectId:"sitio-corrego-do-pinhal"
+});
+const db=firebase.firestore();
+
+let ANIMAIS=[];
+
+function calcularIdade(data){
+  if(!data) return "—";
+
+  let nascimento;
+  if(data.seconds){
+    nascimento = new Date(data.seconds * 1000);
+  }else if(typeof data === "string"){
+    const [y,m,d] = data.split("-");
+    nascimento = new Date(y,m-1,d);
+  }else if(data instanceof Date){
+    nascimento = data;
+  }
+
+  if(!nascimento || isNaN(nascimento)) return "—";
+
+  const hoje = new Date();
+  let anos = hoje.getFullYear() - nascimento.getFullYear();
+  let meses = hoje.getMonth() - nascimento.getMonth();
+
+  if(meses < 0){
+    anos--;
+    meses += 12;
+  }
+
+  return `${anos}a ${meses}m`;
+}
+
+async function load(){
+  ANIMAIS=(await db.collection("animais").get()).docs.map(d=>d.data());
+
+  const especies=["Todas",...new Set(ANIMAIS.map(a=>a.especie).filter(Boolean))];
+  especie.innerHTML=especies.map(e=>`<option>${e}</option>`).join("");
+  especie.onchange=render;
+
+  render();
+}
+
+function render(){
+  const esp=especie.value;
+  const dados=esp==="Todas"?ANIMAIS:ANIMAIS.filter(a=>a.especie===esp);
+
+  const ativos=dados.filter(a=>a.status==="Ativo");
+  const vendidos=dados.filter(a=>["Vendido","Doado"].includes(a.status));
+  const falecidos=dados.filter(a=>a.status==="Falecido");
+
+  const machos=dados.filter(a=>a.sexo==="M");
+  const femeas=dados.filter(a=>a.sexo==="F");
+
+  const machosAtivos=machos.filter(a=>a.status==="Ativo");
+  const femeasAtivas=femeas.filter(a=>a.status==="Ativo");
+
+  const jovens=dados.filter(a=>{
+    const i=calcularIdade(a.data_nascimento);
+    return i!=="—" && parseInt(i)<2;
+  });
+  const adultos=dados.filter(a=>{
+    const i=calcularIdade(a.data_nascimento);
+    return i!=="—" && parseInt(i)>=2;
+  });
+
+  cTotal.innerText=dados.length;
+  cAtivos.innerText=ativos.length;
+  cVendidos.innerText=vendidos.length;
+  cFalecidos.innerText=falecidos.length;
+
+  cMachos.innerText=machos.length;
+  cFemeas.innerText=femeas.length;
+  cJovens.innerText=jovens.length;
+  cAdultos.innerText=adultos.length;
+  cMachosAtivos.innerText=machosAtivos.length;
+  cFemeasAtivas.innerText=femeasAtivas.length;
+
+  let texto="Rebanho dentro do esperado";
+  let desc="Monitoramento automático";
+  let classe="alerta";
+
+  if(falecidos.length>0){
+    texto="Atenção: há registros de falecimento";
+    desc="Verifique causas e histórico sanitário";
+    classe="negativo";
+  }else if(jovens.length<adultos.length*0.2){
+    texto="Alerta: pouca reposição";
+    desc="Rebanho envelhecendo";
+    classe="alerta";
+  }
+
+  alerta.innerText=texto;
+  alertaDesc.innerText=desc;
+  cardAlerta.className="card "+classe;
+
+  tbody.innerHTML="";
+  dados.forEach(a=>{
+    tbody.innerHTML+=`
+      <tr>
+        <td class="nome">${a.nome||"-"}</td>
+        <td>${a.especie||"-"}</td>
+        <td>${a.sexo||"-"}</td>
+        <td class="idade">${calcularIdade(a.data_nascimento)}</td>
+        <td>${a.status||"-"}</td>
+      </tr>`;
+  });
+}
+
+load();
+</script>
+
+</body>
+</html>
