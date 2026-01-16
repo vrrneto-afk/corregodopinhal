@@ -1,13 +1,12 @@
-// auth-adm.js — UTILIDADES ADM (SEM GUARD)
+// auth-adm.js — utilidades administrativas
 
 (function () {
 
   const auth = firebase.auth();
 
-  // Logout global
   window.logout = function () {
     auth.signOut().then(() => {
-      window.location.replace("login.html");
+      window.location.replace("/login/login.html");
     });
   };
 
