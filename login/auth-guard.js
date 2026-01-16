@@ -1,93 +1,78 @@
 // auth-guard.js
-// Guard global de autenticação e vínculo com config/usuarios
+// Guardião global de autenticação e vínculo com Firestore
 
 (function () {
 
-  if (!firebase.apps.length) {
-    firebase.initializeApp({
-      apiKey: "AIzaSyCW-CuFDrOLO-dteckl_GrPTocmyS-IrzY",
-      authDomain: "sitio-corrego-do-pinhal.firebaseapp.com",
-      projectId: "sitio-corrego-do-pinhal"
-    });
-  }
-
-  const auth = firebase.auth();
-  const db = firebase.firestore();
-
-  auth.onAuthStateChanged(async (user) => {
-    if (!user) {
-      window.location.replace("/login/login.html");
-      return;
+  // Aguarda o Firebase existir
+  const aguardarFirebase = setInterval(() => {
+    if (window.firebase && firebase.auth && firebase.firestore) {
+      clearInterval(aguardarFirebase);
+      iniciarAuth();
     }
+  }, 50);
 
-    try {
+  function iniciarAuth(){
+
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+
+    auth.onAuthStateChanged(async (user) => {
+
+      // ❌ NÃO LOGADO → SEMPRE LOGIN
+      if (!user) {
+        if (!location.pathname.includes("/login/")) {
+          location.replace("../login/login.html");
+        }
+        return;
+      }
+
       const uid = user.uid;
       const email = user.email || "";
 
-      const usuariosRef = db.collection("config").doc("usuarios");
-      const usuariosSnap = await usuariosRef.get();
+      // 🔹 COLEÇÃO PADRÃO
+      const ref = db.collection("config").doc("usuarios");
+      const snap = await ref.get();
 
-      let lista = usuariosSnap.exists ? (usuariosSnap.data().lista || []) : [];
-
-      // 🔎 procura por uid
-      let usuario = lista.find(u => u.uid === uid);
-
-      // 🔎 fallback: procura por email (usuários antigos)
-      if (!usuario && email) {
-        usuario = lista.find(u => u.email === email);
-
-        if (usuario) {
-          // preenche uid automaticamente
-          usuario.uid = uid;
-          await usuariosRef.set({ lista }, { merge: true });
-        }
+      let lista = [];
+      if (snap.exists) {
+        lista = snap.data().lista || [];
       }
 
-      // 🟡 primeiro login → cria INATIVO
+      let usuario = lista.find(u => u.uid === uid);
+
+      // 🆕 PRIMEIRO LOGIN → CRIA PERFIL
       if (!usuario) {
         usuario = {
           uid,
-          nome: user.displayName || email.split("@")[0] || "Usuário",
+          nome: user.displayName || email.split("@")[0],
           email,
           grupo: "leitor",
           ativo: false,
           criado_em: firebase.firestore.FieldValue.serverTimestamp()
         };
-
         lista.push(usuario);
-        await usuariosRef.set({ lista }, { merge: true });
+        await ref.set({ lista }, { merge: true });
 
-        alert(
-          "Seu acesso foi registrado, mas ainda não foi liberado.\n" +
-          "Aguarde o administrador."
-        );
-
-        await auth.signOut();
-        window.location.replace("/login/login.html");
+        alert("Seu acesso foi registrado. Aguarde liberação.");
         return;
       }
 
-      // 🚫 usuário inativo
+      // 🚫 BLOQUEADO
       if (usuario.ativo !== true) {
-        alert("Acesso bloqueado. Usuário desativado.");
+        alert("Usuário desativado.");
         await auth.signOut();
-        window.location.replace("/login/login.html");
+        location.replace("../login/login.html");
         return;
       }
 
-      // ✅ usuário válido
-      console.log("Usuário autenticado:", usuario.nome, usuario.grupo);
-      // Se está na tela de login, redireciona para o app
-      if (window.location.pathname.includes("/login/")) {
-      window.location.replace("../app/index.html");
-    }
+      // ✅ LOGADO + ATIVO
+      window.USUARIO_ATUAL = usuario;
 
-
-    } catch (e) {
-      console.error("Erro no auth-guard:", e);
-      await auth.signOut();
-      window.location.replace("/login/login.html");
-    }
-  });
+      // 🔁 SE ESTIVER NO LOGIN → ENTRA NO APP
+      if (location.pathname.includes("/login/")) {
+        location.replace("../app/index.html");
+      }
+    });
+  }
 
 })();
