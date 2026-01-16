@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Configuração – Espécies</title>
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+<link rel="stylesheet" href="menu-adm.css">
+<link rel="stylesheet" href="config.css">
+
+<style>
+.check-row{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  margin-top:12px;
+  font-weight:600;
+}
+.check-row input{margin:0;}
+</style>
+</head>
+
+<body>
+
+<div id="app" class="hidden">
+
+<header>⚙️ Configurações</header>
+<div id="menu-adm"></div>
+
+<div class="container">
+
+<h2>Configuração – Espécies</h2>
+
+<div class="cards-grid" id="lista-especies"></div>
+
+<div id="editor" class="hidden">
+<fieldset>
+
+<label>Nome da espécie</label>
+<input type="text" id="esp_id">
+
+<label>Ícone da espécie (emoji)</label>
+<input type="text" id="esp_icone" placeholder="Ex: 🐄 🐓 🐶">
+
+<div class="check-row">
+  <input type="checkbox" id="esp_ativo" checked>
+  <label for="esp_ativo">Espécie ativa</label>
+</div>
+
+<div class="check-row">
+  <input type="checkbox" id="possui_gestacao">
+  <label for="possui_gestacao">Possui gestação</label>
+</div>
+
+<div class="check-row">
+  <input type="checkbox" id="possui_incubacao">
+  <label for="possui_incubacao">Possui incubação</label>
+</div>
+
+<div id="campo_gestacao" class="hidden">
+  <label>Gestação (meses)</label>
+  <input type="number" id="gestacao_meses" min="0">
+</div>
+
+<div id="campo_incubacao" class="hidden">
+  <label>Incubação (dias)</label>
+  <input type="number" id="incubacao_dias" min="0">
+</div>
+
+</fieldset>
+
+<button class="salvar" onclick="salvarEspecie()">💾 Salvar</button>
+
+<button class="voltar" id="btnExcluir" onclick="excluirEspecie()" style="background:#b03a2e;color:#fff">
+🗑 Excluir espécie
+</button>
+
+<button class="voltar" onclick="cancelarEdicao()">❌ Cancelar</button>
+</div>
+
+<button class="voltar" onclick="location.href='config.html'">
+⬅ Voltar para Configurações
+</button>
+
+</div>
+</div>
+
+<script>
+fetch("menu-adm.html")
+.then(r=>r.text())
+.then(html=>{
+  document.getElementById("menu-adm").innerHTML = html;
+});
+
+firebase.initializeApp({
+  apiKey:"AIzaSyCW-CuFDrOLO-dteckl_GrPTocmyS-IrzY",
+  authDomain:"sitio-corrego-do-pinhal.firebaseapp.com",
+  projectId:"sitio-corrego-do-pinhal"
+});
+
+const auth = firebase.auth();
+const db   = firebase.firestore();
+
+let especies = [];
+let indiceEditando = null;
+
+auth.onAuthStateChanged(user=>{
+  if(user){
+    document.body.style.display="block";
+    document.getElementById("app").classList.remove("hidden");
+    carregar();
+  }
+});
+
+async function carregar(){
+  const snap = await db.collection("config").doc("especies").get();
+  if(!snap.exists) return;
+  especies = snap.data().lista || [];
+  renderizarCards();
+}
+
+function renderizarCards(){
+  const area = document.getElementById("lista-especies");
+  area.innerHTML = "";
+
+  especies.forEach((e,i)=>{
+    const btn = document.createElement("button");
+    btn.className="config-card";
+    btn.onclick=()=>editarEspecie(i);
+
+    if(e.ativo===false) btn.style.opacity="0.5";
+
+    const icone = e.icone || "🐾";
+    let desc="";
+    if(e.possui_gestacao) desc=`Gestação: ${e.gestacao_meses} meses`;
+    if(e.possui_incubacao) desc=`Incubação: ${e.incubacao_dias} dias`;
+
+    btn.innerHTML = `<strong>${icone} ${e.id}${e.ativo===false?" (Inativa)":""}</strong><span>${desc}</span>`;
+    area.appendChild(btn);
+  });
+
+  const novo = document.createElement("button");
+  novo.className="config-card";
+  novo.innerHTML="➕ Nova espécie";
+  novo.onclick=()=>novaEspecie();
+  area.appendChild(novo);
+}
+
+function novaEspecie(){
+  indiceEditando=null;
+  limparFormulario();
+  document.getElementById("btnExcluir").style.display="none";
+  document.getElementById("editor").classList.remove("hidden");
+}
+
+function editarEspecie(i){
+  indiceEditando=i;
+  const e = especies[i];
+
+  document.getElementById("esp_id").value = e.id || "";
+  document.getElementById("esp_icone").value = e.icone || "";
+  document.getElementById("esp_ativo").checked = e.ativo !== false;
+  document.getElementById("possui_gestacao").checked = e.possui_gestacao === true;
+  document.getElementById("possui_incubacao").checked = e.possui_incubacao === true;
+  document.getElementById("gestacao_meses").value = e.gestacao_meses ?? "";
+  document.getElementById("incubacao_dias").value = e.incubacao_dias ?? "";
+
+  ajustarCampos();
+  document.getElementById("btnExcluir").style.display="block";
+  document.getElementById("editor").classList.remove("hidden");
+}
+
+function ajustarCampos(){
+  document.getElementById("campo_gestacao").classList.toggle(
+    "hidden", !document.getElementById("possui_gestacao").checked
+  );
+  document.getElementById("campo_incubacao").classList.toggle(
+    "hidden", !document.getElementById("possui_incubacao").checked
+  );
+}
+
+document.getElementById("possui_gestacao").onchange=()=>{
+  document.getElementById("possui_incubacao").checked=false;
+  ajustarCampos();
+};
+document.getElementById("possui_incubacao").onchange=()=>{
+  document.getElementById("possui_gestacao").checked=false;
+  ajustarCampos();
+};
+
+async function salvarEspecie(){
+  const obj = {
+    id: document.getElementById("esp_id").value.trim(),
+    icone: document.getElementById("esp_icone").value.trim(),
+    ativo: document.getElementById("esp_ativo").checked
+  };
+
+  if(!obj.id){ alert("Informe o nome da espécie."); return; }
+
+  if(document.getElementById("possui_gestacao").checked){
+    obj.possui_gestacao=true;
+    obj.gestacao_meses=Number(document.getElementById("gestacao_meses").value);
+  }
+
+  if(document.getElementById("possui_incubacao").checked){
+    obj.possui_incubacao=true;
+    obj.incubacao_dias=Number(document.getElementById("incubacao_dias").value);
+  }
+
+  if(indiceEditando===null) especies.push(obj);
+  else especies[indiceEditando]=obj;
+
+  await db.collection("config").doc("especies").update({lista:especies});
+  cancelarEdicao();
+  renderizarCards();
+}
+
+async function excluirEspecie(){
+  if(!confirm("Excluir definitivamente esta espécie?")) return;
+  especies.splice(indiceEditando,1);
+  await db.collection("config").doc("especies").update({lista:especies});
+  cancelarEdicao();
+  renderizarCards();
+}
+
+function cancelarEdicao(){
+  document.getElementById("editor").classList.add("hidden");
+  limparFormulario();
+}
+
+function limparFormulario(){
+  document.getElementById("esp_id").value="";
+  document.getElementById("esp_icone").value="";
+  document.getElementById("esp_ativo").checked=true;
+  document.getElementById("gestacao_meses").value="";
+  document.getElementById("incubacao_dias").value="";
+  document.getElementById("possui_gestacao").checked=false;
+  document.getElementById("possui_incubacao").checked=false;
+  ajustarCampos();
+}
+</script>
+
+<script src="auth-adm.js"></script>
+</body>
+</html>

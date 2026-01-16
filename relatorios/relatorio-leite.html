@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Relatório de Produção de Leite – Sítio Córrego do Pinhal</title>
+
+<link rel="stylesheet" href="menu.css">
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+<style>
+:root{
+  --marrom:#7b3f2a;
+  --bege:#f6efe7;
+  --verde:#2f6b2f;
+  --vermelho:#c0392b;
+  --amarelo:#e0a800;
+  --cinza:#666;
+  --logo:#D0B485;
+}
+
+*{box-sizing:border-box;font-family:Inter,system-ui,Arial}
+body{margin:0;background:var(--bege);color:#333}
+
+header{background:var(--logo);padding:15px;text-align:center}
+header img{max-width:260px;width:100%}
+
+.container{max-width:900px;margin:20px auto;padding:0 15px}
+h2,h3{color:var(--marrom)}
+
+.contexto{
+  background:#fff;
+  border-radius:14px;
+  padding:12px 14px;
+  margin-bottom:14px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  box-shadow:0 2px 6px rgba(0,0,0,.05)
+}
+.contexto span{color:var(--cinza);font-size:14px}
+
+.filtros{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+  margin-bottom:12px
+}
+select{
+  padding:12px;
+  font-size:15px;
+  border-radius:12px;
+  border:1.5px solid #ddd;
+  background:#f2f2f2
+}
+#periodo{margin-bottom:18px}
+
+.cards{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
+  gap:12px;
+  margin-bottom:20px
+}
+.card{
+  background:#fff;
+  padding:14px;
+  border-left:6px solid var(--verde);
+  border-radius:14px;
+  box-shadow:0 2px 6px rgba(0,0,0,.05)
+}
+.card.alerta{border-left-color:var(--amarelo)}
+.card strong{font-size:22px;display:block}
+.card span{font-size:14px;color:var(--cinza)}
+
+.pos{color:var(--verde)}
+.neg{color:var(--vermelho)}
+</style>
+</head>
+
+<body>
+
+<header><img src="logo.png"></header>
+<div id="menu"></div>
+
+<div class="container">
+
+<h2>🥛 Relatório de Produção de Leite</h2>
+
+<div class="contexto">
+  <strong id="ctxPeriodo"></strong>
+  <span id="ctxVisao"></span>
+</div>
+
+<div class="filtros">
+  <select id="mes"></select>
+  <select id="ano"></select>
+</div>
+
+<select id="periodo">
+  <option value="mensal">Mensal</option>
+  <option value="bimestral">Bimestral</option>
+  <option value="trimestral">Trimestral</option>
+  <option value="anual">Anual</option>
+</select>
+
+<!-- RESUMO -->
+<div class="cards">
+  <div class="card">
+    <strong id="cLitros">0 L</strong>
+    <span>Total produzido</span>
+  </div>
+
+  <div class="card">
+    <strong id="cReceita">R$ 0,00</strong>
+    <span>Receita do leite</span>
+  </div>
+
+  <div class="card">
+    <strong id="cMediaDia">0 L</strong>
+    <span>Média diária</span>
+  </div>
+
+  <div class="card">
+    <strong id="cMediaVaca">0 L</strong>
+    <span>Média por vaca</span>
+  </div>
+</div>
+
+<!-- COMPARATIVO -->
+<h3>🆚 Comparativo com período anterior</h3>
+<div class="cards">
+  <div class="card">
+    <strong id="cmpLitros">—</strong>
+    <span>Produção</span>
+  </div>
+  <div class="card">
+    <strong id="cmpReceita">—</strong>
+    <span>Receita</span>
+  </div>
+  <div class="card">
+    <strong id="cmpMedia">—</strong>
+    <span>Média diária</span>
+  </div>
+</div>
+
+<!-- ALERTA -->
+<h3>🚨 Alertas</h3>
+<div class="cards">
+  <div class="card alerta">
+    <strong id="alerta">—</strong>
+    <span>Monitoramento de produção</span>
+  </div>
+</div>
+
+</div>
+
+<script>
+fetch("menu.html").then(r=>r.text()).then(h=>{
+  menu.innerHTML=h;
+  document.querySelectorAll("#menu a").forEach(a=>{
+    if(a.getAttribute("href")==="relatorios.html") a.classList.add("ativo");
+  });
+});
+
+firebase.initializeApp({
+  apiKey:"AIzaSyCW-CuFDrOLO-dteckl_GrPTocmyS-IrzY",
+  authDomain:"sitio-corrego-do-pinhal.firebaseapp.com",
+  projectId:"sitio-corrego-do-pinhal"
+});
+const db=firebase.firestore();
+
+const meses=["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
+const moeda=v=>Number(v||0).toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
+
+let LEITE=[];
+
+async function load(){
+  LEITE=(await db.collection("producao_leite").get()).docs.map(d=>{
+    const r=d.data();
+    return {
+      data:new Date(r.ano,r.mes-1,r.dia),
+      litros:+r.litros_dia||0,
+      vacas:+r.vacas_produzindo||0,
+      preco:+r.preco_litro||0,
+      receita:+r.valor_dia||0
+    };
+  });
+
+  mes.innerHTML=meses.map((m,i)=>`<option value="${i+1}">${m}</option>`).join("");
+  const anos=[...new Set(LEITE.map(l=>l.data.getFullYear()))].sort();
+  ano.innerHTML=anos.map(a=>`<option>${a}</option>`).join("");
+
+  mes.value=new Date().getMonth()+1;
+  ano.value=Math.max(...anos);
+
+  mes.onchange=render;
+  ano.onchange=render;
+  periodo.onchange=render;
+
+  render();
+}
+
+function render(){
+  const m = +mes.value;
+  const a = +ano.value;
+  const p = periodo.value;
+
+  const mesesBack = {
+    mensal: 1,
+    bimestral: 2,
+    trimestral: 3,
+    anual: 12
+  }[p];
+
+  ctxPeriodo.innerText = `${meses[m-1]} / ${a}`;
+  ctxVisao.innerText = `📊 Visão: ${periodo.options[periodo.selectedIndex].text}`;
+
+  const fim = a * 12 + m;
+  const inicio = fim - mesesBack + 1;
+
+  const dentroPeriodo = d => {
+    const chave = d.data.getFullYear() * 12 + (d.data.getMonth() + 1);
+    return chave >= inicio && chave <= fim;
+  };
+
+  const atual = LEITE.filter(l => dentroPeriodo(l));
+  const anterior = LEITE.filter(l => {
+    const chave = l.data.getFullYear() * 12 + (l.data.getMonth() + 1);
+    return chave >= (inicio - mesesBack) && chave <= (fim - mesesBack);
+  });
+
+  /* ===== ATUAL ===== */
+  const litrosA = atual.reduce((s,l)=>s+l.litros,0);
+  const receitaA = atual.reduce((s,l)=>s+l.receita,0);
+  const diasA = atual.length || 1;
+  const vacasA = atual.reduce((s,l)=>s+l.vacas,0) / diasA || 0;
+
+  /* ===== ANTERIOR ===== */
+  const litrosP = anterior.reduce((s,l)=>s+l.litros,0);
+  const receitaP = anterior.reduce((s,l)=>s+l.receita,0);
+  const diasP = anterior.length || 1;
+
+  /* ===== CARDS ===== */
+  cLitros.innerText = `${litrosA} L`;
+  cReceita.innerText = moeda(receitaA);
+  cMediaDia.innerText = `${(litrosA/diasA).toFixed(1)} L`;
+  cMediaVaca.innerText = vacasA ? `${(litrosA/vacasA).toFixed(1)} L` : "—";
+
+  /* ===== COMPARATIVO ===== */
+  cmpLitros.innerText = litrosP
+    ? `${litrosA >= litrosP ? "▲" : "▼"} ${Math.abs(litrosA - litrosP)} L`
+    : "—";
+
+  cmpReceita.innerText = receitaP
+    ? `${receitaA >= receitaP ? "▲" : "▼"} ${moeda(Math.abs(receitaA - receitaP))}`
+    : "—";
+
+  cmpMedia.innerText = litrosP
+    ? `${(litrosA/diasA).toFixed(1)} → ${(litrosP/diasP).toFixed(1)} L`
+    : "—";
+
+  /* ===== ALERTA ===== */
+  alerta.innerText =
+    litrosA === 0
+      ? "Sem produção no período"
+      : "Produção dentro do esperado";
+}
+
+load();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Configuração – Vacas</title>
+
+<!-- FIREBASE -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+<link rel="stylesheet" href="menu-adm.css">
+<link rel="stylesheet" href="config.css">
+
+<style>
+/* ✔️ CHECKBOX ALINHADO – PADRÃO DEFINITIVO */
+.label-check{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  font-weight:600;
+  margin-top:12px;
+}
+
+.label-check input{
+  margin:0;
+}
+
+.regra-card span{
+  font-size:13px;
+  font-weight:500;
+}
+</style>
+</head>
+
+<body>
+
+<div id="app" class="hidden">
+
+<header>⚙️ Configurações</header>
+<div id="menu-adm"></div>
+
+<div class="container">
+
+<h2>Configuração – Vacas</h2>
+
+<!-- PARÂMETROS GERAIS -->
+<fieldset>
+  <label>Gestação (meses)</label>
+  <input type="number" id="gestacao_meses" min="0">
+
+  <label>Idade mínima para prenhez (meses)</label>
+  <input type="number" id="idade_minima_meses" min="0">
+</fieldset>
+
+<!-- REGRAS -->
+<h3 style="margin-top:18px;color:var(--marrom)">Regras de Prenhez</h3>
+<div class="cards-grid" id="lista-regras"></div>
+
+<!-- EDITOR -->
+<div id="editor" class="hidden">
+<fieldset>
+
+  <label>Classe da regra</label>
+  <select id="classe">
+    <option value="ok">OK</option>
+    <option value="atencao">Atenção</option>
+    <option value="alerta">Alerta</option>
+    <option value="urgente">Urgente</option>
+  </select>
+
+  <label>Dias mínimos antes do parto</label>
+  <input type="number" id="dias_min" min="0">
+
+  <label>Mensagem (pode usar emoji)</label>
+  <input type="text" id="mensagem">
+
+  <label class="label-check">
+    <input type="checkbox" id="ativa">
+    Regra ativa
+  </label>
+
+</fieldset>
+
+<button class="salvar" onclick="salvarRegra()">💾 Salvar regra</button>
+
+<button class="voltar hidden" id="btn-excluir" onclick="excluirRegra()">
+🗑️ Excluir regra
+</button>
+
+<button class="voltar" onclick="cancelar()">❌ Cancelar</button>
+</div>
+
+<button class="voltar" onclick="location.href='config.html'">
+⬅ Voltar para Configurações
+</button>
+
+</div>
+</div>
+
+<script>
+/* MENU */
+fetch("menu-adm.html")
+.then(r=>r.text())
+.then(html=>{
+  document.getElementById("menu-adm").innerHTML = html;
+  document.querySelectorAll(".menu-link").forEach(a=>{
+    if(a.getAttribute("href")==="config.html") a.classList.add("ativo");
+  });
+});
+
+/* FIREBASE */
+firebase.initializeApp({
+  apiKey:"AIzaSyCW-CuFDrOLO-dteckl_GrPTocmyS-IrzY",
+  authDomain:"sitio-corrego-do-pinhal.firebaseapp.com",
+  projectId:"sitio-corrego-do-pinhal"
+});
+
+const auth = firebase.auth();
+const db   = firebase.firestore();
+
+let regras = [];
+let editando = null;
+
+const lista_regras = document.getElementById("lista-regras");
+const btnExcluir   = document.getElementById("btn-excluir");
+
+/* AUTH */
+auth.onAuthStateChanged(u=>{
+  if(u){
+    document.body.style.display="block";
+    document.getElementById("app").classList.remove("hidden");
+    carregar();
+  }
+});
+
+/* LOAD */
+async function carregar(){
+  const snap = await db.collection("config").doc("vacas").get();
+  if(!snap.exists) return;
+
+  const d = snap.data();
+  gestacao_meses.value     = d.gestacao_meses ?? "";
+  idade_minima_meses.value = d.idade_minima_meses ?? "";
+  regras = d.prenhez_regras || [];
+  renderizar();
+}
+
+/* RENDER */
+function renderizar(){
+  lista_regras.innerHTML="";
+
+  regras.forEach((r,i)=>{
+    if(r.ativa === false) return;
+
+    const b = document.createElement("button");
+    b.className="config-card regra-card";
+    b.onclick=()=>editar(i);
+
+    b.innerHTML=`
+      <strong>${r.classe.toUpperCase()}</strong>
+      <span>≥ ${r.dias_min} dias</span>
+      <span>${r.mensagem || ""}</span>
+    `;
+    lista_regras.appendChild(b);
+  });
+
+  const novo = document.createElement("button");
+  novo.className="config-card";
+  novo.innerHTML="➕ Nova regra";
+  novo.onclick=nova;
+  lista_regras.appendChild(novo);
+}
+
+/* EDITAR / NOVA */
+function nova(){
+  editando = null;
+  limpar();
+  btnExcluir.classList.add("hidden");
+  editor.classList.remove("hidden");
+}
+
+function editar(i){
+  editando = i;
+  const r = regras[i];
+
+  classe.value   = r.classe;
+  dias_min.value = r.dias_min;
+  mensagem.value = r.mensagem;
+  ativa.checked  = r.ativa !== false;
+
+  btnExcluir.classList.remove("hidden");
+  editor.classList.remove("hidden");
+}
+
+/* SALVAR */
+async function salvarRegra(){
+  const obj = {
+    classe: classe.value,
+    dias_min: Number(dias_min.value),
+    mensagem: mensagem.value.trim(),
+    ativa: ativa.checked
+  };
+
+  if(isNaN(obj.dias_min)){
+    alert("Informe dias válidos.");
+    return;
+  }
+
+  if(editando === null) regras.push(obj);
+  else regras[editando] = obj;
+
+  await salvarFirestore();
+  alert("Regra salva com sucesso.");
+  cancelar();
+  renderizar();
+}
+
+/* EXCLUIR */
+async function excluirRegra(){
+  if(editando === null) return;
+  if(!confirm("Deseja excluir esta regra?")) return;
+
+  regras.splice(editando,1);
+  await salvarFirestore();
+  alert("Regra excluída com sucesso.");
+  cancelar();
+  renderizar();
+}
+
+async function salvarFirestore(){
+  await db.collection("config").doc("vacas").update({
+    gestacao_meses: Number(gestacao_meses.value),
+    idade_minima_meses: Number(idade_minima_meses.value),
+    prenhez_regras: regras
+  });
+}
+
+/* CANCELAR */
+function cancelar(){
+  editor.classList.add("hidden");
+  limpar();
+}
+
+function limpar(){
+  classe.value="ok";
+  dias_min.value="";
+  mensagem.value="";
+  ativa.checked=true;
+}
+</script>
+
+<script src="auth-adm.js"></script>
+</body>
+</html>

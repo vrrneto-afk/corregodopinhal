@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Animal – Sítio Córrego do Pinhal</title>
+
+<style>
+:root{
+  --marrom:#7b3f2a;
+  --bege:#f6efe7;
+  --verde:#2f6b2f;
+  --amarelo:#e0a800;
+  --laranja:#e67e22;
+  --cinza:#666;
+  --cinza-escuro:#555;
+  --logo:#D0B485;
+}
+
+*{
+  box-sizing:border-box;
+  font-family:'Inter',system-ui,-apple-system,Arial,Helvetica,sans-serif;
+}
+
+body{
+  margin:0;
+  background:var(--bege);
+  color:#333;
+}
+
+/* HEADER */
+header{
+  background:var(--logo);
+  padding:15px 10px;
+  text-align:center;
+}
+header img{
+  max-width:260px;
+  width:100%;
+}
+
+/* MENU */
+nav{
+  background:var(--marrom);
+  display:flex;
+  flex-wrap:wrap;
+  justify-content:center;
+  gap:4px;
+}
+nav a{
+  color:#fff;
+  text-decoration:none;
+  font-weight:600;
+  font-size:15px;
+  padding:12px 14px;
+  border-radius:10px;
+  display:flex;
+  align-items:center;
+  gap:6px;
+  opacity:.85;
+  position:relative;
+  transition:.2s;
+}
+nav a span{font-size:18px}
+nav a:hover{background:rgba(255,255,255,.12);opacity:1}
+nav a.ativo{
+  background:rgba(255,255,255,.18);
+  font-weight:800;
+  opacity:1;
+}
+nav a.ativo::after{
+  content:"";
+  position:absolute;
+  bottom:4px;
+  left:15%;
+  width:70%;
+  height:3px;
+  background:#fff;
+  border-radius:10px;
+}
+
+/* CONTAINER */
+.container{
+  max-width:900px;
+  margin:20px auto;
+  padding:0 15px;
+}
+
+h2,h3{
+  color:var(--marrom);
+  margin:22px 0 10px;
+}
+
+/* STATUS */
+.badge{
+  display:inline-block;
+  margin-bottom:10px;
+  padding:4px 12px;
+  border-radius:14px;
+  font-size:13px;
+  font-weight:800;
+  color:#fff;
+}
+.badge.ativo{background:var(--verde)}
+.badge.inativo{background:var(--amarelo)}
+.badge.vendido{background:var(--laranja)}
+.badge.falecido{background:var(--cinza-escuro)}
+
+/* FOTO */
+.foto{
+  display:flex;
+  justify-content:center;
+  margin:16px 0 22px;
+}
+.foto img{
+  max-width:100%;
+  max-height:340px;
+  border-radius:14px;
+  box-shadow:0 2px 8px rgba(0,0,0,.2);
+}
+
+/* CARD */
+.card{
+  background:#fff;
+  padding:15px;
+  margin-bottom:16px;
+  border-left:6px solid #ddd;
+  border-radius:12px;
+  box-shadow:0 2px 6px rgba(0,0,0,.06);
+}
+
+.card.ativo{border-color:var(--verde)}
+.card.inativo{border-color:var(--amarelo)}
+.card.vendido{border-color:var(--laranja)}
+.card.falecido{border-color:var(--cinza-escuro)}
+
+.card.vacina-ok{border-color:var(--verde)}
+.card.vacina-pendente{border-color:var(--amarelo)}
+
+.card p{
+  margin:6px 0;
+  font-size:14px;
+  color:var(--cinza);
+}
+
+/* AJUSTE FINO – SOMENTE DADOS DO ANIMAL */
+.card.dados-animal p{
+  margin:3px 0;
+}
+
+/* GRID DADOS */
+.grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+  gap:8px;
+}
+
+/* VOLTAR */
+.voltar{
+  text-align:center;
+  margin:30px 0 40px;
+}
+.voltar button{
+  padding:12px 26px;
+  font-size:16px;
+  background:var(--marrom);
+  color:#fff;
+  border:none;
+  border-radius:8px;
+  cursor:pointer;
+}
+</style>
+</head>
+
+<body>
+
+<header>
+  <img src="logo.png">
+</header>
+
+<div id="menu"></div>
+
+<div class="container" id="conteudo">
+  <p style="color:#666">Carregando animal...</p>
+</div>
+
+<div class="voltar">
+  <button onclick="location.href='animais.html'">⬅️ Voltar para Animais</button>
+</div>
+
+<script>
+fetch("menu.html")
+  .then(r=>r.text())
+  .then(html=>{
+    document.getElementById("menu").innerHTML=html;
+    document.querySelectorAll("#menu a").forEach(a=>{
+      if(a.getAttribute("href")==="animais.html"){
+        a.classList.add("ativo");
+      }
+    });
+  });
+</script>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
+import { getFirestore, collection, getDocs, query, where } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
+
+const app = initializeApp({
+  apiKey:"AIzaSyCW-CuFDrOLO-dteckl_GrPTocmyS-IrzY",
+  authDomain:"sitio-corrego-do-pinhal.firebaseapp.com",
+  projectId:"sitio-corrego-do-pinhal"
+});
+const db = getFirestore(app);
+
+const id = new URLSearchParams(location.search).get("id");
+const c = document.getElementById("conteudo");
+
+const fmt = v => v ? new Date(v+"T00:00:00").toLocaleDateString("pt-BR") : "-";
+const cls = s => (s||"").toLowerCase();
+
+function calcIdade(data){
+  if(!data) return "-";
+  const n = new Date(data+"T00:00:00");
+  const h = new Date();
+
+  let anos = h.getFullYear() - n.getFullYear();
+  let meses = h.getMonth() - n.getMonth();
+  let dias = h.getDate() - n.getDate();
+
+  if(dias < 0){
+    meses--;
+    dias += 30;
+  }
+  if(meses < 0){
+    anos--;
+    meses += 12;
+  }
+  return `${anos} anos, ${meses} meses e ${dias} dias`;
+}
+
+async function load(){
+  const snapA = await getDocs(collection(db,"animais"));
+  const A = snapA.docs.map(d=>({_id:d.id,...d.data()}));
+  const a = A.find(x=>x._id===id);
+
+  if(!a){
+    c.innerHTML="<div class='card'>Animal não encontrado.</div>";
+    return;
+  }
+
+  const mae = A.find(x=>x._id===a.id_mae);
+  const pai = A.find(x=>x._id===a.id_pai);
+
+  const vacSnap = await getDocs(query(collection(db,"vacinas"), where("id_animal","==",id)));
+  const vacinas = vacSnap.docs.map(d=>d.data());
+
+  const evSnap = await getDocs(query(collection(db,"eventos"), where("id_animal","==",id)));
+  const eventos = evSnap.docs.map(d=>d.data());
+
+  c.innerHTML = `
+    <h2>${a.nome.toUpperCase()}</h2>
+    <span class="badge ${cls(a.status)}">${a.status||"-"}</span>
+
+    <div class="foto">
+      <img src="${a.foto_url||'https://via.placeholder.com/600x400'}">
+    </div>
+
+    <div class="card dados-animal ${cls(a.status)}">
+      <div class="grid">
+        <p><strong>Espécie:</strong> ${a.especie||"-"}</p>
+        <p><strong>Sexo:</strong> ${a.sexo==="M"?"Macho":"Fêmea"}</p>
+        <p><strong>Raça:</strong> ${a.raca||"-"}</p>
+        <p><strong>Nascimento:</strong> ${fmt(a.data_nascimento)}</p>
+        <p><strong>Idade:</strong> ${calcIdade(a.data_nascimento)}</p>
+        <p><strong>Mãe:</strong> ${mae?mae.nome:"-"}</p>
+        <p><strong>Pai:</strong> ${pai?pai.nome:"-"}</p>
+      </div>
+      <p><strong>Observações:</strong> ${a.observacoes||"-"}</p>
+    </div>
+
+    <h3>💉 Vacinas</h3>
+    ${
+      vacinas.length
+        ? vacinas.map(v=>`
+          <div class="card ${v.status==="Finalizada"?"vacina-ok":"vacina-pendente"}">
+            <p><strong>${v.nome_vacina||"-"}</strong></p>
+            <p>Aplicada em: ${fmt(v.data_aplicacao)}</p>
+            <p>Próxima dose: ${fmt(v.data_prox)}</p>
+            <p>Status: ${v.status||"-"}</p>
+            <p>Obs: ${v.observacoes||"-"}</p>
+          </div>
+        `).join("")
+        : "<div class='card'>💉 Nenhuma vacina registrada.</div>"
+    }
+
+    <h3>📜 Histórico do Animal</h3>
+    ${
+      eventos.length
+        ? eventos
+            .sort((a,b)=>new Date(b.data_evento)-new Date(a.data_evento))
+            .map(e=>{
+              let nomeRel = "";
+              if(e.tipo_evento==="cria" && e.id_cria){
+                const c = A.find(x=>x._id===e.id_cria);
+                nomeRel = c ? ` – ${c.nome}` : "";
+              }
+              if(e.tipo_evento==="cobertura" && e.id_relacionado){
+                const r = A.find(x=>x._id===e.id_relacionado);
+                nomeRel = r ? ` – ${r.nome}` : "";
+              }
+              return `
+                <div class="card">
+                  <p><strong>${e.tipo_evento.toUpperCase()}${nomeRel}</strong></p>
+                  <p>Data: ${fmt(e.data_evento)}</p>
+                </div>`;
+            }).join("")
+        : "<div class='card'>📜 Nenhum evento registrado.</div>"
+    }
+  `;
+}
+
+load();
+</script>
+
+</body>
+</html>
