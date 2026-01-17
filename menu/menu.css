@@ -1,10 +1,11 @@
-/* ===== MENU GLOBAL – PADRÃO ADM (APP IGUAL) ===== */
+/* ===== MENU GLOBAL – PADRÃO ÚNICO (APP + ADM) ===== */
 
 .menu-wrapper{
   position:relative;
   z-index:100;
 }
 
+/* NAV */
 .menu-adm{
   background:#7b3f2a;
   display:flex;
@@ -14,7 +15,8 @@
   padding:10px 8px;
 }
 
-.menu-adm a{
+/* LINKS */
+.menu-adm .menu-link{
   color:#fff;
   text-decoration:none;
   font-weight:600;
@@ -29,17 +31,23 @@
   transition:.2s;
 }
 
-.menu-adm a:hover{
+.menu-adm .menu-link span{
+  white-space:nowrap;
+}
+
+/* HOVER */
+.menu-adm .menu-link:hover{
   background:rgba(255,255,255,.15);
   opacity:1;
 }
 
-.menu-adm a.ativo{
+/* ATIVO */
+.menu-adm .menu-link.ativo{
   background:rgba(255,255,255,.25);
   font-weight:700;
 }
 
-.menu-adm a.ativo::after{
+.menu-adm .menu-link.ativo::after{
   content:"";
   position:absolute;
   bottom:3px;
@@ -50,6 +58,11 @@
   border-radius:10px;
 }
 
-.menu-adm a.sair{
+/* SAIR */
+.menu-adm .menu-link.sair{
   background:rgba(0,0,0,.35);
+}
+
+.menu-adm .menu-link.sair:hover{
+  background:rgba(0,0,0,.5);
 }
