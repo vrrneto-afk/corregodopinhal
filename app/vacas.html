@@ -8,6 +8,9 @@
 <link rel="manifest" href="../manifest.json">
 <meta name="theme-color" content="#7b3f2a">
 
+<!-- MENU GLOBAL (OBRIGATÓRIO) -->
+<link rel="stylesheet" href="../menu/menu.css">
+
 <!-- FIREBASE -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
@@ -22,13 +25,10 @@ firebase.initializeApp({
 
 <!-- IDENTIFICAÇÃO DA PÁGINA -->
 <script>
-  window.PERMISSAO_PAGINA = {
-    area: "app",
-    chave: "vacas"
-  };
+window.PERMISSAO_PAGINA = { area:"app", chave:"vacas" };
 </script>
 
-<!-- AUTH GUARD GLOBAL -->
+<!-- AUTH GUARD -->
 <script src="../login/auth-guard.js"></script>
 
 <style>
@@ -45,67 +45,16 @@ firebase.initializeApp({
   --logo:#D0B485;
 }
 
-*{
-  box-sizing:border-box;
-  font-family:'Inter',system-ui,-apple-system,Arial,Helvetica,sans-serif;
-}
-
-body{
-  margin:0;
-  background:var(--bege);
-  color:#333;
-}
+*{box-sizing:border-box;font-family:'Inter',system-ui,-apple-system,Arial}
+body{margin:0;background:var(--bege);color:#333}
 
 /* HEADER */
-header{
-  background:var(--logo);
-  padding:15px 10px;
-  text-align:center;
-}
-header img{
-  max-width:260px;
-  width:100%;
-}
-
-/* MENU */
-nav{
-  background:var(--marrom);
-  display:flex;
-  flex-wrap:wrap;
-  justify-content:center;
-  gap:4px;
-}
-nav a{
-  color:#fff;
-  text-decoration:none;
-  font-weight:600;
-  font-size:15px;
-  padding:12px 14px;
-  border-radius:10px;
-  display:flex;
-  align-items:center;
-  gap:6px;
-  opacity:.85;
-}
-nav a.ativo{
-  background:rgba(255,255,255,.18);
-  font-weight:800;
-}
+header{background:var(--logo);padding:15px;text-align:center}
+header img{max-width:260px;width:100%}
 
 /* CONTAINER */
-.container{
-  max-width:900px;
-  margin:20px auto;
-  padding:0 15px;
-}
-
-h2{
-  color:var(--marrom);
-  margin-bottom:12px;
-  display:flex;
-  align-items:center;
-  gap:8px;
-}
+.container{max-width:900px;margin:20px auto;padding:0 15px}
+h2{color:var(--marrom);margin-bottom:12px;display:flex;gap:8px}
 
 /* FILTRO */
 select{
@@ -135,29 +84,10 @@ select{
 .card.parida{border-color:var(--azul)}
 .card.vazia{border-color:var(--cinza-escuro)}
 
-.card strong{
-  font-size:17px;
-  font-weight:800;
-  display:block;
-  margin-bottom:6px;
-}
-
-.card p{
-  margin:4px 0;
-  font-size:14px;
-  color:var(--cinza);
-}
-
-.card .dias{
-  font-size:16px;
-  font-weight:800;
-  color:#333;
-}
-
-.card .msg{
-  font-weight:800;
-  margin-top:4px;
-}
+.card strong{font-size:17px;font-weight:800;display:block;margin-bottom:6px}
+.card p{margin:4px 0;font-size:14px;color:var(--cinza)}
+.card .dias{font-size:16px;font-weight:800}
+.card .msg{font-weight:800;margin-top:4px}
 
 /* BADGE */
 .badge{
@@ -173,12 +103,7 @@ select{
 .badge.parida{background:var(--azul)}
 .badge.vazia{background:var(--cinza-escuro)}
 
-.vazio{
-  text-align:center;
-  color:#777;
-  margin-top:30px;
-  font-style:italic;
-}
+.vazio{text-align:center;color:#777;margin-top:30px;font-style:italic}
 </style>
 </head>
 
@@ -203,6 +128,22 @@ select{
   <div id="lista"></div>
 </div>
 
+<script>
+const db = firebase.firestore();
+
+/* MENU DINÂMICO */
+fetch("../menu/menu.html")
+  .then(r=>r.text())
+  .then(html=>{
+    document.getElementById("menu").innerHTML = html;
+    document.querySelectorAll("#menu a").forEach(a=>{
+      if(a.getAttribute("href")==="../app/vacas.html"){
+        a.classList.add("ativo");
+      }
+    });
+  });
+
+/* === RESTANTE DO CÓDIGO ORIGINAL (SEM ALTERAÇÕES) === */
 <script>
 const db = firebase.firestore();
 
@@ -348,6 +289,8 @@ async function load(){
 
 load();
 </script>
+
+<script src="../login/logout.js"></script>
 
 </body>
 </html>
