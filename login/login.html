@@ -116,7 +116,10 @@ async function login(){
       document.getElementById("email").value,
       document.getElementById("senha").value
     );
-    // Redirecionamento é feito pelo auth-guard
+
+    // ✅ REDIRECIONAMENTO DIRETO E CONTROLADO
+    location.replace("../app/index.html");
+
   }catch(e){
     erro.innerText = "E-mail ou senha inválidos.";
     erro.style.display = "block";
