@@ -11,8 +11,9 @@
 <!-- MENU CSS GLOBAL -->
 <link rel="stylesheet" href="../menu/menu.css">
 
-<!-- FIREBASE -->
+<!-- FIREBASE (PADRÃO GLOBAL COMPLETO) -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
 <script>
@@ -23,10 +24,12 @@ firebase.initializeApp({
 });
 </script>
 
+<!-- IDENTIFICAÇÃO DA PÁGINA -->
 <script>
 window.PERMISSAO_PAGINA = { area:"app", chave:"animais" };
 </script>
 
+<!-- AUTH GUARD (SEMPRE DEPOIS DO FIREBASE COMPLETO) -->
 <script src="../login/auth-guard.js"></script>
 
 <style>
