@@ -1,7 +1,35 @@
 // auth-guard.js
-// Guardião global de autenticação + autorização por grupo (baseado em config/grupos)
+// Guardião global de autenticação + autorização por grupo
+// VERSÃO DEFINITIVA — BLOQUEIO IMEDIATO
 
 (function () {
+
+  // 🔒 BLOQUEIA A TELA IMEDIATAMENTE
+  const bloqueio = document.createElement("div");
+  bloqueio.style.position = "fixed";
+  bloqueio.style.top = 0;
+  bloqueio.style.left = 0;
+  bloqueio.style.width = "100vw";
+  bloqueio.style.height = "100vh";
+  bloqueio.style.background = "#f6efe7";
+  bloqueio.style.zIndex = 99999;
+  document.documentElement.appendChild(bloqueio);
+
+  function liberarTela() {
+    bloqueio.remove();
+  }
+
+  function redirecionarLogin() {
+    if (!location.pathname.includes("/login/")) {
+      location.replace("../login/login.html");
+    }
+  }
+
+  async function bloquear(msg) {
+    alert(msg);
+    try { await firebase.auth().signOut(); } catch (e) {}
+    redirecionarLogin();
+  }
 
   const esperarFirebase = setInterval(() => {
     if (window.firebase && firebase.auth && firebase.firestore) {
@@ -13,18 +41,24 @@
   function iniciar() {
 
     const auth = firebase.auth();
-    const db = firebase.firestore();
+    const db   = firebase.firestore();
+
+    // 🔐 VERIFICA IMEDIATA
+    const userAtual = auth.currentUser;
+    if (!userAtual) {
+      redirecionarLogin();
+      return;
+    }
 
     auth.onAuthStateChanged(async (user) => {
 
-      // ❌ NÃO LOGADO
       if (!user) {
         redirecionarLogin();
         return;
       }
 
       try {
-        // 🔹 BUSCA USUÁRIO
+        // 🔹 USUÁRIO
         const refUser = db.collection("usuarios").doc(user.uid);
         const snapUser = await refUser.get();
 
@@ -40,17 +74,14 @@
           return;
         }
 
-        // ✅ CAMPO CORRETO
         const grupoUsuario = dadosUsuario.papel;
-
         if (!grupoUsuario) {
           await bloquear("Grupo de usuário não definido.");
           return;
         }
 
-        // 🔹 BUSCA CONFIG DE GRUPOS
+        // 🔹 CONFIG GRUPOS
         const snapGrupos = await db.collection("config").doc("grupos").get();
-
         if (!snapGrupos.exists) {
           await bloquear("Configuração de grupos não encontrada.");
           return;
@@ -64,27 +95,20 @@
           return;
         }
 
-        // 🔐 VALIDA PERMISSÃO DA PÁGINA (SE DEFINIDA)
+        // 🔐 PERMISSÃO DA PÁGINA
         if (window.PERMISSAO_PAGINA) {
-
           const { area, chave } = window.PERMISSAO_PAGINA;
 
-          if (!area || !chave) {
-            console.warn("PERMISSAO_PAGINA mal definida.");
-          } else {
-            const permitido =
-              grupoConfig.permissoes &&
-              grupoConfig.permissoes[area] &&
-              grupoConfig.permissoes[area][chave] === true;
+          const permitido =
+            grupoConfig.permissoes?.[area]?.[chave] === true;
 
-            if (!permitido) {
-              await bloquear("Você não tem permissão para acessar esta página.");
-              return;
-            }
+          if (!permitido) {
+            await bloquear("Você não tem permissão para acessar esta página.");
+            return;
           }
         }
 
-        // ✅ OK — USUÁRIO AUTORIZADO
+        // ✅ USUÁRIO AUTORIZADO
         window.USUARIO_ATUAL = {
           uid: user.uid,
           email: user.email,
@@ -92,12 +116,15 @@
           dados: dadosUsuario
         };
 
-        // Atualiza último login (sem travar fluxo)
+        // Atualiza último login (sem travar)
         refUser.update({
           ultimo_login: firebase.firestore.FieldValue.serverTimestamp()
         }).catch(() => {});
 
-        // 🔁 SE ESTIVER NO LOGIN → INDEX
+        // 🔓 LIBERA A TELA
+        liberarTela();
+
+        // 🔁 LOGIN → INDEX
         if (location.pathname.includes("/login/")) {
           location.replace("../app/index.html");
         }
@@ -107,20 +134,6 @@
         await bloquear("Erro ao verificar permissões.");
       }
     });
-  }
-
-  function redirecionarLogin() {
-    if (!location.pathname.includes("/login/")) {
-      location.replace("../login/login.html");
-    }
-  }
-
-  async function bloquear(msg) {
-    alert(msg);
-    try {
-      await firebase.auth().signOut();
-    } catch (e) {}
-    location.replace("../login/login.html");
   }
 
 })();
