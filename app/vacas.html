@@ -8,7 +8,7 @@
 <link rel="manifest" href="../manifest.json">
 <meta name="theme-color" content="#7b3f2a">
 
-<!-- MENU GLOBAL (OBRIGATÓRIO) -->
+<!-- MENU GLOBAL -->
 <link rel="stylesheet" href="../menu/menu.css">
 
 <!-- FIREBASE -->
@@ -23,7 +23,7 @@ firebase.initializeApp({
 });
 </script>
 
-<!-- IDENTIFICAÇÃO DA PÁGINA -->
+<!-- PERMISSÃO -->
 <script>
 window.PERMISSAO_PAGINA = { area:"app", chave:"vacas" };
 </script>
@@ -48,15 +48,12 @@ window.PERMISSAO_PAGINA = { area:"app", chave:"vacas" };
 *{box-sizing:border-box;font-family:'Inter',system-ui,-apple-system,Arial}
 body{margin:0;background:var(--bege);color:#333}
 
-/* HEADER */
 header{background:var(--logo);padding:15px;text-align:center}
 header img{max-width:260px;width:100%}
 
-/* CONTAINER */
 .container{max-width:900px;margin:20px auto;padding:0 15px}
 h2{color:var(--marrom);margin-bottom:12px;display:flex;gap:8px}
 
-/* FILTRO */
 select{
   width:100%;
   padding:12px;
@@ -66,7 +63,6 @@ select{
   margin-bottom:20px;
 }
 
-/* CARD */
 .card{
   background:#fff;
   padding:15px;
@@ -89,7 +85,6 @@ select{
 .card .dias{font-size:16px;font-weight:800}
 .card .msg{font-weight:800;margin-top:4px}
 
-/* BADGE */
 .badge{
   display:inline-block;
   padding:4px 10px;
@@ -131,27 +126,11 @@ select{
 <script>
 const db = firebase.firestore();
 
-/* MENU DINÂMICO */
-fetch("../menu/menu.html")
-  .then(r=>r.text())
-  .then(html=>{
-    document.getElementById("menu").innerHTML = html;
-    document.querySelectorAll("#menu a").forEach(a=>{
-      if(a.getAttribute("href")==="../app/vacas.html"){
-        a.classList.add("ativo");
-      }
-    });
-  });
-
-/* === RESTANTE DO CÓDIGO ORIGINAL (SEM ALTERAÇÕES) === */
-<script>
-const db = firebase.firestore();
-
 /* MENU */
 fetch("../menu/menu.html")
   .then(r=>r.text())
   .then(html=>{
-    document.getElementById("menu").innerHTML=html;
+    document.getElementById("menu").innerHTML = html;
     document.querySelectorAll("#menu a").forEach(a=>{
       if(a.getAttribute("href")==="../app/vacas.html"){
         a.classList.add("ativo");
@@ -190,7 +169,6 @@ async function loadConfig(){
   CFG_VACAS = snap.data();
 }
 
-/* REGRA PRENHEZ (VINDO DO CONFIG) */
 function regraPrenhezConfig(dias){
   const regras = CFG_VACAS.prenhez_regras
     .filter(r=>r.ativa!==false && dias>=r.dias_min)
@@ -198,7 +176,6 @@ function regraPrenhezConfig(dias){
   return regras[0] || {classe:"ok",mensagem:""};
 }
 
-/* LOAD */
 async function load(){
   await loadConfig();
 
@@ -217,7 +194,7 @@ async function load(){
 
   const lista=document.getElementById("lista");
 
-  function render(filtro){
+  function render(f){
     lista.innerHTML="";
     let prenhas=[],paridas=[],vazias=[];
 
@@ -238,7 +215,7 @@ async function load(){
 
     prenhas.sort((a,b)=>a.prev-b.prev);
 
-    if(filtro==="todas"||filtro==="prenhas"){
+    if(f==="todas"||f==="prenhas"){
       prenhas.forEach(p=>{
         const dias=Math.ceil((p.prev-new Date())/86400000);
         const r=regraPrenhezConfig(dias);
@@ -254,7 +231,7 @@ async function load(){
       });
     }
 
-    if(filtro==="todas"||filtro==="paridas"){
+    if(f==="todas"||f==="paridas"){
       paridas.forEach(p=>{
         lista.innerHTML+=`
         <div class="card parida" onclick="abrirAnimal('${p.v._id}')">
@@ -266,7 +243,7 @@ async function load(){
       });
     }
 
-    if(filtro==="todas"||filtro==="vazias"){
+    if(f==="todas"||f==="vazias"){
       vazias.forEach(v=>{
         lista.innerHTML+=`
         <div class="card vazia" onclick="abrirAnimal('${v._id}')">
