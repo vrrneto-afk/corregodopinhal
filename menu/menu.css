@@ -1,4 +1,4 @@
-/* ===== MENU GLOBAL – PADRÃO ADM / APP ===== */
+/* ===== MENU GLOBAL – PADRÃO ADM (APP IGUAL) ===== */
 
 .menu-wrapper{
   position:relative;
@@ -10,47 +10,46 @@
   display:flex;
   flex-wrap:wrap;
   justify-content:center;
-  gap:8px;
-  padding:10px;
+  gap:6px;
+  padding:10px 8px;
 }
 
-/* LINKS */
-.menu-adm .menu-link{
+.menu-adm a{
+  color:#fff;
+  text-decoration:none;
+  font-weight:600;
+  font-size:14px;
+  padding:10px 12px;
+  border-radius:10px;
   display:flex;
   align-items:center;
   gap:6px;
-
-  padding:10px 14px;
-  border-radius:12px;
-
-  color:#fff;
-  text-decoration:none;
-  font-weight:700;
-  font-size:14px;
-
-  background:rgba(255,255,255,.12);
+  opacity:.9;
+  position:relative;
   transition:.2s;
 }
 
-.menu-adm .menu-link span{
-  white-space:nowrap;
+.menu-adm a:hover{
+  background:rgba(255,255,255,.15);
+  opacity:1;
 }
 
-/* HOVER */
-.menu-adm .menu-link:hover{
+.menu-adm a.ativo{
   background:rgba(255,255,255,.25);
+  font-weight:700;
 }
 
-/* ATIVO */
-.menu-adm .menu-link.ativo{
-  background:rgba(0,0,0,.25);
+.menu-adm a.ativo::after{
+  content:"";
+  position:absolute;
+  bottom:3px;
+  left:18%;
+  width:64%;
+  height:3px;
+  background:#fff;
+  border-radius:10px;
 }
 
-/* BOTÃO SAIR */
-.menu-adm .menu-link.sair{
-  background:#5a2b1e;
-}
-
-.menu-adm .menu-link.sair:hover{
-  background:#3e1c12;
+.menu-adm a.sair{
+  background:rgba(0,0,0,.35);
 }
