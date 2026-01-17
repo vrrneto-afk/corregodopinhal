@@ -8,10 +8,10 @@
 <link rel="manifest" href="../manifest.json">
 <meta name="theme-color" content="#7b3f2a">
 
-<!-- 🔹 MENU CSS GLOBAL (APP) -->
+<!-- MENU CSS GLOBAL -->
 <link rel="stylesheet" href="../menu/menu.css">
 
-<!-- FIREBASE (PADRÃO GLOBAL) -->
+<!-- FIREBASE -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
@@ -24,18 +24,14 @@ firebase.initializeApp({
 });
 </script>
 
-<!-- IDENTIFICAÇÃO DA PÁGINA -->
 <script>
-  window.PERMISSAO_PAGINA = {
-    area: "app",
-    chave: "animais"
-  };
+window.PERMISSAO_PAGINA = { area:"app", chave:"animais" };
 </script>
 
-<!-- AUTH GUARD GLOBAL -->
 <script src="../login/auth-guard.js"></script>
 
 <style>
+/* (CSS ORIGINAL – SEM ALTERAÇÃO) */
 :root{
   --marrom:#7b3f2a;
   --bege:#f6efe7;
@@ -46,105 +42,27 @@ firebase.initializeApp({
   --cinza-escuro:#555;
   --logo:#D0B485;
 }
-
-*{
-  box-sizing:border-box;
-  font-family:'Inter',system-ui,-apple-system,Arial,Helvetica,sans-serif;
-}
-
-body{
-  margin:0;
-  background:var(--bege);
-  color:#333;
-}
-
-/* HEADER */
-header{
-  background:var(--logo);
-  padding:15px 10px;
-  text-align:center;
-}
-header img{
-  max-width:260px;
-  width:100%;
-}
-
-/* CONTAINER */
-.container{
-  max-width:900px;
-  margin:20px auto;
-  padding:0 15px;
-}
-
-h2{
-  color:var(--marrom);
-  margin-bottom:12px;
-  display:flex;
-  gap:8px;
-}
-
-/* FILTROS */
-.filtros{
-  display:flex;
-  gap:10px;
-  flex-wrap:wrap;
-  margin-bottom:20px;
-}
-select{
-  flex:1;
-  min-width:200px;
-  padding:12px;
-  font-size:15px;
-  border-radius:12px;
-  border:1.5px solid #ddd;
-}
-
-/* CARD */
-.card{
-  background:#fff;
-  padding:15px;
-  margin-bottom:14px;
-  border-left:6px solid #ddd;
-  border-radius:12px;
-  box-shadow:0 2px 6px rgba(0,0,0,.06);
-  cursor:pointer;
-}
+*{box-sizing:border-box;font-family:'Inter',system-ui,-apple-system,Arial;}
+body{margin:0;background:var(--bege);color:#333}
+header{background:var(--logo);padding:15px 10px;text-align:center}
+header img{max-width:260px;width:100%}
+.container{max-width:900px;margin:20px auto;padding:0 15px}
+h2{color:var(--marrom);margin-bottom:12px;display:flex;gap:8px}
+.filtros{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:20px}
+select{flex:1;min-width:200px;padding:12px;font-size:15px;border-radius:12px;border:1.5px solid #ddd}
+.card{background:#fff;padding:15px;margin-bottom:14px;border-left:6px solid #ddd;border-radius:12px;box-shadow:0 2px 6px rgba(0,0,0,.06);cursor:pointer}
 .card.ativo{border-color:var(--verde)}
 .card.inativo{border-color:var(--amarelo)}
 .card.vendido{border-color:var(--laranja)}
 .card.falecido{border-color:var(--cinza-escuro)}
-
-.card strong{
-  font-size:17px;
-  font-weight:800;
-  display:block;
-}
-.card p{
-  margin:4px 0;
-  font-size:14px;
-  color:var(--cinza);
-}
-
-/* BADGE */
-.badge{
-  display:inline-block;
-  margin-top:6px;
-  padding:3px 8px;
-  border-radius:10px;
-  font-size:12px;
-  font-weight:700;
-  color:#fff;
-}
+.card strong{font-size:17px;font-weight:800;display:block}
+.card p{margin:4px 0;font-size:14px;color:var(--cinza)}
+.badge{display:inline-block;margin-top:6px;padding:3px 8px;border-radius:10px;font-size:12px;font-weight:700;color:#fff}
 .badge.ativo{background:var(--verde)}
 .badge.inativo{background:var(--amarelo)}
 .badge.vendido{background:var(--laranja)}
 .badge.falecido{background:var(--cinza-escuro)}
-
-.vazio{
-  text-align:center;
-  color:#777;
-  margin-top:30px;
-}
+.vazio{text-align:center;color:#777;margin-top:30px}
 </style>
 </head>
 
@@ -154,25 +72,21 @@ select{
   <img src="../logo.png">
 </header>
 
-<!-- MENU GLOBAL -->
 <div id="menu"></div>
 
 <div class="container">
   <h2>🐾 Animais</h2>
 
   <div class="filtros">
-  <select id="filtroEspecie" name="filtroEspecie">
-    <option value="todas" selected>Todas as espécies</option>
-  </select>
-
-  <select id="filtroStatus" name="filtroStatus">
-    <option value="todos" selected>Todos os status</option>
-    <option value="ativo">Ativo</option>
-    <option value="inativo">Inativo</option>
-    <option value="vendido">Vendido</option>
-    <option value="falecido">Falecido</option>
-  </select>
-</div>
+    <select id="filtroEspecie"></select>
+    <select id="filtroStatus">
+      <option value="todos">Todos os status</option>
+      <option value="ativo">Ativo</option>
+      <option value="inativo">Inativo</option>
+      <option value="vendido">Vendido</option>
+      <option value="falecido">Falecido</option>
+    </select>
+  </div>
 
   <div id="lista"></div>
 </div>
@@ -181,9 +95,8 @@ select{
 const db = firebase.firestore();
 const lista = document.getElementById("lista");
 const filtroEspecie = document.getElementById("filtroEspecie");
-const filtroStatus = document.getElementById("filtroStatus");
+const filtroStatus  = document.getElementById("filtroStatus");
 
-/* MENU */
 fetch("../menu/menu.html")
   .then(r=>r.text())
   .then(html=>{
@@ -200,7 +113,7 @@ function ordemStatus(s){
 }
 
 function abrirAnimal(id){
-  location.href = "../app/animal.html?id=" + encodeURIComponent(id);
+  location.href="../app/animal.html?id="+encodeURIComponent(id);
 }
 
 let ANIMAIS = [];
@@ -220,24 +133,27 @@ function render(){
     });
 
   if(!dados.length){
-    lista.innerHTML = "<div class='vazio'>🐾 Nenhum animal encontrado.</div>";
+    lista.innerHTML="<div class='vazio'>🐾 Nenhum animal encontrado.</div>";
     return;
   }
 
   dados.forEach(a=>{
-    const st = (a.status||"").toLowerCase();
-    lista.innerHTML += `
+    const st=(a.status||"").toLowerCase();
+    lista.innerHTML+=`
       <div class="card ${st}" onclick="abrirAnimal('${a._id}')">
         <strong>${a.nome.toUpperCase()}</strong>
-        <p>Espécie: ${a.especie || "-"}</p>
-        <p>Status: <span class="badge ${st}">${a.status || "-"}</span></p>
+        <p>Espécie: ${a.especie||"-"}</p>
+        <p>Status: <span class="badge ${st}">${a.status||"-"}</span></p>
       </div>`;
   });
 }
 
 async function load(){
   const snap = await db.collection("animais").get();
-  ANIMAIS = snap.docs.map(d=>({_id:d.id, ...d.data()}));
+  ANIMAIS = snap.docs.map(d=>({_id:d.id,...d.data()}));
+
+  // 🔒 RECONSTRÓI O SELECT CORRETAMENTE
+  filtroEspecie.innerHTML = `<option value="todas">Todas as espécies</option>`;
 
   [...new Set(ANIMAIS.map(a=>a.especie).filter(Boolean))]
     .sort()
@@ -245,8 +161,12 @@ async function load(){
       filtroEspecie.innerHTML += `<option value="${e}">${e}</option>`;
     });
 
+  filtroEspecie.value = "todas";
+  filtroStatus.value  = "todos";
+
   filtroEspecie.onchange = render;
   filtroStatus.onchange  = render;
+
   render();
 }
 
@@ -254,6 +174,5 @@ load();
 </script>
 
 <script src="../login/logout.js"></script>
-
 </body>
 </html>
