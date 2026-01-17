@@ -10,20 +10,14 @@
 <!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
 <script>
-if (!firebase.apps.length) {
-  firebase.initializeApp({
-    apiKey: "AIzaSyCW-CuFDrOLO-dteckl_GrPTocmyS-IrzY",
-    authDomain: "sitio-corrego-do-pinhal.firebaseapp.com",
-    projectId: "sitio-corrego-do-pinhal"
-  });
-}
+firebase.initializeApp({
+  apiKey: "AIzaSyCW-CuFDrOLO-dteckl_GrPTocmyS-IrzY",
+  authDomain: "sitio-corrego-do-pinhal.firebaseapp.com",
+  projectId: "sitio-corrego-do-pinhal"
+});
 </script>
-
-<!-- Guard global (login pode usar normalmente) -->
-<script src="../login/auth-guard.js"></script>
 
 <style>
 :root{
@@ -93,7 +87,7 @@ body{
 <body>
 
 <div class="login-box">
-  <img src="../logo.png" alt="Sítio Córrego do Pinhal">
+  <img src="../logo.png">
   <h2>Acesso ao Sistema</h2>
   <p>Entre com seu e-mail e senha</p>
 
@@ -109,32 +103,34 @@ body{
 const auth = firebase.auth();
 const erro = document.getElementById("erro");
 
+// 🔒 Se já estiver logado, entra direto
+auth.onAuthStateChanged(user=>{
+  if(user){
+    location.replace("../app/index.html");
+  }
+});
+
 async function login(){
-  erro.style.display = "none";
+  erro.style.display="none";
   try{
     await auth.signInWithEmailAndPassword(
-      document.getElementById("email").value,
-      document.getElementById("senha").value
+      email.value,
+      senha.value
     );
-
-    // ✅ REDIRECIONAMENTO DIRETO E CONTROLADO
-    location.replace("../app/index.html");
-
+    // redireciona pelo listener acima
   }catch(e){
-    erro.innerText = "E-mail ou senha inválidos.";
-    erro.style.display = "block";
-    console.error(e);
+    erro.innerText="E-mail ou senha inválidos.";
+    erro.style.display="block";
   }
 }
 
 async function resetarSenha(){
-  const email = document.getElementById("email").value;
-  if(!email){
-    alert("Informe o e-mail para redefinir a senha.");
+  if(!email.value){
+    alert("Informe o e-mail.");
     return;
   }
-  await auth.sendPasswordResetEmail(email);
-  alert("E-mail de redefinição enviado.");
+  await auth.sendPasswordResetEmail(email.value);
+  alert("E-mail enviado.");
 }
 </script>
 
