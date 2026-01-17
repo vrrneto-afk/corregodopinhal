@@ -5,11 +5,35 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Histórico – Sítio Córrego do Pinhal</title>
 
-<!-- MENU CSS (OBRIGATÓRIO) -->
-<link rel="stylesheet" href="menu.css">
+<link rel="manifest" href="../manifest.json">
+<meta name="theme-color" content="#7b3f2a">
 
+<!-- MENU GLOBAL (OBRIGATÓRIO) -->
+<link rel="stylesheet" href="../menu/menu.css">
+
+<!-- FIREBASE (PADRÃO GLOBAL) -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+<script>
+firebase.initializeApp({
+  apiKey:"AIzaSyCW-CuFDrOLO-dteckl_GrPTocmyS-IrzY",
+  authDomain:"sitio-corrego-do-pinhal.firebaseapp.com",
+  projectId:"sitio-corrego-do-pinhal"
+});
+</script>
+
+<!-- IDENTIFICAÇÃO DA PÁGINA -->
+<script>
+window.PERMISSAO_PAGINA = {
+  area: "app",
+  chave: "historico"
+};
+</script>
+
+<!-- AUTH GUARD -->
+<script src="../login/auth-guard.js"></script>
 
 <style>
 :root{
@@ -59,7 +83,7 @@ h2{
   gap:8px;
 }
 
-/* FILTROS – IGUAL ANIMAIS */
+/* FILTROS */
 .filtros{
   display:flex;
   gap:10px;
@@ -115,10 +139,10 @@ h2{
 <body>
 
 <header>
-  <img src="logo.png">
+  <img src="../logo.png">
 </header>
 
-<!-- MENU EXTERNO -->
+<!-- MENU -->
 <div id="menu"></div>
 
 <div class="container">
@@ -141,14 +165,14 @@ h2{
   <div id="lista"></div>
 </div>
 
-<!-- MENU -->
 <script>
-fetch("menu.html")
+/* MENU DINÂMICO */
+fetch("../menu/menu.html")
   .then(r=>r.text())
   .then(html=>{
     document.getElementById("menu").innerHTML = html;
     document.querySelectorAll("#menu a").forEach(a=>{
-      if(a.getAttribute("href")==="historico.html"){
+      if(a.getAttribute("href")==="../app/historico.html"){
         a.classList.add("ativo");
       }
     });
@@ -156,11 +180,6 @@ fetch("menu.html")
 </script>
 
 <script>
-firebase.initializeApp({
-  apiKey:"AIzaSyCW-CuFDrOLO-dteckl_GrPTocmyS-IrzY",
-  authDomain:"sitio-corrego-do-pinhal.firebaseapp.com",
-  projectId:"sitio-corrego-do-pinhal"
-});
 const db = firebase.firestore();
 
 function addMonths(data, meses){
@@ -244,18 +263,9 @@ async function load(){
   ANIMAIS = (await db.collection("animais").get()).docs.map(d=>({_id:d.id,...d.data()}));
   EVENTOS = (await db.collection("eventos").get()).docs.map(d=>d.data());
 
-  // ESPÉCIES EM ORDEM ALFABÉTICA
   [...new Set(ANIMAIS.map(a=>a.especie).filter(Boolean))]
     .sort((a,b)=>a.localeCompare(b,"pt-BR"))
     .forEach(e=>filtroEspecie.innerHTML += `<option>${e}</option>`);
-
-  // EVENTOS EM ORDEM ALFABÉTICA (mantendo "todos" no topo)
-  const eventosFixos = Array.from(filtroEvento.options)
-    .filter(o=>o.value!=="todos")
-    .sort((a,b)=>a.text.localeCompare(b.text,"pt-BR"));
-
-  filtroEvento.innerHTML = `<option value="todos">Todos os eventos</option>`;
-  eventosFixos.forEach(o=>filtroEvento.appendChild(o));
 
   filtroEspecie.onchange = render;
   filtroEvento.onchange = render;
