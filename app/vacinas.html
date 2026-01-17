@@ -13,6 +13,7 @@
 
 <!-- FIREBASE PADRÃO GLOBAL -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
 <!-- IDENTIFICAÇÃO DA PÁGINA -->
@@ -139,108 +140,90 @@ firebase.initializeApp({
 const db = firebase.firestore();
 const lista = document.getElementById("lista");
 
-/* CONFIG PADRÃO (FALLBACK) */
+/* CONFIG PADRÃO */
 let CONFIG = {
-  prioridades: {
-    atrasada: 1,
-    pendente: 2,
-    finalizada: 3
-  },
-  status: {
-    atrasada: "Atrasada",
-    pendente: "Reaplicar",
-    finalizada: "Finalizada"
-  }
+  prioridades: { atrasada:1, pendente:2, finalizada:3 },
+  status: { atrasada:"Atrasada", pendente:"Reaplicar", finalizada:"Finalizada" }
 };
 
 function parseDate(v){
   if(v?.seconds) return new Date(v.seconds * 1000);
-  if(typeof v === "string") return new Date(v + "T00:00:00");
+  if(typeof v==="string") return new Date(v+"T00:00:00");
   return new Date(v);
 }
-
-function diffDias(a,b){
-  return Math.ceil((b - a) / 86400000);
-}
+function diffDias(a,b){ return Math.ceil((b-a)/86400000); }
 
 async function load(){
-  /* CARREGA CONFIG */
   const cfg = await db.collection("config").doc("vacinas").get();
-  if(cfg.exists){
-    CONFIG = { ...CONFIG, ...cfg.data() };
-  }
+  if(cfg.exists) CONFIG = {...CONFIG, ...cfg.data()};
 
-  /* CARREGA VACINAS */
   const snap = await db.collection("vacinas").get();
   const VACINAS = snap.docs.map(d=>d.data());
 
-  const hoje = new Date();
-  hoje.setHours(0,0,0,0);
+  const hoje = new Date(); hoje.setHours(0,0,0,0);
 
   function render(filtro){
     lista.innerHTML="";
     let cards=[];
 
     VACINAS.forEach(v=>{
-      const aplicada = parseDate(v.data_aplicacao);
-      const repeticao = Number(v.repeticao_dias || 0);
+      const aplicada=parseDate(v.data_aplicacao);
+      const repeticao=Number(v.repeticao_dias||0);
 
-      let status, classe, badge, texto, grupo, ordem;
+      let status,classe,badge,texto,grupo,ordem;
 
-      if(v.status === "Finalizada"){
-        status = "finalizada";
-        classe = "finalizada";
-        badge = `<span class="badge finalizada-b">${CONFIG.status.finalizada}</span>`;
-        grupo = CONFIG.prioridades.finalizada;
-        ordem = aplicada;
+      if(v.status==="Finalizada"){
+        status="finalizada";
+        classe="finalizada";
+        badge=`<span class="badge finalizada-b">${CONFIG.status.finalizada}</span>`;
+        grupo=CONFIG.prioridades.finalizada;
+        ordem=aplicada;
       }else{
-        const reaplicar = new Date(aplicada);
-        reaplicar.setDate(reaplicar.getDate() + repeticao);
-        const dias = diffDias(hoje, reaplicar);
+        const reaplicar=new Date(aplicada);
+        reaplicar.setDate(reaplicar.getDate()+repeticao);
+        const dias=diffDias(hoje,reaplicar);
 
-        if(dias < 0){
-          status = "atrasada";
-          classe = "atrasada";
-          badge = `<span class="badge atrasada-b">${CONFIG.status.atrasada}</span>`;
-          texto = `⚠️ ${CONFIG.status.atrasada} há ${Math.abs(dias)} dias`;
-          grupo = CONFIG.prioridades.atrasada;
-          ordem = dias;
+        if(dias<0){
+          status="atrasada";
+          classe="atrasada";
+          badge=`<span class="badge atrasada-b">${CONFIG.status.atrasada}</span>`;
+          texto=`⚠️ ${CONFIG.status.atrasada} há ${Math.abs(dias)} dias`;
+          grupo=CONFIG.prioridades.atrasada;
+          ordem=dias;
         }else{
-          status = "pendente";
-          classe = "pendente";
-          badge = `<span class="badge pendente-b">${CONFIG.status.pendente}</span>`;
-          texto = `⏳ ${CONFIG.status.pendente} em ${dias} dias`;
-          grupo = CONFIG.prioridades.pendente;
-          ordem = dias;
+          status="pendente";
+          classe="pendente";
+          badge=`<span class="badge pendente-b">${CONFIG.status.pendente}</span>`;
+          texto=`⏳ ${CONFIG.status.pendente} em ${dias} dias`;
+          grupo=CONFIG.prioridades.pendente;
+          ordem=dias;
         }
       }
 
-      if(filtro !== "todas" && filtro !== status) return;
+      if(filtro!=="todas" && filtro!==status) return;
 
       cards.push({
-        grupo,
-        ordem,
+        grupo,ordem,
         html:`
         <div class="card ${classe}" onclick="location.href='../app/animal.html?id=${v.id_animal}'">
-          <strong>💉 ${v.nome_vacina || "Vacina"}</strong>
-          <p>🐄 ${(v.nome_animal || "-").toUpperCase()}</p>
+          <strong>💉 ${v.nome_vacina||"Vacina"}</strong>
+          <p>🐄 ${(v.nome_animal||"-").toUpperCase()}</p>
           ${badge}
-          ${texto ? `<p>${texto}</p>` : ""}
+          ${texto?`<p>${texto}</p>`:""}
           <p>Aplicada em: ${aplicada.toLocaleDateString("pt-BR")}</p>
         </div>`
       });
     });
 
-    cards
-      .sort((a,b)=>a.grupo - b.grupo || a.ordem - b.ordem)
-      .forEach(c=>lista.innerHTML += c.html);
+    cards.sort((a,b)=>a.grupo-b.grupo||a.ordem-b.ordem)
+         .forEach(c=>lista.innerHTML+=c.html);
 
     if(!cards.length){
-      lista.innerHTML = `<div class="vazio">💉 Nenhuma vacina encontrada.</div>`;
+      lista.innerHTML=`<div class="vazio">💉 Nenhuma vacina encontrada.</div>`;
     }
   }
 
-  filtro.onchange = e => render(e.target.value);
+  filtro.onchange=e=>render(e.target.value);
   render("todas");
 }
 
