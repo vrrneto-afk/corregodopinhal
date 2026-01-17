@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -191,12 +190,16 @@ const db = firebase.firestore();
 
 const lista = document.getElementById("lista");
 let MEDS = [];
+
+/* CONFIG PADRÃO (ALINHADO AO FIRESTORE) */
 let CONFIG = {
   quantidade_minima: 1,
-  dias_alerta_validade: 30,
-  texto_sem_estoque: "Sem estoque",
-  texto_vence_em: "Vence em",
-  texto_vencido: "Vencido"
+  validade_alerta_dias: 30,
+  textos: {
+    sem_estoque: "Sem estoque",
+    vence_em: "Vence em",
+    vencido: "Vencido"
+  }
 };
 
 function toDate(v){
@@ -220,7 +223,7 @@ function render(){
       if(filtroVia.value!=="todas" && m.via!==filtroVia.value) return false;
       return true;
     })
-    .sort((a,b)=>a.nome.localeCompare(b.nome));
+    .sort((a,b)=>a.nome.localeCompare(b.nome,"pt-BR"));
 
   if(!dados.length){
     lista.innerHTML=`<div class="vazio">💊 Nenhum medicamento encontrado.</div>`;
@@ -233,15 +236,15 @@ function render(){
 
     if(Number(m.quantidade)<CONFIG.quantidade_minima){
       classe="sem-estoque";
-      badge=`<span class="badge erro">${CONFIG.texto_sem_estoque}</span>`;
+      badge=`<span class="badge erro">${CONFIG.textos.sem_estoque}</span>`;
     }else if(validade){
       const dias = Math.ceil((validade-hoje)/(1000*60*60*24));
       if(dias<0){
         classe="vencido";
-        badge=`<span class="badge erro">${CONFIG.texto_vencido}</span>`;
-      }else if(dias<=CONFIG.dias_alerta_validade){
+        badge=`<span class="badge erro">${CONFIG.textos.vencido}</span>`;
+      }else if(dias<=CONFIG.validade_alerta_dias){
         classe="vencer";
-        badge=`<span class="badge alerta">${CONFIG.texto_vence_em} ${dias} dias</span>`;
+        badge=`<span class="badge alerta">${CONFIG.textos.vence_em} ${dias} dias</span>`;
       }
     }
 
@@ -266,7 +269,24 @@ function render(){
 async function load(){
   const cfg = await db.collection("config").doc("farmacia").get();
   if(cfg.exists){
-    CONFIG = {...CONFIG, ...cfg.data()};
+    const data = cfg.data();
+
+    CONFIG.quantidade_minima =
+      Number(data.quantidade_minima ?? CONFIG.quantidade_minima);
+
+    CONFIG.validade_alerta_dias =
+      Number(data.validade_alerta_dias ?? CONFIG.validade_alerta_dias);
+
+    if(data.textos){
+      CONFIG.textos.sem_estoque =
+        data.textos.sem_estoque ?? CONFIG.textos.sem_estoque;
+
+      CONFIG.textos.vence_em =
+        data.textos.vence_em ?? CONFIG.textos.vence_em;
+
+      CONFIG.textos.vencido =
+        data.textos.vencido ?? CONFIG.textos.vencido;
+    }
   }
 
   const snap = await db.collection("farmacia").where("status","==","Ativo").get();
