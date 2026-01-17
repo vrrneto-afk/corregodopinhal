@@ -13,6 +13,7 @@
 
 <!-- FIREBASE -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
 <!-- IDENTIFICAÇÃO DA PÁGINA -->
@@ -178,7 +179,9 @@ fetch("../menu/menu.html")
       }
     });
   });
+</script>
 
+<script>
 /* FIREBASE INIT */
 firebase.initializeApp({
   apiKey:"AIzaSyCW-CuFDrOLO-dteckl_GrPTocmyS-IrzY",
@@ -191,7 +194,7 @@ const db = firebase.firestore();
 const lista = document.getElementById("lista");
 let MEDS = [];
 
-/* CONFIG PADRÃO (ALINHADO AO FIRESTORE) */
+/* CONFIG PADRÃO */
 let CONFIG = {
   quantidade_minima: 1,
   validade_alerta_dias: 30,
@@ -271,21 +274,13 @@ async function load(){
   if(cfg.exists){
     const data = cfg.data();
 
-    CONFIG.quantidade_minima =
-      Number(data.quantidade_minima ?? CONFIG.quantidade_minima);
-
-    CONFIG.validade_alerta_dias =
-      Number(data.validade_alerta_dias ?? CONFIG.validade_alerta_dias);
+    CONFIG.quantidade_minima = Number(data.quantidade_minima ?? CONFIG.quantidade_minima);
+    CONFIG.validade_alerta_dias = Number(data.validade_alerta_dias ?? CONFIG.validade_alerta_dias);
 
     if(data.textos){
-      CONFIG.textos.sem_estoque =
-        data.textos.sem_estoque ?? CONFIG.textos.sem_estoque;
-
-      CONFIG.textos.vence_em =
-        data.textos.vence_em ?? CONFIG.textos.vence_em;
-
-      CONFIG.textos.vencido =
-        data.textos.vencido ?? CONFIG.textos.vencido;
+      CONFIG.textos.sem_estoque = data.textos.sem_estoque ?? CONFIG.textos.sem_estoque;
+      CONFIG.textos.vence_em = data.textos.vence_em ?? CONFIG.textos.vence_em;
+      CONFIG.textos.vencido = data.textos.vencido ?? CONFIG.textos.vencido;
     }
   }
 
