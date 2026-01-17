@@ -45,20 +45,16 @@ window.PERMISSAO_PAGINA = { area:"app", chave:"inicio" };
 *{box-sizing:border-box;font-family:'Inter',system-ui,-apple-system,Arial}
 body{margin:0;background:var(--bege);color:#333}
 
-/* HEADER */
 header{
   background:var(--logo);
   padding:15px 10px;
   text-align:center;
-  position:relative;
 }
 header img{max-width:260px;width:100%}
 
-/* CONTAINER */
 .container{max-width:900px;margin:20px auto;padding:0 15px}
 h2{margin:28px 0 12px;color:var(--marrom)}
 
-/* CLIMA */
 .clima-bar{
   background:#fff;
   margin:12px auto 16px;
@@ -69,7 +65,6 @@ h2{margin:28px 0 12px;color:var(--marrom)}
   cursor:pointer;
 }
 
-/* ALERTA */
 .alerta-rapido{
   display:block;
   margin:0 auto 20px;
@@ -81,7 +76,6 @@ h2{margin:28px 0 12px;color:var(--marrom)}
 .alerta-ok{background:#eaf6ec;color:var(--verde)}
 .alerta-on{background:#fdecea;color:var(--vermelho)}
 
-/* CARDS */
 .card{
   background:#fff;
   padding:15px;
@@ -101,7 +95,6 @@ h2{margin:28px 0 12px;color:var(--marrom)}
 .card .data{font-size:13px;color:var(--cinza)}
 .card .msg{font-weight:700;margin-top:4px}
 
-/* MODAL */
 #modalClima{
   position:fixed;
   inset:0;
@@ -145,14 +138,14 @@ h2{margin:28px 0 12px;color:var(--marrom)}
 </div>
 
 <script>
-const db=firebase.firestore();
-const menu=document.getElementById("menu");
-const clima=document.getElementById("clima");
-const conteudo=document.getElementById("conteudo");
-const alertaRapido=document.getElementById("alertaRapido");
-const modalClima=document.getElementById("modalClima");
+const db = firebase.firestore();
+const menu = document.getElementById("menu");
+const clima = document.getElementById("clima");
+const conteudo = document.getElementById("conteudo");
+const alertaRapido = document.getElementById("alertaRapido");
+const modalClima = document.getElementById("modalClima");
 
-/* MENU + ATIVO */
+/* MENU */
 fetch("../menu/menu.html")
   .then(r=>r.text())
   .then(h=>{
@@ -167,7 +160,128 @@ fetch("../menu/menu.html")
 clima.onclick=()=>modalClima.style.display="flex";
 modalClima.onclick=e=>{if(e.target===modalClima)modalClima.style.display="none";};
 
-/* === RESTANTE DO SEU CÓDIGO PERMANECE 100% IGUAL === */
+const hoje = new Date();
+const hojeZ = new Date(hoje.getFullYear(),hoje.getMonth(),hoje.getDate());
+
+function parse(d){
+  if(!d) return null;
+  if(d.seconds) return new Date(d.seconds*1000);
+  const p=d.split("-");
+  return new Date(p[0],p[1]-1,p[2]);
+}
+function addM(d,m){const x=new Date(d);x.setMonth(x.getMonth()+m);return x;}
+function diff(a,b){return Math.floor((b-a)/86400000);}
+
+/* CONFIGS (BLINDADOS) */
+let CFG={};
+
+async function loadConfigs(){
+  const [c1,c2,c3]=await Promise.all([
+    db.collection("config").doc("clima").get(),
+    db.collection("config").doc("vacas").get(),
+    db.collection("config").doc("vacinas").get()
+  ]);
+
+  CFG.clima = c1.exists ? c1.data() : {};
+  CFG.vacas = c2.exists ? c2.data() : {};
+  CFG.vacinas = c3.exists ? c3.data() : {};
+
+  CFG.vacas.prenhez_regras = Array.isArray(CFG.vacas.prenhez_regras)
+    ? CFG.vacas.prenhez_regras
+    : [];
+}
+
+/* CLIMA */
+async function loadClima(){
+  if(!CFG.clima.latitude){
+    clima.innerText="☁️ Clima indisponível";
+    return;
+  }
+
+  const c=CFG.clima;
+  const url=`https://api.open-meteo.com/v1/forecast?latitude=${c.latitude}&longitude=${c.longitude}&current_weather=true&hourly=precipitation_probability&timezone=${c.timezone}`;
+  const d=await (await fetch(url)).json();
+
+  let texto=c.textos?.sem_chuva || "Sem previsão de chuva.";
+  const agora=new Date();
+
+  for(let i=0;i<d.hourly.time.length;i++){
+    const h=new Date(d.hourly.time[i]);
+    const min=(h-agora)/60000;
+    if(min>0 && min<=c.janela_previsao_minutos && d.hourly.precipitation_probability[i]>=c.limite_chuva_percentual){
+      texto=`${c.textos?.chuva_em || "Chuva em"} ${Math.round(min)} minutos.`;
+      break;
+    }
+  }
+
+  clima.innerHTML=`☀️ ${c.cidade||""} • ${Math.round(d.current_weather.temperature)}°C<br>${texto}`;
+}
+
+/* ALERTAS */
+async function loadAlertas(){
+  const s=await db.collection("lembretes").get();
+  alertaRapido.className=s.size?"alerta-rapido alerta-on":"alerta-rapido alerta-ok";
+  alertaRapido.innerText=s.size?`🔔 ${s.size} itens pendentes para comprar`:"🔔 Nenhum alerta no momento";
+}
+
+/* INDEX */
+async function loadIndex(){
+  conteudo.innerHTML="";
+
+  const ani=(await db.collection("animais").get()).docs.map(d=>({_id:d.id,...d.data()}));
+  const eve=(await db.collection("eventos").get()).docs.map(d=>d.data());
+  const vac=(await db.collection("vacinas").get()).docs.map(d=>d.data());
+
+  conteudo.innerHTML+="<h2>🐄 Vacas a Criar</h2>";
+
+  eve.filter(e=>e.tipo_evento==="cobertura")
+    .map(c=>{
+      const prev=addM(parse(c.data_evento),CFG.vacas.gestacao_meses||9);
+      const dias=diff(hojeZ,prev);
+      return {v:ani.find(a=>a._id===c.id_animal),prev,dias};
+    })
+    .filter(x=>x.v)
+    .sort((a,b)=>a.dias-b.dias)
+    .forEach(v=>{
+      const regras = CFG.vacas.prenhez_regras;
+      const regra = regras
+        .filter(r=>r.ativa!==false && v.dias>=(r.dias_min??0))
+        .sort((a,b)=>(b.dias_min??0)-(a.dias_min??0))[0];
+
+      conteudo.innerHTML+=`
+      <div class="card ${regra?.classe||"ok"}">
+        <strong>🐄 ${v.v.nome.toUpperCase()}</strong>
+        <p class="dias">⏳ Faltam ${v.dias} dias</p>
+        ${regra?.mensagem?`<p class="msg">${regra.mensagem}</p>`:""}
+        <p class="data">Previsão: ${v.prev.toLocaleDateString("pt-BR")}</p>
+      </div>`;
+    });
+
+  conteudo.innerHTML+="<h2>💉 Vacinas pendentes</h2>";
+
+  vac.filter(v=>v.status!==CFG.vacinas?.status?.finalizada)
+    .forEach(v=>{
+      const animal = ani.find(a=>a._id===v.id_animal);
+      const reap=parse(v.data_aplicacao);
+      reap.setDate(reap.getDate()+Number(v.repeticao_dias||0));
+      const dias=diff(hojeZ,reap);
+
+      conteudo.innerHTML+=`
+      <div class="card ${dias<0?"atrasada":"pendente"}">
+        <strong>💉 ${v.nome_vacina}</strong>
+        ${animal?`<p><strong>🐄 ${animal.nome.toUpperCase()}</strong></p>`:""}
+        <p class="dias">${dias<0?`Atrasada há ${Math.abs(dias)} dias`:`Pendente em ${dias} dias`}</p>
+        <p class="data">📅 ${reap.toLocaleDateString("pt-BR")}</p>
+      </div>`;
+    });
+}
+
+(async()=>{
+  await loadConfigs();
+  await loadClima();
+  await loadAlertas();
+  await loadIndex();
+})();
 </script>
 
 <script src="../login/logout.js"></script>
