@@ -149,7 +149,14 @@ function render(){
 
 async function load(){
   const snap = await db.collection("animais").get();
-  ANIMAIS = snap.docs.map(d=>({_id:d.id,...d.data()}));
+  ANIMAIS = snap.docs.map(d=>{
+  const data = d.data();
+  return {
+    _id: d.id,
+    ...data,
+    especie: (data.especie || "").trim()
+  };
+});
 
   filtroEspecie.innerHTML = `<option value="todas">Todas as espécies</option>`;
 
