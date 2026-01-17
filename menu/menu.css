@@ -1,67 +1,56 @@
-/* ===== MENU – PADRÃO GLOBAL (IGUAL AO INDEX) ===== */
+/* ===== MENU GLOBAL – PADRÃO ADM / APP ===== */
 
 .menu-wrapper{
-  position: relative;
-  z-index: 100;
+  position:relative;
+  z-index:100;
 }
 
-nav{
+.menu-adm{
   background:#7b3f2a;
   display:flex;
   flex-wrap:wrap;
   justify-content:center;
-  gap:4px;
+  gap:8px;
+  padding:10px;
 }
 
-nav a{
-  color:#fff;
-  text-decoration:none;
-  font-weight:600;
-  font-size:15px;
-  padding:12px 14px;
-  border-radius:10px;
+/* LINKS */
+.menu-adm .menu-link{
   display:flex;
   align-items:center;
   gap:6px;
-  opacity:.85;
-  position:relative;
+
+  padding:10px 14px;
+  border-radius:12px;
+
+  color:#fff;
+  text-decoration:none;
+  font-weight:700;
+  font-size:14px;
+
+  background:rgba(255,255,255,.12);
   transition:.2s;
 }
 
-nav a span{
-  font-size:18px;
+.menu-adm .menu-link span{
+  white-space:nowrap;
 }
 
-nav a:hover{
-  background:rgba(255,255,255,.12);
-  opacity:1;
+/* HOVER */
+.menu-adm .menu-link:hover{
+  background:rgba(255,255,255,.25);
 }
 
-nav a.ativo{
-  background:rgba(255,255,255,.18);
-  font-weight:800;
-  opacity:1;
+/* ATIVO */
+.menu-adm .menu-link.ativo{
+  background:rgba(0,0,0,.25);
 }
 
-nav a.ativo::after{
-  content:"";
-  position:absolute;
-  bottom:4px;
-  left:15%;
-  width:70%;
-  height:3px;
-  background:#fff;
-  border-radius:10px;
+/* BOTÃO SAIR */
+.menu-adm .menu-link.sair{
+  background:#5a2b1e;
 }
 
-/* ===== BOTÃO SAIR ===== */
-nav a.logout{
-  background: rgba(192, 57, 43, 0.18);
-  color: #fff;
-  font-weight: 800;
+.menu-adm .menu-link.sair:hover{
+  background:#3e1c12;
 }
-
-nav a.logout:hover{
-  background: rgba(192, 57, 43, 0.32);
-}
-
