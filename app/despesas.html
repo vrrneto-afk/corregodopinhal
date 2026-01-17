@@ -221,12 +221,12 @@ firebase.initializeApp({
 });
 const db = firebase.firestore();
 
-/* CONFIG PADRÃO */
+/* CONFIG PADRÃO (ALINHADO AO FIRESTORE) */
 let CONFIG = {
-  quantidade_vencimentos: 5,
+  vencimentos_max: 5,
   textos:{
-    atrasada:"Atrasada há",
-    vence_em:"Vence em"
+    atrasada_ha: "Atrasada há",
+    vence_em: "Vence em"
   }
 };
 
@@ -245,7 +245,18 @@ let rows=[];
 async function load(){
   const cfg = await db.collection("config").doc("despesas").get();
   if(cfg.exists){
-    CONFIG = {...CONFIG, ...cfg.data()};
+    const data = cfg.data();
+
+    CONFIG.vencimentos_max =
+      Number(data.vencimentos_max ?? CONFIG.vencimentos_max);
+
+    if(data.textos){
+      CONFIG.textos.atrasada_ha =
+        data.textos.atrasada_ha ?? CONFIG.textos.atrasada_ha;
+
+      CONFIG.textos.vence_em =
+        data.textos.vence_em ?? CONFIG.textos.vence_em;
+    }
   }
 
   const snap = await db.collection("despesas").get();
@@ -280,7 +291,7 @@ function renderVencimentos(){
       return {...r,dias};
     })
     .sort((a,b)=>a.dias-b.dias)
-    .slice(0,CONFIG.quantidade_vencimentos)
+    .slice(0,CONFIG.vencimentos_max)
     .forEach(r=>{
       vencimentos.innerHTML+=`
         <div class="card ${r.dias<0?'atrasada':''}">
@@ -295,7 +306,7 @@ function renderVencimentos(){
           <small class="${r.dias>=0?'pos':'neg'}">
             ${r.dias>=0
               ? `⏳ ${CONFIG.textos.vence_em} ${r.dias} dias`
-              : `⚠️ ${CONFIG.textos.atrasada} ${Math.abs(r.dias)} dias`}
+              : `⚠️ ${CONFIG.textos.atrasada_ha} ${Math.abs(r.dias)} dias`}
           </small>
         </div>`;
     });
