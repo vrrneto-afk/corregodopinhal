@@ -154,7 +154,8 @@ async function load(){
   return {
     _id: d.id,
     ...data,
-    especie: (data.especie || "").trim()
+    especie: (data.especie || "").trim(),
+    status: (data.status || "").toLowerCase().trim()
   };
 });
 
