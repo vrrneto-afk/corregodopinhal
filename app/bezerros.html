@@ -8,7 +8,10 @@
 <link rel="manifest" href="../manifest.json">
 <meta name="theme-color" content="#7b3f2a">
 
-<!-- FIREBASE -->
+<!-- MENU GLOBAL -->
+<link rel="stylesheet" href="../menu/menu.css">
+
+<!-- FIREBASE (PADRÃO GLOBAL) -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
@@ -23,13 +26,13 @@ firebase.initializeApp({
 
 <!-- IDENTIFICAÇÃO DA PÁGINA -->
 <script>
-  window.PERMISSAO_PAGINA = {
-    area: "app",
-    chave: "bezerros"
-  };
+window.PERMISSAO_PAGINA = {
+  area: "app",
+  chave: "bezerros"
+};
 </script>
 
-<!-- AUTH GUARD GLOBAL -->
+<!-- AUTH GUARD -->
 <script src="../login/auth-guard.js"></script>
 
 <style>
@@ -42,31 +45,16 @@ firebase.initializeApp({
   --logo:#D0B485;
 }
 
-*{box-sizing:border-box;font-family:'Inter',system-ui,-apple-system,Arial,Helvetica,sans-serif}
+*{box-sizing:border-box;font-family:'Inter',system-ui,-apple-system,Arial}
 body{margin:0;background:var(--bege);color:#333}
 
 /* HEADER */
-header{
-  background:var(--logo);
-  padding:15px 10px;
-  text-align:center;
-}
+header{background:var(--logo);padding:15px;text-align:center}
 header img{max-width:260px;width:100%}
 
 /* CONTAINER */
-.container{
-  max-width:900px;
-  margin:20px auto;
-  padding:0 15px;
-}
-
-h2{
-  margin:28px 0 12px;
-  color:var(--marrom);
-  display:flex;
-  align-items:center;
-  gap:8px;
-}
+.container{max-width:900px;margin:20px auto;padding:0 15px}
+h2{margin:28px 0 12px;color:var(--marrom);display:flex;gap:8px}
 
 /* FILTRO */
 select{
@@ -86,19 +74,10 @@ select{
   border-left:6px solid var(--verde);
   border-radius:12px;
   box-shadow:0 2px 6px rgba(0,0,0,.06);
-  cursor:pointer;
+  cursor:pointer
 }
-.card strong{
-  font-size:17px;
-  font-weight:800;
-  display:block;
-  margin-bottom:6px;
-}
-.card p{
-  margin:4px 0;
-  font-size:14px;
-  color:var(--cinza);
-}
+.card strong{font-size:17px;font-weight:800;display:block;margin-bottom:6px}
+.card p{margin:4px 0;font-size:14px;color:var(--cinza)}
 
 /* BADGE */
 .badge{
@@ -108,17 +87,12 @@ select{
   font-weight:800;
   color:#fff;
   border-radius:10px;
-  margin-left:6px;
+  margin-left:6px
 }
 .badge.cria{background:var(--verde)}
 .badge.bezerro{background:var(--azul)}
 
-.vazio{
-  text-align:center;
-  color:#777;
-  margin-top:30px;
-  font-style:italic;
-}
+.vazio{text-align:center;color:#777;margin-top:30px;font-style:italic}
 </style>
 </head>
 
@@ -143,14 +117,27 @@ select{
 </div>
 
 <script>
-const db = firebase.firestore();
-const lista = document.getElementById("lista");
+/* MENU DINÂMICO */
+fetch("../menu/menu.html")
+  .then(r=>r.text())
+  .then(html=>{
+    document.getElementById("menu").innerHTML = html;
+    document.querySelectorAll("#menu a").forEach(a=>{
+      if(a.getAttribute("href")==="../app/bezerros.html"){
+        a.classList.add("ativo");
+      }
+    });
+  });
+</script>
+
+<script>
+const db     = firebase.firestore();
+const lista  = document.getElementById("lista");
 const filtro = document.getElementById("filtro");
 const titulo = document.getElementById("titulo");
 
-fetch("../menu/menu.html")
-  .then(r=>r.text())
-  .then(html=>menu.innerHTML=html);
+let LISTA = [];
+let CFG   = {};
 
 function idadeDetalhada(data){
   const n=new Date(data+"T00:00:00"),h=new Date();
@@ -159,32 +146,35 @@ function idadeDetalhada(data){
   let d=h.getDate()-n.getDate();
   if(d<0){m--;d+=30}
   if(m<0){a--;m+=12}
-  return {meses:a*12+m, texto:`${a} ano(s), ${m} mês(es) e ${d} dia(s)`};
+  return { meses:a*12+m, texto:`${a} ano(s), ${m} mês(es) e ${d} dia(s)` };
 }
 
 function abrirAnimal(id){
-  location.href="../app/animal.html?id="+encodeURIComponent(id);
+  location.href = "../app/animal.html?id=" + encodeURIComponent(id);
 }
 
-let LISTA=[];
-let CFG={};
-
 async function load(){
+  /* CONFIG BEZERROS */
   const cfgSnap = await db.collection("config").doc("bezerros").get();
-  CFG = cfgSnap.data();
+  CFG = cfgSnap.exists ? cfgSnap.data() : {};
 
   titulo.innerText = "🐮 " + (CFG.textos?.titulo || "Bezerros / Crias");
 
-  const ani = (await db.collection("animais").get()).docs.map(d=>({_id:d.id,...d.data()}));
+  const aniSnap = await db.collection("animais").get();
+  const animais = aniSnap.docs.map(d=>({_id:d.id,...d.data()}));
 
-  LISTA = ani
-    .filter(a=>a.status==="Ativo" && a.especie==="Bovino" && a.data_nascimento)
+  LISTA = animais
+    .filter(a =>
+      a.status === "Ativo" &&
+      a.especie === "Bovino" &&
+      a.data_nascimento
+    )
     .map(a=>{
       const i = idadeDetalhada(a.data_nascimento);
       if(i.meses > CFG.idade_bezerro_meses) return null;
 
-      const mae = ani.find(m=>m._id===a.id_mae);
-      const pai = ani.find(p=>p._id===a.id_pai);
+      const mae = animais.find(m=>m._id===a.id_mae);
+      const pai = animais.find(p=>p._id===a.id_pai);
 
       return {
         ...a,
@@ -203,8 +193,8 @@ async function load(){
 }
 
 function render(){
-  lista.innerHTML="";
-  const f=filtro.value;
+  lista.innerHTML = "";
+  const f = filtro.value;
 
   const dados = LISTA.filter(a=>{
     if(f==="cria") return a.tipo==="Cria";
@@ -218,7 +208,7 @@ function render(){
   }
 
   dados.forEach(a=>{
-    lista.innerHTML+=`
+    lista.innerHTML += `
       <div class="card" onclick="abrirAnimal('${a._id}')">
         <strong>🐮 ${a.nome.toUpperCase()}
           <span class="badge ${a.tipo.toLowerCase()}">${a.tipo}</span>
@@ -229,7 +219,8 @@ function render(){
         <p>Pai: ${a.pai}</p>
         <p>Idade: ${a.idadeTexto}</p>
         <p>Nascimento: ${a.nascimento}</p>
-      </div>`;
+      </div>
+    `;
   });
 }
 
@@ -238,6 +229,5 @@ load();
 </script>
 
 <script src="../login/logout.js"></script>
-
 </body>
 </html>
