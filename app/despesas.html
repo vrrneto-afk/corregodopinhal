@@ -69,14 +69,6 @@ h2{color:var(--marrom);display:flex;gap:8px;align-items:center;margin-bottom:10p
 }
 .vencimentos .card.atrasada{border-left-color:var(--vermelho)}
 
-select{
-  padding:12px;
-  font-size:15px;
-  border-radius:12px;
-  border:1.5px solid #ddd;
-  background:#f2f2f2
-}
-
 .card{
   background:#fff;
   padding:14px;
@@ -118,6 +110,7 @@ select{
 </div>
 
 <script>
+/* MENU */
 fetch("../menu/menu.html")
   .then(r=>r.text())
   .then(html=>{
@@ -129,6 +122,7 @@ fetch("../menu/menu.html")
     });
   });
 
+/* FIREBASE INIT */
 firebase.initializeApp({
   apiKey:"AIzaSyCW-CuFDrOLO-dteckl_GrPTocmyS-IrzY",
   authDomain:"sitio-corrego-do-pinhal.firebaseapp.com",
@@ -136,6 +130,7 @@ firebase.initializeApp({
 });
 const db = firebase.firestore();
 
+/* CONFIG */
 let CONFIG = {
   vencimentos_max: 5,
   textos:{
@@ -156,14 +151,14 @@ async function load(){
   const cfg = await db.collection("config").doc("despesas").get();
   if(cfg.exists){
     const d=cfg.data();
-    CONFIG.vencimentos_max=d.vencimentos_max ?? CONFIG.vencimentos_max;
-    CONFIG.textos={...CONFIG.textos,...(d.textos||{})};
+    CONFIG.vencimentos_max = d.vencimentos_max ?? CONFIG.vencimentos_max;
+    CONFIG.textos = { ...CONFIG.textos, ...(d.textos||{}) };
   }
 
-  const snap=await db.collection("despesas").get();
-  rows=snap.docs.map(d=>{
+  const snap = await db.collection("despesas").get();
+  rows = snap.docs.map(d=>{
     const r=d.data();
-    return {...r,vencimento:parseData(r.data_vencimento)};
+    return {...r, vencimento:parseData(r.data_vencimento)};
   });
 
   renderVencimentos();
