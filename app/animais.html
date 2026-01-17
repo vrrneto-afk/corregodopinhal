@@ -8,10 +8,8 @@
 <link rel="manifest" href="../manifest.json">
 <meta name="theme-color" content="#7b3f2a">
 
-<!-- MENU CSS GLOBAL -->
 <link rel="stylesheet" href="../menu/menu.css">
 
-<!-- FIREBASE -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
@@ -54,8 +52,6 @@ select{flex:1;min-width:200px;padding:12px;font-size:15px;border-radius:12px;bor
 .card.inativo{border-color:var(--amarelo)}
 .card.vendido{border-color:var(--laranja)}
 .card.falecido{border-color:var(--cinza-escuro)}
-.card strong{font-size:17px;font-weight:800;display:block}
-.card p{margin:4px 0;font-size:14px;color:var(--cinza)}
 .badge{display:inline-block;margin-top:6px;padding:3px 8px;border-radius:10px;font-size:12px;font-weight:700;color:#fff}
 .badge.ativo{background:var(--verde)}
 .badge.inativo{background:var(--amarelo)}
@@ -107,8 +103,12 @@ fetch("../menu/menu.html")
     });
   });
 
-function ordemStatus(s){
-  return {ativo:1,inativo:2,vendido:3,falecido:4}[s] || 9;
+function normalizar(txt){
+  return (txt||"")
+    .toLowerCase()
+    .replace(/\s+/g," ")
+    .replace(/\s*-\s*/g,"-")
+    .trim();
 }
 
 function abrirAnimal(id){
@@ -118,18 +118,14 @@ function abrirAnimal(id){
 let ANIMAIS = [];
 
 function render(){
-  const especie = filtroEspecie.value || "todas";
+  const especie = filtroEspecie.value;
   const status  = filtroStatus.value;
 
   lista.innerHTML = "";
 
   const dados = ANIMAIS
-    .filter(a => especie==="todas" || a.especie===especie)
-    .filter(a => status==="todos" || (a.status||"").toLowerCase()===status)
-    .sort((a,b)=>{
-      const o = ordemStatus((a.status||"").toLowerCase()) - ordemStatus((b.status||"").toLowerCase());
-      return o!==0 ? o : (a.nome||"").localeCompare(b.nome||"");
-    });
+    .filter(a => especie==="todas" || a.especie_key===especie)
+    .filter(a => status==="todos" || a.status===status);
 
   if(!dados.length){
     lista.innerHTML="<div class='vazio'>🐾 Nenhum animal encontrado.</div>";
@@ -137,37 +133,39 @@ function render(){
   }
 
   dados.forEach(a=>{
-    const st=(a.status||"").toLowerCase();
     lista.innerHTML+=`
-      <div class="card ${st}" onclick="abrirAnimal('${a._id}')">
+      <div class="card ${a.status}" onclick="abrirAnimal('${a._id}')">
         <strong>${a.nome.toUpperCase()}</strong>
-        <p>Espécie: ${a.especie||"-"}</p>
-        <p>Status: <span class="badge ${st}">${a.status||"-"}</span></p>
+        <p>Espécie: ${a.especie}</p>
+        <p>Status: <span class="badge ${a.status}">${a.status}</span></p>
       </div>`;
   });
 }
 
 async function load(){
   const snap = await db.collection("animais").get();
+
   ANIMAIS = snap.docs.map(d=>{
-  const data = d.data();
-  return {
-    _id: d.id,
-    ...data,
-    especie: (data.especie || "").trim(),
-    status: (data.status || "").toLowerCase().trim()
-  };
-});
+    const data = d.data();
+    return {
+      _id: d.id,
+      ...data,
+      especie_key: normalizar(data.especie),
+      status: normalizar(data.status)
+    };
+  });
 
   filtroEspecie.innerHTML = `<option value="todas">Todas as espécies</option>`;
 
-  [...new Set(ANIMAIS.map(a=>a.especie).filter(Boolean))]
+  [...new Set(ANIMAIS.map(a=>a.especie_key))]
     .sort()
-    .forEach(e=>{
-      filtroEspecie.innerHTML += `<option value="${e}">${e}</option>`;
+    .forEach(k=>{
+      const ex = ANIMAIS.find(a=>a.especie_key===k);
+      filtroEspecie.innerHTML += `<option value="${k}">${ex.especie}</option>`;
     });
 
-  filtroStatus.value = "todos";
+  filtroEspecie.value="todas";
+  filtroStatus.value="todos";
 
   filtroEspecie.onchange = render;
   filtroStatus.onchange  = render;
