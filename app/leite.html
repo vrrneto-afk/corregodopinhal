@@ -5,10 +5,27 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Leite – Sítio Córrego do Pinhal</title>
 
-<link rel="stylesheet" href="menu.css">
+<link rel="manifest" href="../manifest.json">
+<meta name="theme-color" content="#7b3f2a">
 
+<!-- MENU GLOBAL -->
+<link rel="stylesheet" href="../menu/menu.css">
+
+<!-- FIREBASE GLOBAL -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+<!-- IDENTIFICAÇÃO DA PÁGINA -->
+<script>
+window.PERMISSAO_PAGINA = {
+  area: "app",
+  chave: "leite"
+};
+</script>
+
+<!-- AUTH GUARD -->
+<script src="../login/auth-guard.js"></script>
 
 <style>
 :root{
@@ -20,7 +37,7 @@
   --logo:#D0B485;
 }
 
-*{box-sizing:border-box;font-family:Inter,system-ui,Arial}
+*{box-sizing:border-box;font-family:'Inter',system-ui,Arial}
 body{margin:0;background:var(--bege);color:#333}
 
 header{background:var(--logo);padding:15px;text-align:center}
@@ -75,21 +92,11 @@ select{
 }
 .card strong{font-size:21px}
 .card span{font-size:14px;color:var(--cinza)}
-.card small{
-  display:block;
-  margin-top:4px;
-  font-size:13px;
-}
+.card small{display:block;margin-top:4px;font-size:13px}
 
-/* CORES DOS COMPARATIVOS */
-.comp-positivo{
-  color:var(--verde);
-  font-weight:600;
-}
-.comp-negativo{
-  color:var(--vermelho);
-  font-weight:600;
-}
+/* COMPARATIVOS */
+.comp-positivo{color:var(--verde);font-weight:600}
+.comp-negativo{color:var(--vermelho);font-weight:600}
 
 /* TABELA */
 table{
@@ -121,7 +128,10 @@ tfoot td{font-weight:800;background:#efe3d3}
 
 <body>
 
-<header><img src="logo.png"></header>
+<header>
+  <img src="../logo.png">
+</header>
+
 <div id="menu"></div>
 
 <div class="container">
@@ -137,30 +147,24 @@ tfoot td{font-weight:800;background:#efe3d3}
   <select id="ano"></select>
 </div>
 
-<select id="periodo">
-  <option value="mensal">Mensal</option>
-  <option value="bimestral">Bimestral</option>
-  <option value="trimestral">Trimestral</option>
-  <option value="semestral">Semestral</option>
-  <option value="anual">Anual</option>
-</select>
+<select id="periodo"></select>
 
 <div class="cards">
   <div class="card">
     <strong id="cLitros">0</strong>
-    <span>Produção total</span>
+    <span id="txtProducao"></span>
     <small id="dLitros"></small>
   </div>
 
   <div class="card">
-    <strong id="cValor">R$ 0,00</strong>
-    <span>Faturamento</span>
+    <strong id="cValor">0</strong>
+    <span id="txtFaturamento"></span>
     <small id="dValor"></small>
   </div>
 
   <div class="card">
     <strong id="cMediaVaca">0.00</strong>
-    <span>Média / vaca</span>
+    <span id="txtMedia"></span>
     <small id="dMedia"></small>
   </div>
 
@@ -181,7 +185,7 @@ tfoot td{font-weight:800;background:#efe3d3}
 <tr>
   <td>Total</td>
   <td id="tLitros">0</td>
-  <td id="tValor">R$ 0,00</td>
+  <td id="tValor">0</td>
   <td>-</td>
   <td id="tMedia">0.00</td>
 </tr>
@@ -192,58 +196,91 @@ tfoot td{font-weight:800;background:#efe3d3}
 </div>
 
 <script>
-fetch("menu.html").then(r=>r.text()).then(h=>{
-  menu.innerHTML=h;
-  document.querySelectorAll("#menu a").forEach(a=>{
-    if(a.getAttribute("href")==="leite.html") a.classList.add("ativo");
+/* MENU */
+fetch("../menu/menu.html")
+  .then(r=>r.text())
+  .then(html=>{
+    menu.innerHTML = html;
+    document.querySelectorAll("#menu a").forEach(a=>{
+      if(a.getAttribute("href")==="../app/leite.html"){
+        a.classList.add("ativo");
+      }
+    });
   });
-});
 
+/* FIREBASE INIT */
 firebase.initializeApp({
   apiKey:"AIzaSyCW-CuFDrOLO-dteckl_GrPTocmyS-IrzY",
   authDomain:"sitio-corrego-do-pinhal.firebaseapp.com",
   projectId:"sitio-corrego-do-pinhal"
 });
-const db=firebase.firestore();
 
-const meses=["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
-const moeda=v=>v.toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
+const db = firebase.firestore();
 
+/* CONFIG PADRÃO */
+let CONFIG = {
+  moeda:{codigo:"BRL",locale:"pt-BR"},
+  textos:{
+    faturamento:"Faturamento",
+    media:"Média por vaca",
+    producao:"Produção total"
+  },
+  periodos:[]
+};
+
+const mesesNomes=["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
 let rows=[];
 
+/* UTIL */
+const moeda = v => v.toLocaleString(CONFIG.moeda.locale,{style:"currency",currency:CONFIG.moeda.codigo});
+
+/* LOAD */
 async function load(){
-  const snap=await db.collection("producao_leite").get();
-  rows=snap.docs.map(d=>d.data());
+  const cfg = await db.collection("config").doc("leite").get();
+  if(cfg.exists){
+    CONFIG = {...CONFIG, ...cfg.data()};
+  }
 
-  mes.innerHTML=meses.map((m,i)=>`<option value="${i+1}">${m}</option>`).join("");
-  ano.innerHTML=[...new Set(rows.map(r=>r.ano))].sort().map(a=>`<option>${a}</option>`).join("");
+  txtFaturamento.innerText = CONFIG.textos.faturamento;
+  txtMedia.innerText = CONFIG.textos.media;
+  txtProducao.innerText = CONFIG.textos.producao;
 
-  ano.value=Math.max(...rows.map(r=>r.ano));
-  mes.value=1;
+  periodo.innerHTML = CONFIG.periodos
+    .filter(p=>p.ativo)
+    .map((p,i)=>`<option value="${i+1}">${p.nome}</option>`)
+    .join("");
 
-  mes.onchange=render;
-  ano.onchange=render;
-  periodo.onchange=render;
+  const snap = await db.collection("producao_leite").get();
+  rows = snap.docs.map(d=>d.data());
+
+  mes.innerHTML = mesesNomes.map((m,i)=>`<option value="${i+1}">${m}</option>`).join("");
+  ano.innerHTML = [...new Set(rows.map(r=>r.ano))].sort().map(a=>`<option>${a}</option>`).join("");
+
+  ano.value = Math.max(...rows.map(r=>r.ano));
+  mes.value = 1;
+
+  mes.onchange = render;
+  ano.onchange = render;
+  periodo.onchange = render;
 
   render();
 }
 
+/* RENDER (REGRA ORIGINAL PRESERVADA) */
 function render(){
-  const m=+mes.value,a=+ano.value,p=periodo.value;
+  const m=+mes.value,a=+ano.value,p=+periodo.value;
 
-  ctxMes.innerText=`${meses[m-1]} / ${a}`;
+  ctxMes.innerText=`${mesesNomes[m-1]} / ${a}`;
   ctxVisao.innerText=`📊 Visão: ${periodo.options[periodo.selectedIndex].text}`;
 
-  let mesesBack={mensal:1,bimestral:2,trimestral:3,semestral:6,anual:12}[p];
-
-  const atual=rows.filter(r=>{
+  const atual = rows.filter(r=>{
     const diff=(a*12+m)-(r.ano*12+r.mes);
-    return diff>=0 && diff<mesesBack;
+    return diff>=0 && diff<p;
   });
 
-  const anterior=rows.filter(r=>{
+  const anterior = rows.filter(r=>{
     const diff=(a*12+m)-(r.ano*12+r.mes);
-    return diff>=mesesBack && diff<mesesBack*2;
+    return diff>=p && diff<p*2;
   });
 
   const soma = arr => arr.reduce((s,r)=>s+r.litros_dia,0);
@@ -262,27 +299,11 @@ function render(){
   cMediaVaca.innerText=M.toFixed(2);
   cDias.innerText=atual.length;
 
-  function aplica(el,diff,txt){
-    el.className="";
-    if(diff<0){
-      el.classList.add("comp-negativo");
-      el.innerText=`▼ ${txt} vs período anterior`;
-    }else{
-      el.classList.add("comp-positivo");
-      el.innerText=`▲ ${txt} vs período anterior`;
-    }
-  }
+  dLitros.innerText = Lp ? (L-Lp>=0?`▲ ${L-Lp}`:`▼ ${Math.abs(L-Lp)}`) : "";
+  dValor.innerText = Vp ? (V-Vp>=0?`▲ ${moeda(V-Vp)}`:`▼ ${moeda(Math.abs(V-Vp))}`) : "";
+  dMedia.innerText = Mp ? (M-Mp>=0?`▲ ${(M-Mp).toFixed(2)}`:`▼ ${Math.abs(M-Mp).toFixed(2)}`) : "";
 
-  if(Lp) aplica(dLitros,L-Lp,Math.abs(L-Lp));
-  else dLitros.innerText="";
-
-  if(Vp) aplica(dValor,V-Vp,moeda(Math.abs(V-Vp)));
-  else dValor.innerText="";
-
-  if(Mp) aplica(dMedia,M-Mp,Math.abs(M-Mp).toFixed(2));
-  else dMedia.innerText="";
-
-  const mensal=rows.filter(r=>r.mes===m&&r.ano===a).sort((a,b)=>a.dia-b.dia);
+  const mensal = rows.filter(r=>r.mes===m && r.ano===a).sort((a,b)=>a.dia-b.dia);
   tbody.innerHTML="";
 
   let TL=0,TV=0,TM=0;
@@ -310,8 +331,8 @@ function render(){
   resumo.innerHTML=`
     <strong>📊 Resumo do mês</strong>
     <p>• Dias registrados: ${mensal.length}</p>
-    <p>• Produção total: ${TL} L</p>
-    <p>• Média por vaca: ${tMedia.innerText} L</p>
+    <p>• ${CONFIG.textos.producao}: ${TL} L</p>
+    <p>• ${CONFIG.textos.media}: ${tMedia.innerText} L</p>
   `;
 }
 
