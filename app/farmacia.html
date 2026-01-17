@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -5,10 +6,26 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Farmácia – Sítio Córrego do Pinhal</title>
 
-<link rel="stylesheet" href="menu.css">
+<link rel="manifest" href="../manifest.json">
+<meta name="theme-color" content="#7b3f2a">
 
+<!-- MENU GLOBAL -->
+<link rel="stylesheet" href="../menu/menu.css">
+
+<!-- FIREBASE -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+<!-- IDENTIFICAÇÃO DA PÁGINA -->
+<script>
+window.PERMISSAO_PAGINA = {
+  area: "app",
+  chave: "farmacia"
+};
+</script>
+
+<!-- AUTH GUARD -->
+<script src="../login/auth-guard.js"></script>
 
 <style>
 :root{
@@ -81,8 +98,7 @@ h2{
   border-left:6px solid var(--verde);
   border-radius:12px;
   box-shadow:0 2px 6px rgba(0,0,0,.06);
-  cursor:default;
-  pointer-events: none; /* ✅ BLOQUEIA QUALQUER CLIQUE */
+  pointer-events:none;
 }
 
 .card.sem-estoque{border-color:var(--vermelho)}
@@ -102,7 +118,7 @@ h2{
   color:var(--cinza);
 }
 
-/* BADGES */
+/* BADGE */
 .badge{
   display:inline-block;
   margin-top:6px;
@@ -128,7 +144,7 @@ h2{
 <body>
 
 <header>
-  <img src="logo.png">
+  <img src="../logo.png">
 </header>
 
 <div id="menu"></div>
@@ -152,28 +168,36 @@ h2{
 </div>
 
 <script>
-fetch("menu.html")
+/* MENU */
+fetch("../menu/menu.html")
   .then(r=>r.text())
   .then(html=>{
     document.getElementById("menu").innerHTML = html;
     document.querySelectorAll("#menu a").forEach(a=>{
-      if(a.getAttribute("href")==="farmacia.html"){
+      if(a.getAttribute("href")==="../app/farmacia.html"){
         a.classList.add("ativo");
       }
     });
   });
-</script>
 
-<script>
+/* FIREBASE INIT */
 firebase.initializeApp({
   apiKey:"AIzaSyCW-CuFDrOLO-dteckl_GrPTocmyS-IrzY",
   authDomain:"sitio-corrego-do-pinhal.firebaseapp.com",
   projectId:"sitio-corrego-do-pinhal"
 });
+
 const db = firebase.firestore();
 
 const lista = document.getElementById("lista");
 let MEDS = [];
+let CONFIG = {
+  quantidade_minima: 1,
+  dias_alerta_validade: 30,
+  texto_sem_estoque: "Sem estoque",
+  texto_vence_em: "Vence em",
+  texto_vencido: "Vencido"
+};
 
 function toDate(v){
   if(!v) return null;
@@ -187,16 +211,13 @@ function toDate(v){
 
 function render(){
   lista.innerHTML="";
-
   const hoje = new Date();
-  const status = filtroStatus.value;
-  const via = filtroVia.value;
 
   const dados = MEDS
     .filter(m=>{
-      if(status==="estoque" && Number(m.quantidade)<=0) return false;
-      if(status==="sem" && Number(m.quantidade)>0) return false;
-      if(via!=="todas" && m.via!==via) return false;
+      if(filtroStatus.value==="estoque" && Number(m.quantidade)<CONFIG.quantidade_minima) return false;
+      if(filtroStatus.value==="sem" && Number(m.quantidade)>=CONFIG.quantidade_minima) return false;
+      if(filtroVia.value!=="todas" && m.via!==filtroVia.value) return false;
       return true;
     })
     .sort((a,b)=>a.nome.localeCompare(b.nome));
@@ -208,20 +229,20 @@ function render(){
 
   dados.forEach(m=>{
     const validade = toDate(m.validade);
-    let classe="", badge="", dias=999;
+    let classe="", badge="";
 
-    if(validade){
-      dias = Math.ceil((validade-hoje)/(1000*60*60*24));
-      if(dias<0){
-        classe="vencido"; badge=`<span class="badge erro">Vencido</span>`;
-      }else if(dias<=30){
-        classe="vencer"; badge=`<span class="badge alerta">Vence em ${dias} dias</span>`;
-      }
-    }
-
-    if(Number(m.quantidade)<=0){
+    if(Number(m.quantidade)<CONFIG.quantidade_minima){
       classe="sem-estoque";
-      badge=`<span class="badge erro">Sem estoque</span>`;
+      badge=`<span class="badge erro">${CONFIG.texto_sem_estoque}</span>`;
+    }else if(validade){
+      const dias = Math.ceil((validade-hoje)/(1000*60*60*24));
+      if(dias<0){
+        classe="vencido";
+        badge=`<span class="badge erro">${CONFIG.texto_vencido}</span>`;
+      }else if(dias<=CONFIG.dias_alerta_validade){
+        classe="vencer";
+        badge=`<span class="badge alerta">${CONFIG.texto_vence_em} ${dias} dias</span>`;
+      }
     }
 
     let dosagem = `${m.dosagem_valor} ${m.dosagem_unidade}`;
@@ -243,13 +264,18 @@ function render(){
 }
 
 async function load(){
+  const cfg = await db.collection("config").doc("farmacia").get();
+  if(cfg.exists){
+    CONFIG = {...CONFIG, ...cfg.data()};
+  }
+
   const snap = await db.collection("farmacia").where("status","==","Ativo").get();
   MEDS = snap.docs.map(d=>({_id:d.id,...d.data()}));
 
   filtroVia.innerHTML = `<option value="todas">Todas as vias</option>`;
   [...new Set(MEDS.map(m=>m.via).filter(Boolean))]
     .sort()
-    .forEach(v=>filtroVia.innerHTML += `<option>${v}</option>`);
+    .forEach(v=>filtroVia.innerHTML+=`<option>${v}</option>`);
 
   filtroStatus.onchange = render;
   filtroVia.onchange = render;
