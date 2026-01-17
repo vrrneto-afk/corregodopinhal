@@ -8,8 +8,10 @@
 <link rel="manifest" href="../manifest.json">
 <meta name="theme-color" content="#7b3f2a">
 
+<!-- MENU CSS GLOBAL -->
 <link rel="stylesheet" href="../menu/menu.css">
 
+<!-- FIREBASE -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
@@ -41,6 +43,7 @@ window.PERMISSAO_PAGINA = { area:"app", chave:"animais" };
 
 *{box-sizing:border-box;font-family:'Inter',system-ui,-apple-system,Arial}
 body{margin:0;background:var(--bege);color:#333}
+
 header{background:var(--logo);padding:15px;text-align:center}
 header img{max-width:260px;width:100%}
 
@@ -127,14 +130,14 @@ const ORDEM_STATUS = {
 };
 
 function abrirAnimal(id){
-  location.href="../app/animal.html?id="+encodeURIComponent(id);
+  location.href = "../app/animal.html?id=" + encodeURIComponent(id);
+}
+
+function normalizar(txt){
+  return (txt || "").toLowerCase().trim();
 }
 
 let ANIMAIS = [];
-
-function normalizar(txt){
-  return (txt||"").toLowerCase().trim();
-}
 
 function render(){
   const esp = filtroEspecie.value;
@@ -142,12 +145,12 @@ function render(){
 
   lista.innerHTML = "";
 
-  let dados = ANIMAIS
-    .filter(a => esp==="todas" || a.especie_key===esp)
-    .filter(a => st==="todos" || a.status_key===st)
+  const dados = ANIMAIS
+    .filter(a => esp === "todas" || a.especie_key === esp)
+    .filter(a => st === "todos" || a.status_key === st)
     .sort((a,b)=>{
       const o = ORDEM_STATUS[a.status_key] - ORDEM_STATUS[b.status_key];
-      return o!==0 ? o : a.nome.localeCompare(b.nome);
+      return o !== 0 ? o : a.nome.localeCompare(b.nome);
     });
 
   if(!dados.length){
@@ -181,12 +184,17 @@ async function load(){
     };
   });
 
-  // SELECT ESPÉCIES
+  /* SELECT ESPÉCIES — CORREÇÃO DEFINITIVA */
   filtroEspecie.innerHTML = `<option value="todas">Todas as espécies</option>`;
-  [...new Set(ANIMAIS.map(a=>a.especie_key))]
+
+  [...new Set(
+      ANIMAIS
+        .map(a => a.especie_key)
+        .filter(Boolean)   // 👈 REMOVE CAMPO VAZIO
+    )]
     .sort()
     .forEach(k=>{
-      const ref = ANIMAIS.find(a=>a.especie_key===k);
+      const ref = ANIMAIS.find(a => a.especie_key === k);
       filtroEspecie.innerHTML += `<option value="${k}">${ref.especie}</option>`;
     });
 
