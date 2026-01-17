@@ -1,10 +1,18 @@
 // auth-guard.js
 // Guardião global de autenticação + autorização por grupo
-// VERSÃO DEFINITIVA — BLOQUEIO IMEDIATO
+// VERSÃO DEFINITIVA — LOGIN SEGURO SEM LOOP
 
 (function () {
 
-  // 🔒 BLOQUEIA A TELA IMEDIATAMENTE
+  const emLogin = location.pathname.includes("/login/");
+
+  // 🔓 LOGIN NÃO DEVE SER BLOQUEADO
+  if (emLogin) {
+    iniciarLogin();
+    return;
+  }
+
+  // 🔒 BLOQUEIO VISUAL IMEDIATO (APENAS FORA DO LOGIN)
   const bloqueio = document.createElement("div");
   bloqueio.style.position = "fixed";
   bloqueio.style.top = 0;
@@ -20,9 +28,7 @@
   }
 
   function redirecionarLogin() {
-    if (!location.pathname.includes("/login/")) {
-      location.replace("../login/login.html");
-    }
+    location.replace("../login/login.html");
   }
 
   async function bloquear(msg) {
@@ -34,18 +40,17 @@
   const esperarFirebase = setInterval(() => {
     if (window.firebase && firebase.auth && firebase.firestore) {
       clearInterval(esperarFirebase);
-      iniciar();
+      iniciarApp();
     }
   }, 50);
 
-  function iniciar() {
+  function iniciarApp() {
 
     const auth = firebase.auth();
     const db   = firebase.firestore();
 
     // 🔐 VERIFICA IMEDIATA
-    const userAtual = auth.currentUser;
-    if (!userAtual) {
+    if (!auth.currentUser) {
       redirecionarLogin();
       return;
     }
@@ -58,7 +63,6 @@
       }
 
       try {
-        // 🔹 USUÁRIO
         const refUser = db.collection("usuarios").doc(user.uid);
         const snapUser = await refUser.get();
 
@@ -76,14 +80,13 @@
 
         const grupoUsuario = dadosUsuario.papel;
         if (!grupoUsuario) {
-          await bloquear("Grupo de usuário não definido.");
+          await bloquear("Grupo não definido.");
           return;
         }
 
-        // 🔹 CONFIG GRUPOS
         const snapGrupos = await db.collection("config").doc("grupos").get();
         if (!snapGrupos.exists) {
-          await bloquear("Configuração de grupos não encontrada.");
+          await bloquear("Configuração de grupos ausente.");
           return;
         }
 
@@ -91,14 +94,13 @@
         const grupoConfig = grupos.find(g => g.id === grupoUsuario);
 
         if (!grupoConfig) {
-          await bloquear("Grupo de usuário inválido.");
+          await bloquear("Grupo inválido.");
           return;
         }
 
         // 🔐 PERMISSÃO DA PÁGINA
         if (window.PERMISSAO_PAGINA) {
           const { area, chave } = window.PERMISSAO_PAGINA;
-
           const permitido =
             grupoConfig.permissoes?.[area]?.[chave] === true;
 
@@ -108,7 +110,7 @@
           }
         }
 
-        // ✅ USUÁRIO AUTORIZADO
+        // ✅ OK
         window.USUARIO_ATUAL = {
           uid: user.uid,
           email: user.email,
@@ -116,24 +118,31 @@
           dados: dadosUsuario
         };
 
-        // Atualiza último login (sem travar)
         refUser.update({
           ultimo_login: firebase.firestore.FieldValue.serverTimestamp()
-        }).catch(() => {});
+        }).catch(()=>{});
 
-        // 🔓 LIBERA A TELA
         liberarTela();
-
-        // 🔁 LOGIN → INDEX
-        if (location.pathname.includes("/login/")) {
-          location.replace("../app/index.html");
-        }
 
       } catch (e) {
         console.error(e);
-        await bloquear("Erro ao verificar permissões.");
+        await bloquear("Erro ao validar acesso.");
       }
     });
+  }
+
+  // 🔓 LOGIN: APENAS REDIRECIONA SE JÁ LOGADO
+  function iniciarLogin() {
+    const esperar = setInterval(() => {
+      if (window.firebase && firebase.auth) {
+        clearInterval(esperar);
+        firebase.auth().onAuthStateChanged(user => {
+          if (user) {
+            location.replace("../app/index.html");
+          }
+        });
+      }
+    }, 50);
   }
 
 })();
