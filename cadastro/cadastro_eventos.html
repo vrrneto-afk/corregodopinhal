@@ -127,11 +127,6 @@ firebase.initializeApp({
 const auth=firebase.auth();
 const db=firebase.firestore();
 
-/* LOGOUT (CORRIGIDO) */
-function logout(){
-  auth.signOut().then(()=>location.href="index.html");
-}
-
 /* ELEMENTOS */
 const acao=document.getElementById("acao");
 const animal=document.getElementById("animal");
@@ -177,71 +172,10 @@ async function carregarAnimais(){
   });
 }
 
-/* LIMPAR FORMULÁRIO (NOVO) */
-function limparFormulario(){
-  animal.value="";
-  eventoExistente.innerHTML="";
-  tipo_evento.value="";
-  data_evento.value="";
-  status_evento.value="Confirmado";
-  observacoes.value="";
-  boi.value="";
-  blocoCobertura.classList.add("hidden");
-  atual=null;
-}
-
-/* NOVO x EDITAR */
-acao.onchange=()=>{
-  const editar=acao.value==="editar";
-  blocoEditar.classList.toggle("hidden",!editar);
-  btnExcluir.classList.toggle("hidden",!editar);
-
-  if(!editar){
-    limparFormulario();
-  }
-};
-
-/* ANIMAL → EVENTOS */
-animal.onchange=async()=>{
-  eventoExistente.innerHTML="";
-  atual=null;
-
-  if(acao.value!=="editar" || !animal.value) return;
-
-  const snap=await db.collection("eventos")
-    .where("id_animal","==",animal.value)
-    .get();
-
-  EVENTOS=snap.docs.map(d=>({id:d.id,...d.data()}));
-
-  eventoExistente.innerHTML='<option value="">Selecione</option>';
-  EVENTOS.forEach(e=>{
-    eventoExistente.innerHTML+=`
-      <option value="${e.id}">
-        ${e.tipo_evento} - ${e.data_evento}
-      </option>`;
-  });
-};
-
-/* EDITAR */
-eventoExistente.onchange=()=>{
-  atual=EVENTOS.find(e=>e.id===eventoExistente.value);
-  if(!atual) return;
-
-  tipo_evento.value=atual.tipo_evento;
-  data_evento.value=atual.data_evento;
-  status_evento.value=atual.status_evento||"Confirmado";
-  observacoes.value=atual.observacoes||"";
-  boi.value=atual.id_relacionado||"";
-
-  atualizarBlocos();
-};
-
 /* BLOCO POR TIPO */
-tipo_evento.onchange=atualizarBlocos;
-function atualizarBlocos(){
+tipo_evento.onchange=()=>{
   blocoCobertura.classList.toggle("hidden",tipo_evento.value!=="cobertura");
-}
+};
 
 /* SALVAR */
 async function salvar(){
@@ -250,15 +184,11 @@ async function salvar(){
     return;
   }
 
-  if(["venda","falecimento"].includes(tipo_evento.value)){
-    await db.collection("animais").doc(animal.value).update({
-      status: tipo_evento.value==="venda"?"Vendido":"Falecido"
-    });
-  }
-
-  const dados={
+  const a = ANIMAIS.find(x=>x.id===animal.value);
+  let dados={
     id_animal:animal.value,
-    nome_animal:ANIMAIS.find(a=>a.id===animal.value)?.nome||"",
+    nome_animal:a?.nome||"",
+    especie:a?.especie||"",
     tipo_evento:tipo_evento.value,
     data_evento:data_evento.value,
     id_relacionado: tipo_evento.value==="cobertura"?boi.value:"",
@@ -269,6 +199,30 @@ async function salvar(){
     origem_registro:"manual"
   };
 
+  /* === PADRÃO GLOBAL: COBERTURA === */
+  if(tipo_evento.value==="cobertura"){
+    const cfgSnap = await db.collection("config")
+      .doc("especies")
+      .get();
+
+    const cfg = cfgSnap.data()?.[a.especie] || {};
+    const meses = Number(cfg.gestacao_meses || 0);
+
+    if(meses>0){
+      const d=new Date(data_evento.value+"T00:00:00");
+      d.setMonth(d.getMonth()+meses);
+
+      dados.gestacao_meses = meses;
+      dados.data_prevista_parto = d.toISOString().slice(0,10);
+    }
+  }
+
+  if(["venda","falecimento"].includes(tipo_evento.value)){
+    await db.collection("animais").doc(animal.value).update({
+      status: tipo_evento.value==="venda"?"Vendido":"Falecido"
+    });
+  }
+
   if(acao.value==="editar" && atual){
     await db.collection("eventos").doc(atual.id).update(dados);
   }else{
@@ -277,17 +231,6 @@ async function salvar(){
 
   alert("Evento salvo com sucesso");
   location.reload();
-}
-
-/* EXCLUIR (COM MENSAGEM) */
-async function excluir(){
-  if(!atual) return;
-
-  if(confirm("Excluir evento?")){
-    await db.collection("eventos").doc(atual.id).delete();
-    alert("Evento excluído com sucesso");
-    location.reload();
-  }
 }
 </script>
 
