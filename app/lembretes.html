@@ -5,8 +5,34 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>Lembretes – Sítio Córrego do Pinhal</title>
 
+<link rel="manifest" href="../manifest.json">
+<meta name="theme-color" content="#7b3f2a">
+
+<!-- MENU GLOBAL -->
+<link rel="stylesheet" href="../menu/menu.css">
+
+<!-- FIREBASE -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+<script>
+firebase.initializeApp({
+  apiKey: "AIzaSyCW-CuFDrOLO-dteckl_GrPTocmyS-IrzY",
+  authDomain: "sitio-corrego-do-pinhal.firebaseapp.com",
+  projectId: "sitio-corrego-do-pinhal"
+});
+</script>
+
+<!-- IDENTIFICAÇÃO DA PÁGINA -->
+<script>
+window.PERMISSAO_PAGINA = {
+  area: "app",
+  chave: "lembretes"
+};
+</script>
+
+<!-- AUTH GUARD -->
+<script src="../login/auth-guard.js"></script>
 
 <style>
 :root{
@@ -40,51 +66,6 @@ header{
 header img{
   max-width:260px;
   width:100%;
-}
-
-/* MENU (necessário mesmo sendo externo) */
-nav{
-  background:var(--marrom);
-  display:flex;
-  flex-wrap:wrap;
-  justify-content:center;
-  gap:4px;
-}
-nav a{
-  color:#fff;
-  text-decoration:none;
-  font-weight:600;
-  font-size:15px;
-  padding:12px 14px;
-  border-radius:10px;
-  display:flex;
-  align-items:center;
-  gap:6px;
-  opacity:.85;
-  position:relative;
-  transition:.2s;
-}
-nav a span{
-  font-size:18px;
-}
-nav a:hover{
-  background:rgba(255,255,255,.12);
-  opacity:1;
-}
-nav a.ativo{
-  background:rgba(255,255,255,.22);
-  font-weight:800;
-  opacity:1;
-}
-nav a.ativo::after{
-  content:"";
-  position:absolute;
-  bottom:4px;
-  left:15%;
-  width:70%;
-  height:3px;
-  background:#fff;
-  border-radius:10px;
 }
 
 /* CONTAINER */
@@ -135,7 +116,7 @@ h2{
   cursor:pointer;
 }
 
-/* CARDS – NEUTROS */
+/* CARDS */
 .card{
   background:#fff;
   padding:14px;
@@ -186,10 +167,9 @@ h2{
 <body>
 
 <header>
-  <img src="logo.png">
+  <img src="../logo.png">
 </header>
 
-<!-- MENU EXTERNO -->
 <div id="menu"></div>
 
 <div class="container">
@@ -215,49 +195,39 @@ h2{
 </div>
 
 <script>
-/* ===== MENU ===== */
-fetch("menu.html")
-  .then(r => r.text())
-  .then(html => {
+/* MENU DINÂMICO */
+fetch("../menu/menu.html")
+  .then(r=>r.text())
+  .then(html=>{
     document.getElementById("menu").innerHTML = html;
-
-    const atual = location.pathname.split("/").pop();
-    document.querySelectorAll("#menu a").forEach(a => {
-      if(a.getAttribute("href") === atual){
+    document.querySelectorAll("#menu a").forEach(a=>{
+      if(a.getAttribute("href")==="../app/lembretes.html"){
         a.classList.add("ativo");
       }
     });
   });
 
-/* ===== FIREBASE ===== */
-firebase.initializeApp({
-  apiKey:"AIzaSyCW-CuFDrOLO-dteckl_GrPTocmyS-IrzY",
-  authDomain:"sitio-corrego-do-pinhal.firebaseapp.com",
-  projectId:"sitio-corrego-do-pinhal"
-});
+const db = firebase.firestore();
+let editId = null;
+let editTipo = null;
 
-const db=firebase.firestore();
-let editId=null;
-let editTipo=null;
-
-/* ===== FUNÇÕES ===== */
 async function carregar(){
-  const snap=await db.collection("lembretes").get();
+  const snap = await db.collection("lembretes").get();
 
-  listaCompra.innerHTML="";
-  listaTarefa.innerHTML="";
+  listaCompra.innerHTML = "";
+  listaTarefa.innerHTML = "";
 
-  const dados=snap.docs.map(d=>({id:d.id,...d.data()}));
+  const dados = snap.docs.map(d=>({id:d.id,...d.data()}));
 
   if(!dados.length){
-    listaCompra.innerHTML="<p style='color:#666'>Nenhum item cadastrado.</p>";
-    listaTarefa.innerHTML="<p style='color:#666'>Nenhuma tarefa cadastrada.</p>";
+    listaCompra.innerHTML = "<p style='color:#666'>Nenhum item cadastrado.</p>";
+    listaTarefa.innerHTML = "<p style='color:#666'>Nenhuma tarefa cadastrada.</p>";
     return;
   }
 
   dados.forEach(r=>{
-    const destino=r.tipo==="tarefa"?listaTarefa:listaCompra;
-    destino.innerHTML+=`
+    const destino = r.tipo==="tarefa" ? listaTarefa : listaCompra;
+    destino.innerHTML += `
       <div class="card">
         <div class="texto">${r.texto}</div>
         <div class="acoes">
@@ -269,14 +239,14 @@ async function carregar(){
 }
 
 async function salvar(tipo){
-  const input=tipo==="tarefa"?textoTarefa:textoCompra;
-  const valor=input.value.trim();
+  const input = tipo==="tarefa" ? textoTarefa : textoCompra;
+  const valor = input.value.trim();
   if(!valor) return alert("Digite um texto");
 
-  if(editId&&editTipo===tipo){
+  if(editId && editTipo===tipo){
     await db.collection("lembretes").doc(editId).update({texto:valor});
-    editId=null;
-    editTipo=null;
+    editId = null;
+    editTipo = null;
   }else{
     await db.collection("lembretes").add({
       texto:valor,
@@ -285,15 +255,15 @@ async function salvar(tipo){
     });
   }
 
-  input.value="";
+  input.value = "";
   carregar();
 }
 
 function editar(id,tipo,valor){
-  editId=id;
-  editTipo=tipo;
-  const input=tipo==="tarefa"?textoTarefa:textoCompra;
-  input.value=valor;
+  editId = id;
+  editTipo = tipo;
+  const input = tipo==="tarefa" ? textoTarefa : textoCompra;
+  input.value = valor;
   input.focus();
 }
 
@@ -306,6 +276,8 @@ async function excluir(id){
 
 carregar();
 </script>
+
+<script src="../login/logout.js"></script>
 
 </body>
 </html>
