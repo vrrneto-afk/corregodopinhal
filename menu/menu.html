@@ -1,49 +1,56 @@
 <div class="menu-wrapper">
   <nav id="menu-links">
 
-    <a href="../app/index.html" data-chave="inicio">
-      <span>🏠</span> Início
-    </a>
+  <a href="../app/index.html" class="menu-link">
+    🏠 <span>Início</span>
+  </a>
 
-    <a href="../app/lembretes.html" data-chave="lembretes">
-      <span>📝</span> Lembretes
-    </a>
+  <a href="../app/lembretes.html" class="menu-link">
+    📝 <span>Lembretes</span>
+  </a>
 
-    <a href="../app/animais.html" data-chave="animais">
-      <span>🐾</span> Animais
-    </a>
+  <a href="../app/animais.html" class="menu-link">
+    🐾 <span>Animais</span>
+  </a>
 
-    <a href="../app/vacas.html" data-chave="vacas">
-      <span>🐄</span> Vacas
-    </a>
+  <a href="../app/vacas.html" class="menu-link">
+    🐄 <span>Vacas</span>
+  </a>
 
-    <a href="../app/bezerros.html" data-chave="bezerros">
-      <span>🐮</span> Bezerros
-    </a>
+  <a href="../app/bezerros.html" class="menu-link">
+    🐮 <span>Bezerros</span>
+  </a>
 
-    <a href="../app/historico.html" data-chave="historico">
-      <span>📜</span> Histórico
-    </a>
+  <a href="../app/historico.html" class="menu-link">
+    📜 <span>Histórico</span>
+  </a>
 
-    <a href="../app/farmacia.html" data-chave="farmacia">
-      <span>💊</span> Farmácia
-    </a>
+  <a href="../app/farmacia.html" class="menu-link">
+    💊 <span>Farmácia</span>
+  </a>
 
-    <a href="../app/vacinas.html" data-chave="vacinas">
-      <span>💉</span> Vacinas
-    </a>
+  <a href="../app/vacinas.html" class="menu-link">
+    💉 <span>Vacinas</span>
+  </a>
 
-    <a href="../app/leite.html" data-chave="leite">
-      <span>🥛</span> Leite
-    </a>
+  <a href="../app/leite.html" class="menu-link">
+    🥛 <span>Leite</span>
+  </a>
 
-    <a href="../app/despesas.html" data-chave="despesas">
-      <span>💰</span> Despesas
-    </a>
+  <a href="../app/despesas.html" class="menu-link">
+    💰 <span>Despesas</span>
+  </a>
 
-    <a href="../app/relatorios.html" data-chave="relatorios">
-      <span>📊</span> Relatórios
-    </a>
+  <a href="../app/relatorios.html" class="menu-link">
+    📊 <span>Relatórios</span>
+  </a>
+
+  <!-- SAIR -->
+  <a href="#" class="menu-link sair" id="btnLogout">
+    🚪 <span>Sair</span>
+  </a>
+
+</nav>
 
     <!-- SAIR -->
     <a href="#" id="btnLogout" class="logout">
@@ -51,25 +58,3 @@
     </a>
 
   </nav>
-</div>
-
-<script>
-/* ===========================
-   MENU LINK – ATIVO AUTOMÁTICO
-   =========================== */
-
-(function () {
-  if (!window.PERMISSAO_PAGINA) return;
-
-  const { chave } = window.PERMISSAO_PAGINA;
-  if (!chave) return;
-
-  document
-    .querySelectorAll("#menu-links a[data-chave]")
-    .forEach(link => {
-      if (link.dataset.chave === chave) {
-        link.classList.add("ativo");
-      }
-    });
-})();
-</script>
