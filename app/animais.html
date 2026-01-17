@@ -71,7 +71,6 @@ select{flex:1;min-width:200px;padding:12px;font-size:15px;border-radius:12px;bor
   <img src="../logo.png">
 </header>
 
-<!-- MENU GLOBAL (CORRETO) -->
 <div id="menu"></div>
 
 <div class="container">
@@ -97,7 +96,6 @@ const lista = document.getElementById("lista");
 const filtroEspecie = document.getElementById("filtroEspecie");
 const filtroStatus  = document.getElementById("filtroStatus");
 
-/* MENU */
 fetch("../menu/menu.html")
   .then(r=>r.text())
   .then(html=>{
@@ -120,7 +118,7 @@ function abrirAnimal(id){
 let ANIMAIS = [];
 
 function render(){
-  const especie = filtroEspecie.value;
+  const especie = filtroEspecie.value || "todas";
   const status  = filtroStatus.value;
 
   lista.innerHTML = "";
@@ -161,8 +159,7 @@ async function load(){
       filtroEspecie.innerHTML += `<option value="${e}">${e}</option>`;
     });
 
-  filtroEspecie.value = "todas";
-  filtroStatus.value  = "todos";
+  filtroStatus.value = "todos";
 
   filtroEspecie.onchange = render;
   filtroStatus.onchange  = render;
