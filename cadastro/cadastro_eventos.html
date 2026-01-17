@@ -106,7 +106,7 @@ button{
 
 <script>
 /* MENU ADM */
-fetch("menu-adm.html")
+fetch("/menu/menu-adm.html")
   .then(r=>r.text())
   .then(html=>{
     document.getElementById("menu-adm").innerHTML = html;
