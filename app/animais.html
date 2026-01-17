@@ -11,7 +11,6 @@
 <link rel="stylesheet" href="../menu/menu.css">
 
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
 <script>
@@ -39,24 +38,46 @@ window.PERMISSAO_PAGINA = { area:"app", chave:"animais" };
   --cinza-escuro:#555;
   --logo:#D0B485;
 }
-*{box-sizing:border-box;font-family:'Inter',system-ui,-apple-system,Arial;}
+
+*{box-sizing:border-box;font-family:'Inter',system-ui,-apple-system,Arial}
 body{margin:0;background:var(--bege);color:#333}
-header{background:var(--logo);padding:15px 10px;text-align:center}
+header{background:var(--logo);padding:15px;text-align:center}
 header img{max-width:260px;width:100%}
+
 .container{max-width:900px;margin:20px auto;padding:0 15px}
 h2{color:var(--marrom);margin-bottom:12px;display:flex;gap:8px}
+
 .filtros{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:20px}
-select{flex:1;min-width:200px;padding:12px;font-size:15px;border-radius:12px;border:1.5px solid #ddd}
-.card{background:#fff;padding:15px;margin-bottom:14px;border-left:6px solid #ddd;border-radius:12px;box-shadow:0 2px 6px rgba(0,0,0,.06);cursor:pointer}
+select{flex:1;min-width:200px;padding:12px;border-radius:12px;border:1.5px solid #ddd}
+
+.card{
+  background:#fff;
+  padding:15px;
+  margin-bottom:14px;
+  border-left:6px solid #ddd;
+  border-radius:12px;
+  box-shadow:0 2px 6px rgba(0,0,0,.06);
+  cursor:pointer
+}
+
 .card.ativo{border-color:var(--verde)}
 .card.inativo{border-color:var(--amarelo)}
 .card.vendido{border-color:var(--laranja)}
 .card.falecido{border-color:var(--cinza-escuro)}
-.badge{display:inline-block;margin-top:6px;padding:3px 8px;border-radius:10px;font-size:12px;font-weight:700;color:#fff}
+
+.badge{
+  padding:4px 10px;
+  border-radius:12px;
+  font-size:12px;
+  font-weight:800;
+  color:#fff
+}
+
 .badge.ativo{background:var(--verde)}
 .badge.inativo{background:var(--amarelo)}
 .badge.vendido{background:var(--laranja)}
 .badge.falecido{background:var(--cinza-escuro)}
+
 .vazio{text-align:center;color:#777;margin-top:30px}
 </style>
 </head>
@@ -96,20 +117,14 @@ fetch("../menu/menu.html")
   .then(r=>r.text())
   .then(html=>{
     document.getElementById("menu").innerHTML = html;
-    document.querySelectorAll("#menu a").forEach(a=>{
-      if(a.getAttribute("href")==="../app/animais.html"){
-        a.classList.add("ativo");
-      }
-    });
   });
 
-function normalizar(txt){
-  return (txt||"")
-    .toLowerCase()
-    .replace(/\s+/g," ")
-    .replace(/\s*-\s*/g,"-")
-    .trim();
-}
+const ORDEM_STATUS = {
+  ativo: 1,
+  inativo: 2,
+  vendido: 3,
+  falecido: 4
+};
 
 function abrirAnimal(id){
   location.href="../app/animal.html?id="+encodeURIComponent(id);
@@ -117,28 +132,37 @@ function abrirAnimal(id){
 
 let ANIMAIS = [];
 
+function normalizar(txt){
+  return (txt||"").toLowerCase().trim();
+}
+
 function render(){
-  const especie = filtroEspecie.value;
-  const status  = filtroStatus.value;
+  const esp = filtroEspecie.value;
+  const st  = filtroStatus.value;
 
   lista.innerHTML = "";
 
-  const dados = ANIMAIS
-    .filter(a => especie==="todas" || a.especie_key===especie)
-    .filter(a => status==="todos" || a.status===status);
+  let dados = ANIMAIS
+    .filter(a => esp==="todas" || a.especie_key===esp)
+    .filter(a => st==="todos" || a.status_key===st)
+    .sort((a,b)=>{
+      const o = ORDEM_STATUS[a.status_key] - ORDEM_STATUS[b.status_key];
+      return o!==0 ? o : a.nome.localeCompare(b.nome);
+    });
 
   if(!dados.length){
-    lista.innerHTML="<div class='vazio'>🐾 Nenhum animal encontrado.</div>";
+    lista.innerHTML = `<div class="vazio">🐾 Nenhum animal encontrado.</div>`;
     return;
   }
 
   dados.forEach(a=>{
-    lista.innerHTML+=`
-      <div class="card ${a.status}" onclick="abrirAnimal('${a._id}')">
+    lista.innerHTML += `
+      <div class="card ${a.status_key}" onclick="abrirAnimal('${a._id}')">
         <strong>${a.nome.toUpperCase()}</strong>
         <p>Espécie: ${a.especie}</p>
-        <p>Status: <span class="badge ${a.status}">${a.status}</span></p>
-      </div>`;
+        <p>Status: <span class="badge ${a.status_key}">${a.status}</span></p>
+      </div>
+    `;
   });
 }
 
@@ -149,23 +173,25 @@ async function load(){
     const data = d.data();
     return {
       _id: d.id,
-      ...data,
+      nome: data.nome || "",
+      especie: data.especie || "",
       especie_key: normalizar(data.especie),
-      status: normalizar(data.status)
+      status: data.status || "",
+      status_key: normalizar(data.status)
     };
   });
 
+  // SELECT ESPÉCIES
   filtroEspecie.innerHTML = `<option value="todas">Todas as espécies</option>`;
-
   [...new Set(ANIMAIS.map(a=>a.especie_key))]
     .sort()
     .forEach(k=>{
-      const ex = ANIMAIS.find(a=>a.especie_key===k);
-      filtroEspecie.innerHTML += `<option value="${k}">${ex.especie}</option>`;
+      const ref = ANIMAIS.find(a=>a.especie_key===k);
+      filtroEspecie.innerHTML += `<option value="${k}">${ref.especie}</option>`;
     });
 
-  filtroEspecie.value="todas";
-  filtroStatus.value="todos";
+  filtroEspecie.value = "todas";
+  filtroStatus.value  = "todos";
 
   filtroEspecie.onchange = render;
   filtroStatus.onchange  = render;
