@@ -69,13 +69,6 @@ h2{color:var(--marrom);display:flex;gap:8px;align-items:center;margin-bottom:10p
 }
 .vencimentos .card.atrasada{border-left-color:var(--vermelho)}
 
-/* CONTROLES */
-.controles{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:10px;
-  margin-bottom:14px;
-}
 select{
   padding:12px;
   font-size:15px;
@@ -83,52 +76,22 @@ select{
   border:1.5px solid #ddd;
   background:#f2f2f2
 }
-#periodo{margin-bottom:14px}
 
-/* CARDS */
-.cards{
-  display:grid;
-  grid-template-columns:repeat(auto-fit,minmax(160px,1fr));
-  gap:12px;
-  margin-bottom:18px;
-}
 .card{
   background:#fff;
   padding:14px;
-  border-left:6px solid var(--verde);
   border-radius:14px;
   box-shadow:0 2px 6px rgba(0,0,0,.05)
 }
-.card strong{font-size:18px}
-.card span{font-size:14px;color:var(--cinza)}
-.card small{display:block;margin-top:6px;font-size:13px}
+.card p{
+  margin:4px 0;
+  font-size:14px;
+  color:var(--cinza)
+}
+.card strong{color:#000}
 
 .pos{color:var(--verde)}
 .neg{color:var(--vermelho)}
-
-.linha-dupla{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:10px;
-  margin-top:6px;
-}
-
-/* TABELA */
-table{
-  width:100%;
-  border-collapse:collapse;
-  background:#fff;
-  border-radius:14px;
-  overflow:hidden
-}
-th,td{
-  padding:10px;
-  text-align:center;
-  border-bottom:1px solid #eee;
-  font-size:14px
-}
-th{background:#efe3d3}
-tfoot td{font-weight:800;background:#efe3d3}
 </style>
 </head>
 
@@ -152,56 +115,9 @@ tfoot td{font-weight:800;background:#efe3d3}
 <h3>⏰ Despesas a Vencer</h3>
 <div id="vencimentos" class="vencimentos"></div>
 
-<div class="controles">
-  <select id="mes"></select>
-  <select id="ano"></select>
-</div>
-
-<select id="periodo">
-  <option value="mensal">Mensal</option>
-  <option value="bimestral">Bimestral</option>
-  <option value="trimestral">Trimestral</option>
-  <option value="semestral">Semestral</option>
-  <option value="anual">Anual</option>
-</select>
-
-<div class="cards">
-  <div class="card">
-    <strong id="cTotal">R$ 0,00</strong>
-    <span>Total</span>
-  </div>
-  <div class="card">
-    <strong id="cQtd">0</strong>
-    <span>Quantidade</span>
-  </div>
-  <div class="card">
-    <strong id="cMedia">R$ 0,00</strong>
-    <span>Média</span>
-  </div>
-</div>
-
-<table>
-<thead>
-<tr>
-  <th>Vencimento</th>
-  <th>Tipo</th>
-  <th>Fornecedor</th>
-  <th>Valor</th>
-</tr>
-</thead>
-<tbody id="tbody"></tbody>
-<tfoot>
-<tr>
-  <td colspan="3">Total</td>
-  <td id="tValor">R$ 0,00</td>
-</tr>
-</tfoot>
-</table>
-
 </div>
 
 <script>
-/* MENU */
 fetch("../menu/menu.html")
   .then(r=>r.text())
   .then(html=>{
@@ -213,7 +129,6 @@ fetch("../menu/menu.html")
     });
   });
 
-/* FIREBASE INIT */
 firebase.initializeApp({
   apiKey:"AIzaSyCW-CuFDrOLO-dteckl_GrPTocmyS-IrzY",
   authDomain:"sitio-corrego-do-pinhal.firebaseapp.com",
@@ -221,21 +136,16 @@ firebase.initializeApp({
 });
 const db = firebase.firestore();
 
-/* CONFIG PADRÃO (ALINHADO AO FIRESTORE) */
 let CONFIG = {
   vencimentos_max: 5,
   textos:{
-    atrasada_ha: "Atrasada há",
-    vence_em: "Vence em"
+    atrasada_ha:"Atrasada há",
+    vence_em:"Vence em"
   }
 };
 
-const meses=["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
-const moeda=v=>Number(v||0).toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
-
 function parseData(v){
-  if(!v) return null;
-  if(v.seconds) return new Date(v.seconds*1000);
+  if(v?.seconds) return new Date(v.seconds*1000);
   const [y,m,d]=String(v).split("-");
   return new Date(y,m-1,d);
 }
@@ -245,39 +155,18 @@ let rows=[];
 async function load(){
   const cfg = await db.collection("config").doc("despesas").get();
   if(cfg.exists){
-    const data = cfg.data();
-
-    CONFIG.vencimentos_max =
-      Number(data.vencimentos_max ?? CONFIG.vencimentos_max);
-
-    if(data.textos){
-      CONFIG.textos.atrasada_ha =
-        data.textos.atrasada_ha ?? CONFIG.textos.atrasada_ha;
-
-      CONFIG.textos.vence_em =
-        data.textos.vence_em ?? CONFIG.textos.vence_em;
-    }
+    const d=cfg.data();
+    CONFIG.vencimentos_max=d.vencimentos_max ?? CONFIG.vencimentos_max;
+    CONFIG.textos={...CONFIG.textos,...(d.textos||{})};
   }
 
-  const snap = await db.collection("despesas").get();
-  rows = snap.docs.map(d=>{
+  const snap=await db.collection("despesas").get();
+  rows=snap.docs.map(d=>{
     const r=d.data();
-    return {...r, vencimento:parseData(r.data_vencimento)};
+    return {...r,vencimento:parseData(r.data_vencimento)};
   });
 
-  mes.innerHTML = meses.map((m,i)=>`<option value="${i+1}">${m}</option>`).join("");
-  ano.innerHTML = [...new Set(rows.map(r=>r.vencimento.getFullYear()))]
-    .sort().map(a=>`<option>${a}</option>`).join("");
-
-  ano.value = Math.max(...rows.map(r=>r.vencimento.getFullYear()));
-  mes.value = new Date().getMonth()+1;
-
-  mes.onchange=render;
-  ano.onchange=render;
-  periodo.onchange=render;
-
   renderVencimentos();
-  render();
 }
 
 function renderVencimentos(){
@@ -295,53 +184,18 @@ function renderVencimentos(){
     .forEach(r=>{
       vencimentos.innerHTML+=`
         <div class="card ${r.dias<0?'atrasada':''}">
-          <strong>${r.fornecedor}</strong>
-          <span>${r.tipo_despesa}</span>
+          <p><strong>Fornecedor:</strong> ${r.fornecedor}</p>
+          <p><strong>Despesa:</strong> ${r.tipo_despesa}</p>
+          <p><strong>Valor:</strong> ${Number(r.valor_total).toLocaleString("pt-BR",{style:"currency",currency:"BRL"})}</p>
+          <p><strong>Vencimento:</strong> ${r.vencimento.toLocaleDateString("pt-BR")}</p>
 
-          <div class="linha-dupla">
-            <span>${moeda(r.valor_total)}</span>
-            <span>${r.vencimento.toLocaleDateString("pt-BR")}</span>
-          </div>
-
-          <small class="${r.dias>=0?'pos':'neg'}">
+          <p class="${r.dias>=0?'pos':'neg'}">
             ${r.dias>=0
               ? `⏳ ${CONFIG.textos.vence_em} ${r.dias} dias`
               : `⚠️ ${CONFIG.textos.atrasada_ha} ${Math.abs(r.dias)} dias`}
-          </small>
+          </p>
         </div>`;
     });
-}
-
-function render(){
-  const m=+mes.value,a=+ano.value,p=periodo.value;
-  ctxMes.innerText=`${meses[m-1]} / ${a}`;
-  ctxVisao.innerText=`📊 Visão: ${periodo.options[periodo.selectedIndex].text}`;
-
-  let mesesBack={mensal:1,bimestral:2,trimestral:3,semestral:6,anual:12}[p];
-
-  const atual=rows.filter(r=>{
-    const diff=(a*12+m)-(r.vencimento.getFullYear()*12+(r.vencimento.getMonth()+1));
-    return diff>=0 && diff<mesesBack;
-  });
-
-  const total = atual.reduce((s,r)=>s+Number(r.valor_total||0),0);
-
-  cTotal.innerText=moeda(total);
-  cQtd.innerText=atual.length;
-  cMedia.innerText=moeda(atual.length?total/atual.length:0);
-
-  tbody.innerHTML="";
-  atual.sort((a,b)=>a.vencimento-b.vencimento).forEach(r=>{
-    tbody.innerHTML+=`
-      <tr>
-        <td>${r.vencimento.toLocaleDateString("pt-BR")}</td>
-        <td>${r.tipo_despesa}</td>
-        <td>${r.fornecedor}</td>
-        <td>${moeda(r.valor_total)}</td>
-      </tr>`;
-  });
-
-  tValor.innerText=moeda(total);
 }
 
 load();
