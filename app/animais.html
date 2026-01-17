@@ -31,7 +31,6 @@ window.PERMISSAO_PAGINA = { area:"app", chave:"animais" };
 <script src="../login/auth-guard.js"></script>
 
 <style>
-/* (CSS ORIGINAL – SEM ALTERAÇÃO) */
 :root{
   --marrom:#7b3f2a;
   --bege:#f6efe7;
@@ -72,9 +71,8 @@ select{flex:1;min-width:200px;padding:12px;font-size:15px;border-radius:12px;bor
   <img src="../logo.png">
 </header>
 
-<div class="menu-wrapper">
-  <nav>...</nav>
-</div>
+<!-- MENU GLOBAL (CORRETO) -->
+<div id="menu"></div>
 
 <div class="container">
   <h2>🐾 Animais</h2>
@@ -99,6 +97,7 @@ const lista = document.getElementById("lista");
 const filtroEspecie = document.getElementById("filtroEspecie");
 const filtroStatus  = document.getElementById("filtroStatus");
 
+/* MENU */
 fetch("../menu/menu.html")
   .then(r=>r.text())
   .then(html=>{
@@ -154,7 +153,6 @@ async function load(){
   const snap = await db.collection("animais").get();
   ANIMAIS = snap.docs.map(d=>({_id:d.id,...d.data()}));
 
-  // 🔒 RECONSTRÓI O SELECT CORRETAMENTE
   filtroEspecie.innerHTML = `<option value="todas">Todas as espécies</option>`;
 
   [...new Set(ANIMAIS.map(a=>a.especie).filter(Boolean))]
