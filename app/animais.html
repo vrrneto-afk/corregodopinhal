@@ -40,7 +40,6 @@ window.PERMISSAO_PAGINA = { area:"app", chave:"animais" };
   --cinza-escuro:#555;
   --logo:#D0B485;
 }
-
 *{box-sizing:border-box;font-family:'Inter',system-ui,-apple-system,Arial}
 body{margin:0;background:var(--bege);color:#333}
 
@@ -116,10 +115,16 @@ const lista = document.getElementById("lista");
 const filtroEspecie = document.getElementById("filtroEspecie");
 const filtroStatus  = document.getElementById("filtroStatus");
 
+/* MENU DINÂMICO + ATIVO */
 fetch("../menu/menu.html")
   .then(r=>r.text())
   .then(html=>{
     document.getElementById("menu").innerHTML = html;
+    document.querySelectorAll("#menu a").forEach(a=>{
+      if(a.getAttribute("href")==="../app/animais.html"){
+        a.classList.add("ativo");
+      }
+    });
   });
 
 const ORDEM_STATUS = {
@@ -184,17 +189,12 @@ async function load(){
     };
   });
 
-  /* SELECT ESPÉCIES — CORREÇÃO DEFINITIVA */
   filtroEspecie.innerHTML = `<option value="todas">Todas as espécies</option>`;
 
-  [...new Set(
-      ANIMAIS
-        .map(a => a.especie_key)
-        .filter(Boolean)   // 👈 REMOVE CAMPO VAZIO
-    )]
+  [...new Set(ANIMAIS.map(a=>a.especie_key).filter(Boolean))]
     .sort()
     .forEach(k=>{
-      const ref = ANIMAIS.find(a => a.especie_key === k);
+      const ref = ANIMAIS.find(a=>a.especie_key === k);
       filtroEspecie.innerHTML += `<option value="${k}">${ref.especie}</option>`;
     });
 
