@@ -3,14 +3,38 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Cadastro de Fotos</title>
+<title>Cadastro de Fotos – ADM</title>
+
+<!-- MANIFEST -->
+<link rel="manifest" href="../manifest.json">
+<meta name="theme-color" content="#7b3f2a">
+
+<!-- MENU GLOBAL -->
+<link rel="stylesheet" href="../menu/menu.css">
 
 <!-- FIREBASE -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
-<link rel="stylesheet" href="menu-adm.css">
+<script>
+firebase.initializeApp({
+  apiKey: "AIzaSyCW-CuFDrOLO-dteckl_GrPTocmyS-IrzY",
+  authDomain: "sitio-corrego-do-pinhal.firebaseapp.com",
+  projectId: "sitio-corrego-do-pinhal"
+});
+</script>
+
+<!-- IDENTIFICAÇÃO DA PÁGINA -->
+<script>
+window.PERMISSAO_PAGINA = {
+  area: "adm",
+  chave: "cadastro_fotos"
+};
+</script>
+
+<!-- AUTH GUARD -->
+<script src="../login/auth-guard.js"></script>
 
 <style>
 :root{
@@ -20,39 +44,50 @@
   --vermelho:#b03a2e;
   --logo:#D0B485;
 }
+
 *{
   box-sizing:border-box;
-  font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif
+  font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
 }
-body{margin:0;background:var(--bege);display:none}
+
+body{
+  margin:0;
+  background:var(--bege);
+  color:#333;
+}
+
 header{
   background:var(--logo);
   padding:14px;
   text-align:center;
-  font-weight:700;
-  font-size:17px
+  font-weight:800;
+  font-size:17px;
 }
+
 .container{
   max-width:760px;
   margin:16px auto;
   padding:16px;
   background:#fff;
-  border-radius:12px
+  border-radius:12px;
 }
+
 label{
   font-weight:600;
   margin-top:10px;
   display:block;
-  font-size:14px
+  font-size:14px;
 }
+
 input,select{
   width:100%;
   padding:10px 12px;
   margin-top:4px;
   border-radius:8px;
   border:1px solid #ccc;
-  font-size:14px
+  font-size:14px;
 }
+
 button{
   width:100%;
   padding:12px;
@@ -60,27 +95,29 @@ button{
   border:none;
   font-size:15px;
   cursor:pointer;
-  border-radius:10px
+  border-radius:10px;
 }
+
 .salvar{background:var(--verde);color:#fff}
 .excluir{background:var(--vermelho);color:#fff}
 .hidden{display:none}
+
 .preview{
   margin-top:12px;
-  text-align:center
+  text-align:center;
 }
+
 .preview img{
   max-width:100%;
-  border-radius:10px
+  border-radius:10px;
 }
 </style>
 </head>
 
 <body>
 
-<div id="app" class="hidden">
+<header>📷 Cadastro de Fotos</header>
 
-<header>Cadastro de Fotos</header>
 <div id="menu-adm"></div>
 
 <div class="container">
@@ -105,57 +142,46 @@ button{
 <button class="excluir hidden" id="btnExcluir" onclick="excluirFoto()">Excluir foto</button>
 
 </div>
-</div>
 
+<!-- MENU ADM -->
 <script>
-/* ================= MENU ================= */
-fetch("menu-adm.html")
-  .then(r=>r.text())
-  .then(h=>{
-    document.getElementById("menu-adm").innerHTML=h;
+fetch("../menu/menu-adm.html")
+  .then(r => r.text())
+  .then(html => {
+    document.getElementById("menu-adm").innerHTML = html;
+
+    const atual = location.pathname.split("/").pop();
     document.querySelectorAll(".menu-link").forEach(a=>{
-      if(a.getAttribute("href")==="cadastro_fotos.html"){
+      if(a.getAttribute("href")?.includes(atual)){
         a.classList.add("ativo");
       }
     });
   });
+</script>
 
-/* ================= FIREBASE ================= */
-firebase.initializeApp({
-  apiKey:"AIzaSyCW-CuFDrOLO-dteckl_GrPTocmyS-IrzY",
-  authDomain:"sitio-corrego-do-pinhal.firebaseapp.com",
-  projectId:"sitio-corrego-do-pinhal"
-});
-
+<script>
 const auth = firebase.auth();
 const db   = firebase.firestore();
+
 const IMGBB_KEY = "a11f7aaf2269d07d4b16b11175dbfb75";
 
-/* LOGOUT */
-function logout(){
-  auth.signOut().then(()=>location.href="index.html");
-}
+const acao = document.getElementById("acao");
+const animalSelect = document.getElementById("animalSelect");
+const preview = document.getElementById("preview");
+const fotoAtual = document.getElementById("fotoAtual");
+const foto = document.getElementById("foto");
+const btnSalvar = document.getElementById("btnSalvar");
+const btnExcluir = document.getElementById("btnExcluir");
 
-/* ================= AUTH ================= */
-auth.onAuthStateChanged(user=>{
-  if(user){
-    document.body.style.display="block";
-    app.classList.remove("hidden");
-    carregarAnimais();
-  }else{
-    location.href="index.html";
-  }
-});
+let animais = [];
+let animalAtual = null;
 
-let animais=[];
-let animalAtual=null;
-
-/* ================= LOAD ================= */
+/* LOAD */
 async function carregarAnimais(){
   const snap = await db.collection("animais").get();
   animais = snap.docs
     .map(d=>({id:d.id,...d.data()}))
-    .sort((a,b)=>a.nome.localeCompare(b.nome));
+    .sort((a,b)=>(a.nome||"").localeCompare(b.nome||"","pt-BR"));
 
   animalSelect.innerHTML='<option value="">Selecione</option>';
   animais.forEach(a=>{
@@ -163,16 +189,16 @@ async function carregarAnimais(){
   });
 }
 
-/* ================= AÇÃO ================= */
-acao.onchange=()=>{
+/* AÇÃO */
+acao.onchange = ()=>{
   preview.classList.add("hidden");
   btnExcluir.classList.add("hidden");
   foto.value="";
 };
 
-/* ================= ANIMAL ================= */
-animalSelect.onchange=()=>{
-  animalAtual = animais.find(a=>a.id===animalSelect.value)||null;
+/* ANIMAL */
+animalSelect.onchange = ()=>{
+  animalAtual = animais.find(a=>a.id===animalSelect.value) || null;
   preview.classList.add("hidden");
   btnExcluir.classList.add("hidden");
 
@@ -183,16 +209,16 @@ animalSelect.onchange=()=>{
   }
 };
 
-/* ================= PREVIEW ================= */
-foto.onchange=()=>{
-  const file=foto.files[0];
+/* PREVIEW */
+foto.onchange = ()=>{
+  const file = foto.files[0];
   if(file){
-    fotoAtual.src=URL.createObjectURL(file);
+    fotoAtual.src = URL.createObjectURL(file);
     preview.classList.remove("hidden");
   }
 };
 
-/* ================= IMG BASE64 ================= */
+/* IMG → BASE64 */
 function imageToBase64(file){
   return new Promise(resolve=>{
     const img=new Image();
@@ -217,7 +243,7 @@ function imageToBase64(file){
   });
 }
 
-/* ================= SALVAR ================= */
+/* SALVAR */
 async function salvar(){
   if(!animalAtual){
     alert("Selecione um animal.");
@@ -232,20 +258,24 @@ async function salvar(){
   btnSalvar.textContent="Enviando foto...";
 
   try{
-    const base64=await imageToBase64(foto.files[0]);
+    const base64 = await imageToBase64(foto.files[0]);
 
-    const formData=new FormData();
-    formData.append("key",IMGBB_KEY);
-    formData.append("image",base64);
-    formData.append("name",animalAtual.nome);
+    const formData = new FormData();
+    formData.append("key", IMGBB_KEY);
+    formData.append("image", base64);
+    formData.append("name", animalAtual.nome);
 
-    const res=await fetch("https://api.imgbb.com/1/upload",{method:"POST",body:formData});
-    const json=await res.json();
+    const res = await fetch("https://api.imgbb.com/1/upload",{
+      method:"POST",
+      body:formData
+    });
+
+    const json = await res.json();
     if(!json.success) throw new Error();
 
     await db.collection("animais").doc(animalAtual.id).update({
       foto_url: json.data.display_url,
-      foto_atualizada_em: new Date().toISOString().split("T")[0]
+      foto_atualizada_em: new Date().toISOString().slice(0,10)
     });
 
     alert("Foto salva com sucesso.");
@@ -260,7 +290,7 @@ async function salvar(){
   }
 }
 
-/* ================= EXCLUIR ================= */
+/* EXCLUIR */
 async function excluirFoto(){
   if(!animalAtual) return;
   if(!confirm("Excluir a foto deste animal?")) return;
@@ -273,7 +303,12 @@ async function excluirFoto(){
   alert("Foto excluída com sucesso.");
   location.reload();
 }
+
+carregarAnimais();
 </script>
+
+<!-- LOGOUT GLOBAL -->
+<script src="../login/logout.js"></script>
 
 </body>
 </html>
