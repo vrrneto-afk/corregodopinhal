@@ -237,27 +237,6 @@ async function salvarGrupo(){
   cancelar();
   render();
 }
-
-  document.querySelectorAll("input[type=checkbox]").forEach(c=>{
-    if(!c.checked) return;
-    permissoes[c.dataset.area] = permissoes[c.dataset.area] || {};
-    permissoes[c.dataset.area][c.dataset.pagina] = true;
-  });
-
-  const obj = {
-    id: grupo_id.value.trim(),
-    nome: grupo_nome.value.trim(),
-    permissoes
-  };
-
-  if(editando === null) grupos.push(obj);
-  else grupos[editando] = obj;
-
-  await db.collection("config").doc("grupos").set({ lista: grupos });
-
-  cancelar();
-  render();
-}
 </script>
 
 </body>
