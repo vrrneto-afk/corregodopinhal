@@ -9,10 +9,10 @@
 <link rel="manifest" href="../manifest.json">
 <meta name="theme-color" content="#7b3f2a">
 
-<!-- MENU GLOBAL (PADRÃO ÚNICO) -->
+<!-- MENU GLOBAL (PADRÃO ÚNICO DO SISTEMA) -->
 <link rel="stylesheet" href="../menu/menu.css">
 
-<!-- CONFIG CSS (EXCLUSIVO DO MÓDULO CONFIG) -->
+<!-- CSS EXCLUSIVO DO MÓDULO CONFIG -->
 <link rel="stylesheet" href="../config/config.css">
 
 <!-- FIREBASE -->
@@ -26,7 +26,6 @@ firebase.initializeApp({
   projectId: "sitio-corrego-do-pinhal"
 });
 </script>
-
 </head>
 
 <body>
@@ -109,6 +108,11 @@ fetch("../menu/menu-adm.html")
 
 <!-- LOGOUT GLOBAL -->
 <script src="../login/logout.js"></script>
+
+<script>
+/* LIBERA O BODY (config.css usa display:none por padrão) */
+document.body.style.display = "block";
+</script>
 
 </body>
 </html>
