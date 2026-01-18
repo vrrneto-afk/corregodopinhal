@@ -317,5 +317,13 @@ function limpar(){
 carregarDespesas();
 </script>
 
+<script>
+function logout(){
+  firebase.auth().signOut().then(()=>{
+    location.href = "../index.html";
+  });
+}
+</script>
+
 </body>
 </html>
