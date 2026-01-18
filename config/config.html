@@ -21,11 +21,13 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
 <script>
-firebase.initializeApp({
-  apiKey: "AIzaSyCW-CuFDrOLO-dteckl_GrPTocmyS-IrzY",
-  authDomain: "sitio-corrego-do-pinhal.firebaseapp.com",
-  projectId: "sitio-corrego-do-pinhal"
-});
+if (!firebase.apps.length) {
+  firebase.initializeApp({
+    apiKey: "AIzaSyCW-CuFDrOLO-dteckl_GrPTocmyS-IrzY",
+    authDomain: "sitio-corrego-do-pinhal.firebaseapp.com",
+    projectId: "sitio-corrego-do-pinhal"
+  });
+}
 </script>
 
 <script>
