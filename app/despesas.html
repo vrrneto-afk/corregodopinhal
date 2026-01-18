@@ -71,12 +71,10 @@ select{
   background:#f2f2f2
 }
 
-/* 🔧 ajuste de espaçamento do filtro */
 #periodo{
   margin-bottom:22px;
 }
 
-/* CARDS RESUMO */
 .cards{
   display:grid;
   grid-template-columns:repeat(auto-fit,minmax(160px,1fr));
@@ -92,14 +90,14 @@ select{
   box-shadow:0 2px 6px rgba(0,0,0,.05)
 }
 
-/* 🔧 quebra correta de linha */
-.card strong{
+/* 🔒 APLICAÇÃO SOMENTE NOS CARDS DE RESUMO */
+.cards .card strong{
   display:block;
   font-size:18px;
   color:#000;
 }
 
-.card span{
+.cards .card span{
   display:block;
   margin-top:6px;
   font-size:14px;
