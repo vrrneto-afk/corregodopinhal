@@ -5,10 +5,27 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Relatório Financeiro – Sítio Córrego do Pinhal</title>
 
-<link rel="stylesheet" href="menu.css">
+<link rel="manifest" href="../manifest.json">
+<meta name="theme-color" content="#7b3f2a">
 
+<!-- MENU GLOBAL -->
+<link rel="stylesheet" href="../menu/menu.css">
+
+<!-- FIREBASE -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+<!-- IDENTIFICAÇÃO DA PÁGINA -->
+<script>
+window.PERMISSAO_PAGINA = {
+  area: "app",
+  chave: "relatorios"
+};
+</script>
+
+<!-- AUTH GUARD -->
+<script src="../login/auth-guard.js"></script>
 
 <style>
 :root{
@@ -99,12 +116,38 @@ th,td{
 }
 th{background:#efe3d3}
 tfoot td{font-weight:800;background:#efe3d3}
+
+.voltar{
+  margin:30px 0 10px;
+  display:flex;
+  justify-content:center;
+}
+
+.voltar button{
+  background:#fff;
+  border:2px solid var(--marrom);
+  color:var(--marrom);
+  padding:12px 18px;
+  font-size:15px;
+  font-weight:600;
+  border-radius:14px;
+  cursor:pointer;
+  transition:.2s;
+}
+
+.voltar button:hover{
+  background:var(--marrom);
+  color:#fff;
+}
 </style>
 </head>
 
 <body>
 
-<header><img src="logo.png"></header>
+<header>
+  <img src="../logo.png">
+</header>
+
 <div id="menu"></div>
 
 <div class="container">
@@ -128,7 +171,6 @@ tfoot td{font-weight:800;background:#efe3d3}
   <option value="anual">Anual</option>
 </select>
 
-<!-- RESUMO -->
 <div class="cards">
   <div class="card">
     <strong id="cReceita">R$ 0,00</strong>
@@ -150,40 +192,15 @@ tfoot td{font-weight:800;background:#efe3d3}
     <strong id="cMedia">R$ 0,00</strong>
     <span>Média mensal</span>
   </div>
-</div>
 
-<!-- COMPARATIVO -->
-<h3>🆚 Comparativo com período anterior</h3>
-<div class="cards">
-  <div class="card"><strong id="cmpReceita">—</strong><span>Receita</span></div>
-  <div class="card"><strong id="cmpDespesa">—</strong><span>Despesas</span></div>
-  <div class="card"><strong id="cmpLucro">—</strong><span>Lucro</span></div>
-</div>
-
-<!-- ALERTA -->
-<h3>🚨 Alerta de custo</h3>
-<div class="cards">
-  <div class="card alerta" id="alertaCategoria">
-    <strong>—</strong>
-    <span>Categoria que mais cresceu</span>
-    <small></small>
+  <div class="voltar">
+    <button onclick="location.href='../app/relatorios.html'">
+     ⬅ Voltar para Relatórios
+   </button>
   </div>
+
 </div>
 
-<!-- CUSTOS UNITÁRIOS -->
-<h3>📐 Custos unitários</h3>
-<div class="cards">
-  <div class="card">
-    <strong id="cCustoVaca">—</strong>
-    <span>Custo por vaca</span>
-  </div>
-  <div class="card">
-    <strong id="cCustoLitro">—</strong>
-    <span>Custo por litro de leite</span>
-  </div>
-</div>
-
-<!-- TABELA -->
 <h3>📂 Despesas por categoria</h3>
 <table>
 <thead>
@@ -204,13 +221,19 @@ tfoot td{font-weight:800;background:#efe3d3}
 </div>
 
 <script>
-fetch("menu.html").then(r=>r.text()).then(h=>{
-  menu.innerHTML=h;
-  document.querySelectorAll("#menu a").forEach(a=>{
-    if(a.getAttribute("href")==="relatorios.html") a.classList.add("ativo");
+/* MENU */
+fetch("../menu/menu.html")
+  .then(r=>r.text())
+  .then(h=>{
+    menu.innerHTML=h;
+    document.querySelectorAll("#menu a").forEach(a=>{
+      if(a.getAttribute("href")==="../app/relatorios.html"){
+        a.classList.add("ativo");
+      }
+    });
   });
-});
 
+/* FIREBASE INIT */
 firebase.initializeApp({
   apiKey:"AIzaSyCW-CuFDrOLO-dteckl_GrPTocmyS-IrzY",
   authDomain:"sitio-corrego-do-pinhal.firebaseapp.com",
@@ -237,14 +260,14 @@ async function load(){
   });
 
   LEITE=(await db.collection("producao_leite").get()).docs.map(d=>{
-  const r=d.data();
-  return {
-    ...r,
-    data: new Date(r.ano, r.mes - 1, r.dia),
-    litros: Number(r.litros_dia || 0),
-    valor: Number(r.valor_dia || 0)
-  };
-});
+    const r=d.data();
+    return {
+      ...r,
+      data:new Date(r.ano,r.mes-1,r.dia),
+      litros:+r.litros_dia||0,
+      valor:+r.valor_dia||0
+    };
+  });
 
   ANIMAIS=(await db.collection("animais").get()).docs.map(d=>d.data());
 
@@ -275,28 +298,16 @@ function render(){
   };
 
   const D=DESPESAS.filter(d=>d.data&&filtro(d.data));
-  const Dprev=DESPESAS.filter(d=>d.data&&filtro(d.data,mesesBack));
-
   const L=LEITE.filter(l=>filtro(l.data));
-  const Lprev=LEITE.filter(l=>filtro(l.data,mesesBack));
 
   const desp=D.reduce((s,d)=>s+d.valor,0);
-  const despPrev=Dprev.reduce((s,d)=>s+d.valor,0);
-
   const rec=L.reduce((s,l)=>s+l.valor,0);
-  const recPrev=Lprev.reduce((s,l)=>s+l.valor,0);
-
   const lucro=rec-desp;
-  const lucroPrev=recPrev-despPrev;
 
   cReceita.innerText=moeda(rec);
   cDespesa.innerText=moeda(desp);
   cLucro.innerText=moeda(lucro);
   cMedia.innerText=moeda(lucro/mesesBack||0);
-
-  cmpReceita.innerText=recPrev?`${rec>=recPrev?"▲":"▼"} ${moeda(Math.abs(rec-recPrev))}`:"—";
-  cmpDespesa.innerText=despPrev?`${desp>=despPrev?"▲":"▼"} ${moeda(Math.abs(desp-despPrev))}`:"—";
-  cmpLucro.innerText=lucroPrev?`${lucro>=lucroPrev?"▲":"▼"} ${moeda(Math.abs(lucro-lucroPrev))}`:"—";
 
   const cat={};
   D.forEach(d=>{
@@ -308,19 +319,8 @@ function render(){
   Object.entries(cat).forEach(([k,v])=>{
     tbody.innerHTML+=`<tr><td>${k}</td><td>${moeda(v)}</td></tr>`;
   });
+
   tTotal.innerText=moeda(desp);
-
-  let maior={k:null,v:0};
-  Object.entries(cat).forEach(([k,v])=>{if(v>maior.v)maior={k,v};});
-
-  alertaCategoria.querySelector("strong").innerText=maior.k||"—";
-  alertaCategoria.querySelector("small").innerText=maior.k?`Maior custo no período: ${moeda(maior.v)}`:"Nenhum alerta";
-
-  const vacas=ANIMAIS.filter(a=>a.especie==="Bovino"&&a.sexo==="F"&&a.status==="Ativo").length;
-  const litros=L.reduce((s,l)=>s+l.litros,0);
-
-  cCustoVaca.innerText=vacas?moeda(desp/vacas):"—";
-  cCustoLitro.innerText=litros?`R$ ${(desp/litros).toFixed(2)}`:"—";
 }
 
 load();
