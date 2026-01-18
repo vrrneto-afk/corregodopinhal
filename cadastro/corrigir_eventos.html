@@ -1,3 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Correção de Eventos</title>
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+<script>
+firebase.initializeApp({
+  apiKey: "AIzaSyCW-CuFDrOLO-dteckl_GrPTocmyS-IrzY",
+  authDomain: "sitio-corrego-do-pinhal.firebaseapp.com",
+  projectId: "sitio-corrego-do-pinhal"
+});
+</script>
+</head>
+
+<body>
+<h3>Corrigindo eventos...</h3>
+
+<script>
 (async ()=>{
   const db = firebase.firestore();
 
@@ -13,8 +35,6 @@
 
   for(const doc of snapEventos.docs){
     const e = doc.data();
-
-    // Só corrige se não tiver nome_animal
     if(e.id_animal && !e.nome_animal){
       const a = animais[e.id_animal];
       if(a){
@@ -27,5 +47,8 @@
     }
   }
 
-  alert(`Correção concluída. Eventos corrigidos: ${corrigidos}`);
+  alert("Correção concluída. Eventos corrigidos: " + corrigidos);
 })();
+</script>
+</body>
+</html>
