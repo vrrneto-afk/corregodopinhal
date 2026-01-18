@@ -213,29 +213,45 @@ function cancelar(){
 }
 
 async function salvarGrupo(){
-  const permissoes = {};
+  try{
+    const permissoes = {};
 
-  document.querySelectorAll("input[type=checkbox]").forEach(c=>{
-    const area = c.dataset.area;
-    const pag  = c.dataset.pagina;
+    document.querySelectorAll("input[type=checkbox]").forEach(c=>{
+      const area = c.dataset.area;
+      const pag  = c.dataset.pagina;
 
-    permissoes[area] = permissoes[area] || {};
-    permissoes[area][pag] = c.checked === true;
-  });
+      permissoes[area] = permissoes[area] || {};
+      permissoes[area][pag] = c.checked === true;
+    });
 
-  const obj = {
-    id: grupo_id.value.trim(),
-    nome: grupo_nome.value.trim(),
-    permissoes
-  };
+    if(!grupo_id.value.trim() || !grupo_nome.value.trim()){
+      alert("Informe o ID e o nome do grupo.");
+      return;
+    }
 
-  if(editando === null) grupos.push(obj);
-  else grupos[editando] = obj;
+    const obj = {
+      id: grupo_id.value.trim(),
+      nome: grupo_nome.value.trim(),
+      permissoes
+    };
 
-  await db.collection("config").doc("grupos").set({ lista: grupos });
+    if(editando === null){
+      grupos.push(obj);
+    }else{
+      grupos[editando] = obj;
+    }
 
-  cancelar();
-  render();
+    await db.collection("config").doc("grupos").set({ lista: grupos });
+
+    alert("Grupo salvo com sucesso.");
+
+    cancelar();
+    render();
+
+  }catch(e){
+    console.error(e);
+    alert("Erro ao salvar o grupo. Verifique o console.");
+  }
 }
 </script>
 
