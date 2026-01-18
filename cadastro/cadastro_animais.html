@@ -3,14 +3,38 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Cadastro de Animais</title>
+<title>Cadastro de Animais – ADM</title>
+
+<!-- MANIFEST -->
+<link rel="manifest" href="../manifest.json">
+<meta name="theme-color" content="#7b3f2a">
+
+<!-- MENU GLOBAL -->
+<link rel="stylesheet" href="../menu/menu.css">
 
 <!-- FIREBASE -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
-<link rel="stylesheet" href="menu-adm.css">
+<script>
+firebase.initializeApp({
+  apiKey: "AIzaSyCW-CuFDrOLO-dteckl_GrPTocmyS-IrzY",
+  authDomain: "sitio-corrego-do-pinhal.firebaseapp.com",
+  projectId: "sitio-corrego-do-pinhal"
+});
+</script>
+
+<!-- IDENTIFICAÇÃO DA PÁGINA (PADRÃO GLOBAL) -->
+<script>
+window.PERMISSAO_PAGINA = {
+  area: "adm",
+  chave: "cadastro_animais"
+};
+</script>
+
+<!-- AUTH GUARD ADM -->
+<script src="../login/auth-guard.js"></script>
 
 <style>
 :root{
@@ -20,11 +44,41 @@
   --vermelho:#b03a2e;
   --logo:#D0B485;
 }
-*{box-sizing:border-box;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
-body{margin:0;background:var(--bege);display:none}
-header{background:var(--logo);padding:14px;text-align:center;font-weight:700;font-size:17px}
-.container{max-width:720px;margin:16px auto;padding:16px;background:#fff;border-radius:12px}
-label{font-weight:600;margin-top:10px;display:block;font-size:14px}
+
+*{
+  box-sizing:border-box;
+  font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif
+}
+
+body{
+  margin:0;
+  background:var(--bege);
+  color:#333;
+}
+
+header{
+  background:var(--logo);
+  padding:14px;
+  text-align:center;
+  font-weight:800;
+  font-size:17px;
+}
+
+.container{
+  max-width:720px;
+  margin:16px auto;
+  padding:16px;
+  background:#fff;
+  border-radius:12px;
+}
+
+label{
+  font-weight:600;
+  margin-top:10px;
+  display:block;
+  font-size:14px
+}
+
 input,select,textarea{
   width:100%;
   padding:10px 12px;
@@ -33,7 +87,9 @@ input,select,textarea{
   border:1px solid #ccc;
   font-size:14px
 }
+
 textarea{min-height:70px}
+
 button{
   width:100%;
   padding:12px;
@@ -43,6 +99,7 @@ button{
   cursor:pointer;
   border-radius:10px
 }
+
 .salvar{background:var(--verde);color:#fff}
 .excluir{background:var(--vermelho);color:#fff}
 .hidden{display:none}
@@ -51,10 +108,9 @@ button{
 
 <body>
 
-<div id="app" class="hidden">
-
 <header>🐄 Cadastro de Animais</header>
-<div id="menu-adm"></div>
+
+<div id="menu"></div>
 
 <div class="container">
 
@@ -129,44 +185,25 @@ button{
 
 <button class="salvar" onclick="salvar()">💾 Salvar</button>
 <button class="excluir hidden" id="btnExcluir" onclick="excluir()">🗑️ Excluir</button>
-</div>
+
 </div>
 
 <script>
-/* MENU */
-fetch("menu-adm.html")
+/* MENU ADM */
+fetch("../menu/menu-adm.html")
   .then(r=>r.text())
-  .then(html=>{
-    document.getElementById("menu-adm").innerHTML = html;
-    document.querySelectorAll(".menu-link").forEach(a=>{
-      if(a.getAttribute("href") === location.pathname.split("/").pop()){
+  .then(h=>{
+    menu.innerHTML=h;
+    document.querySelectorAll("#menu a").forEach(a=>{
+      if(a.getAttribute("href")==="cadastro_animais.html"){
         a.classList.add("ativo");
       }
     });
   });
 
-/* FIREBASE INIT */
-firebase.initializeApp({
-  apiKey:"AIzaSyCW-CuFDrOLO-dteckl_GrPTocmyS-IrzY",
-  authDomain:"sitio-corrego-do-pinhal.firebaseapp.com",
-  projectId:"sitio-corrego-do-pinhal"
-});
-
-const auth = firebase.auth();
 const db = firebase.firestore();
+const auth = firebase.auth();
 
-/* LOGOUT (CORREÇÃO) */
-function logout(){
-  auth.signOut().then(()=>{
-    location.href = "index.html";
-  });
-}
-</script>
-
-<!-- AUTH CENTRAL -->
-<script src="auth-adm.js"></script>
-
-<script>
 const acao = document.getElementById("acao");
 const blocoEditar = document.getElementById("blocoEditar");
 const btnExcluir = document.getElementById("btnExcluir");
@@ -185,14 +222,6 @@ const observacoes = document.getElementById("observacoes");
 
 let animais = [];
 let atual = null;
-
-auth.onAuthStateChanged(user=>{
-  if(user){
-    document.body.style.display="block";
-    document.getElementById("app").classList.remove("hidden");
-    carregar();
-  }
-});
 
 async function carregar(){
   const snap = await db.collection("animais").get();
@@ -258,7 +287,9 @@ async function salvar(){
     observacoes:observacoes.value.trim()
   };
 
-  Object.keys(dados).forEach(k=>{ if(dados[k]==="") delete dados[k]; });
+  Object.keys(dados).forEach(k=>{
+    if(dados[k]==="") delete dados[k];
+  });
 
   if(acao.value==="novo"){
     dados.criado_em = firebase.firestore.FieldValue.serverTimestamp();
@@ -281,10 +312,12 @@ async function excluir(){
 
   if(confirm(`Confirma a exclusão do animal "${atual.nome}"?`)){
     await db.collection("animais").doc(atual.id).delete();
-    alert(`Animal "${atual.nome}" excluído com sucesso.`);
+    alert("Animal excluído com sucesso.");
     location.reload();
   }
 }
+
+carregar();
 </script>
 
 </body>
