@@ -1,10 +1,11 @@
 <!DOCTYPE html>
-<html>
+<html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
 <title>Correção de Eventos</title>
 
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
 <script>
@@ -14,14 +15,34 @@ firebase.initializeApp({
   projectId: "sitio-corrego-do-pinhal"
 });
 </script>
+
+<style>
+body{
+  font-family: system-ui, Arial;
+  background:#f6efe7;
+  padding:20px;
+}
+</style>
 </head>
 
 <body>
-<h3>Corrigindo eventos...</h3>
+
+<h3>🔧 Corrigindo eventos…</h3>
+<p id="status">Aguardando autenticação…</p>
 
 <script>
-(async ()=>{
-  const db = firebase.firestore();
+const auth = firebase.auth();
+const db   = firebase.firestore();
+
+auth.onAuthStateChanged(async (user)=>{
+  if(!user){
+    document.getElementById("status").innerText =
+      "❌ Usuário não autenticado. Faça login antes.";
+    return;
+  }
+
+  document.getElementById("status").innerText =
+    "🔍 Buscando eventos e animais…";
 
   const snapEventos = await db.collection("eventos").get();
   const snapAnimais = await db.collection("animais").get();
@@ -35,6 +56,7 @@ firebase.initializeApp({
 
   for(const doc of snapEventos.docs){
     const e = doc.data();
+
     if(e.id_animal && !e.nome_animal){
       const a = animais[e.id_animal];
       if(a){
@@ -47,8 +69,12 @@ firebase.initializeApp({
     }
   }
 
-  alert("Correção concluída. Eventos corrigidos: " + corrigidos);
-})();
+  document.getElementById("status").innerText =
+    `✅ Correção concluída. Eventos corrigidos: ${corrigidos}`;
+
+  alert(`Correção concluída. Eventos corrigidos: ${corrigidos}`);
+});
 </script>
+
 </body>
 </html>
