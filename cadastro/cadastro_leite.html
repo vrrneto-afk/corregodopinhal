@@ -3,13 +3,38 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Cadastro de Leite</title>
+<title>Cadastro de Leite – ADM</title>
 
+<!-- MANIFEST -->
+<link rel="manifest" href="../manifest.json">
+<meta name="theme-color" content="#7b3f2a">
+
+<!-- MENU GLOBAL -->
+<link rel="stylesheet" href="../menu/menu.css">
+
+<!-- FIREBASE -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
-<link rel="stylesheet" href="menu-adm.css">
+<script>
+firebase.initializeApp({
+  apiKey: "AIzaSyCW-CuFDrOLO-dteckl_GrPTocmyS-IrzY",
+  authDomain: "sitio-corrego-do-pinhal.firebaseapp.com",
+  projectId: "sitio-corrego-do-pinhal"
+});
+</script>
+
+<!-- IDENTIFICAÇÃO DA PÁGINA -->
+<script>
+window.PERMISSAO_PAGINA = {
+  area: "adm",
+  chave: "cadastro_leite"
+};
+</script>
+
+<!-- AUTH GUARD -->
+<script src="../login/auth-guard.js"></script>
 
 <style>
 :root{
@@ -19,22 +44,66 @@
   --vermelho:#b03a2e;
   --logo:#D0B485;
 }
-*{box-sizing:border-box;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
-body{margin:0;background:var(--bege);display:none}
-header{background:var(--logo);padding:14px;text-align:center;font-weight:700;font-size:17px}
-.container{max-width:760px;margin:16px auto;padding:16px;background:#fff;border-radius:12px}
-label{font-weight:600;margin-top:10px;display:block;font-size:14px}
+
+*{
+  box-sizing:border-box;
+  font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+}
+
+body{
+  margin:0;
+  background:var(--bege);
+  color:#333;
+}
+
+header{
+  background:var(--logo);
+  padding:14px;
+  text-align:center;
+  font-weight:800;
+  font-size:17px;
+}
+
+.container{
+  max-width:760px;
+  margin:16px auto;
+  padding:16px;
+  background:#fff;
+  border-radius:12px;
+}
+
+label{
+  font-weight:600;
+  margin-top:10px;
+  display:block;
+  font-size:14px;
+}
+
 input,select{
   width:100%;
   padding:10px 12px;
   margin-top:4px;
   border-radius:8px;
   border:1px solid #ccc;
-  font-size:14px
+  font-size:14px;
 }
-table{width:100%;border-collapse:collapse;margin-top:10px}
-th,td{border:1px solid #ddd;padding:8px;text-align:center}
-th{background:#f2e8da}
+
+table{
+  width:100%;
+  border-collapse:collapse;
+  margin-top:10px;
+}
+
+th,td{
+  border:1px solid #ddd;
+  padding:8px;
+  text-align:center;
+}
+
+th{
+  background:#f2e8da;
+}
+
 button{
   width:100%;
   padding:12px;
@@ -42,8 +111,9 @@ button{
   border:none;
   font-size:15px;
   cursor:pointer;
-  border-radius:10px
+  border-radius:10px;
 }
+
 .salvar{background:var(--verde);color:#fff}
 .excluir{background:var(--vermelho);color:#fff}
 </style>
@@ -51,9 +121,8 @@ button{
 
 <body>
 
-<div id="app" class="hidden">
-
 <header>🥛 Cadastro de Produção de Leite</header>
+
 <div id="menu-adm"></div>
 
 <div class="container">
@@ -82,49 +151,35 @@ button{
 <button class="excluir" onclick="excluirMes()">Excluir mês inteiro</button>
 
 </div>
-</div>
 
+<!-- MENU ADM -->
 <script>
-/* MENU */
-fetch("menu-adm.html")
-  .then(r=>r.text())
-  .then(h=>{
-    document.getElementById("menu-adm").innerHTML = h;
+fetch("../menu/menu-adm.html")
+  .then(r => r.text())
+  .then(html => {
+    document.getElementById("menu-adm").innerHTML = html;
+
+    const atual = location.pathname.split("/").pop();
     document.querySelectorAll(".menu-link").forEach(a=>{
-      if(a.getAttribute("href")==="cadastro_leite.html"){
+      if(a.getAttribute("href")?.includes(atual)){
         a.classList.add("ativo");
       }
     });
   });
+</script>
 
-/* FIREBASE */
-firebase.initializeApp({
-  apiKey:"AIzaSyCW-CuFDrOLO-dteckl_GrPTocmyS-IrzY",
-  authDomain:"sitio-corrego-do-pinhal.firebaseapp.com",
-  projectId:"sitio-corrego-do-pinhal"
-});
+<script>
+const db = firebase.firestore();
 
-const auth = firebase.auth();
-const db   = firebase.firestore();
-
-function logout(){
-  auth.signOut().then(()=>location.href="index.html");
-}
-
-/* AUTH */
-auth.onAuthStateChanged(user=>{
-  if(user){
-    document.body.style.display="block";
-    app.classList.remove("hidden");
-    init();
-  }else{
-    location.href="index.html";
-  }
-});
+const ano = document.getElementById("ano");
+const mes = document.getElementById("mes");
+const preco_mes = document.getElementById("preco_mes");
+const tabelaDias = document.getElementById("tabelaDias");
 
 /* INIT */
 function init(){
   const anoAtual = new Date().getFullYear();
+
   ano.innerHTML="";
   mes.innerHTML="";
 
@@ -155,10 +210,10 @@ function gerarTabela(){
   }
 }
 
-/* CARREGA MÊS */
 ano.onchange = carregarMes;
 mes.onchange = carregarMes;
 
+/* CARREGAR MÊS */
 async function carregarMes(){
   gerarTabela();
   preco_mes.value="";
@@ -186,7 +241,7 @@ async function carregarMes(){
   });
 }
 
-/* SALVAR / ATUALIZAR */
+/* SALVAR */
 async function salvarMensal(){
   if(!preco_mes.value){
     alert("Informe o preço do mês.");
@@ -205,7 +260,7 @@ async function salvarMensal(){
 
   snap.docs.forEach(d=>existentes[d.data().dia]=d.id);
 
-  let algum = false;
+  let algum=false;
 
   for(const tr of tabelaDias.querySelectorAll("tr")){
     const dia = Number(tr.children[0].innerText);
@@ -213,7 +268,7 @@ async function salvarMensal(){
     const vacas  = Number(tr.querySelector("[data-vaca]").value||0);
 
     if(litros<=0 || vacas<=0) continue;
-    algum = true;
+    algum=true;
 
     const dados = {
       ano:a,
@@ -261,12 +316,17 @@ async function excluirMes(){
   limparFormulario();
 }
 
-/* LIMPAR FORMULÁRIO */
+/* LIMPAR */
 function limparFormulario(){
   preco_mes.value="";
   gerarTabela();
 }
+
+init();
 </script>
+
+<!-- LOGOUT GLOBAL -->
+<script src="../login/logout.js"></script>
 
 </body>
 </html>
