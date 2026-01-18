@@ -45,12 +45,34 @@ window.PERMISSAO_PAGINA = { area:"app", chave:"inicio" };
 *{box-sizing:border-box;font-family:'Inter',system-ui,-apple-system,Arial}
 body{margin:0;background:var(--bege);color:#333}
 
+/* HEADER */
 header{
+  position:relative;
   background:var(--logo);
   padding:15px 10px;
   text-align:center;
 }
 header img{max-width:260px;width:100%}
+
+/* BOTÃO ADMIN */
+.btn-admin{
+  position:absolute;
+  top:12px;
+  right:14px;
+  width:42px;
+  height:42px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+.btn-admin img{
+  width:100%;
+  height:auto;
+  opacity:.85;
+}
+.btn-admin:hover img{
+  opacity:1;
+}
 
 .container{max-width:900px;margin:20px auto;padding:0 15px}
 h2{margin:28px 0 12px;color:var(--marrom)}
@@ -117,6 +139,11 @@ h2{margin:28px 0 12px;color:var(--marrom)}
 
 <header>
   <img src="../logo.png">
+
+  <!-- ÍCONE ÁREA ADMINISTRATIVA -->
+  <a href="../cadastro/cadastro_animais.html" class="btn-admin">
+    <img src="../icon/icone-admin.png" alt="Área Administrativa">
+  </a>
 </header>
 
 <div id="menu"></div>
@@ -229,52 +256,6 @@ async function loadAlertas(){
 /* INDEX */
 async function loadIndex(){
   conteudo.innerHTML="";
-
-  const animais=(await db.collection("animais").get()).docs.map(d=>({_id:d.id,...d.data()}));
-  const eventos=(await db.collection("eventos").get()).docs.map(d=>d.data());
-  const vacinas=(await db.collection("vacinas").get()).docs.map(d=>d.data());
-
-  conteudo.innerHTML+="<h2>🐄 Vacas a Criar</h2>";
-
-  eventos.filter(e=>e.tipo_evento==="cobertura")
-    .map(c=>{
-      const prev=addM(parse(c.data_evento),CFG.vacas.gestacao_meses||9);
-      const dias=diff(hojeZ,prev);
-      return {animal:animais.find(a=>a._id===c.id_animal),prev,dias};
-    })
-    .filter(x=>x.animal)
-    .sort((a,b)=>a.dias-b.dias)
-    .forEach(v=>{
-      const regra = CFG.vacas.prenhez_regras
-        .filter(r=>r.ativa!==false && v.dias>=(r.dias_min??0))
-        .sort((a,b)=>(b.dias_min??0)-(a.dias_min??0))[0];
-
-      conteudo.innerHTML+=`
-      <div class="card ${regra?.classe||"ok"}">
-        <strong>🐄 ${v.animal.nome.toUpperCase()}</strong>
-        <p class="dias">⏳ Faltam ${v.dias} dias</p>
-        ${regra?.mensagem?`<p class="msg">${regra.mensagem}</p>`:""}
-        <p class="data">📅 ${v.prev.toLocaleDateString("pt-BR")}</p>
-      </div>`;
-    });
-
-  conteudo.innerHTML+="<h2>💉 Vacinas pendentes</h2>";
-
-  vacinas.filter(v=>v.status!==CFG.vacinas.status?.finalizada)
-    .forEach(v=>{
-      const animal=animais.find(a=>a._id===v.id_animal);
-      const reap=parse(v.data_aplicacao);
-      reap.setDate(reap.getDate()+Number(v.repeticao_dias||0));
-      const dias=diff(hojeZ,reap);
-
-      conteudo.innerHTML+=`
-      <div class="card ${dias<0?"atrasada":"pendente"}">
-        <strong>💉 ${v.nome_vacina}</strong>
-        ${animal?`<p><strong>🐄 ${animal.nome.toUpperCase()}</strong></p>`:""}
-        <p class="dias">${dias<0?`Atrasada há ${Math.abs(dias)} dias`:`Pendente em ${dias} dias`}</p>
-        <p class="data">📅 ${reap.toLocaleDateString("pt-BR")}</p>
-      </div>`;
-    });
 }
 
 (async()=>{
