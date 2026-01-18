@@ -5,10 +5,27 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Relatório Sanitário – Sítio Córrego do Pinhal</title>
 
-<link rel="stylesheet" href="menu.css">
+<link rel="manifest" href="../manifest.json">
+<meta name="theme-color" content="#7b3f2a">
 
+<!-- MENU GLOBAL -->
+<link rel="stylesheet" href="../menu/menu.css">
+
+<!-- FIREBASE -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+<!-- IDENTIFICAÇÃO DA PÁGINA -->
+<script>
+window.PERMISSAO_PAGINA = {
+  area: "app",
+  chave: "relatorios"
+};
+</script>
+
+<!-- AUTH GUARD -->
+<script src="../login/auth-guard.js"></script>
 
 <style>
 :root{
@@ -21,10 +38,13 @@
   --cinza:#666;
   --logo:#D0B485;
 }
+
 *{box-sizing:border-box;font-family:Inter,system-ui,Arial}
 body{margin:0;background:var(--bege);color:#333}
+
 header{background:var(--logo);padding:15px;text-align:center}
 header img{max-width:260px;width:100%}
+
 .container{max-width:900px;margin:20px auto;padding:0 15px}
 h2,h3{color:var(--marrom)}
 
@@ -34,6 +54,7 @@ h2,h3{color:var(--marrom)}
   gap:10px;
   margin-bottom:12px;
 }
+
 select{
   padding:12px;
   border-radius:12px;
@@ -48,6 +69,7 @@ select{
   gap:10px;
   margin-bottom:16px;
 }
+
 .card{
   background:#fff;
   padding:12px;
@@ -55,17 +77,45 @@ select{
   border-radius:14px;
   box-shadow:0 2px 6px rgba(0,0,0,.05)
 }
+
 .card.alerta{border-left-color:var(--amarelo)}
 .card.negativo{border-left-color:var(--vermelho)}
 .card.info{border-left-color:var(--azul)}
+
 .card strong{font-size:22px;display:block}
 .card span{font-size:14px;color:var(--cinza)}
+
+.voltar{
+  margin:30px 0 10px;
+  display:flex;
+  justify-content:center;
+}
+
+.voltar button{
+  background:#fff;
+  border:2px solid var(--marrom);
+  color:var(--marrom);
+  padding:12px 18px;
+  font-size:15px;
+  font-weight:600;
+  border-radius:14px;
+  cursor:pointer;
+  transition:.2s;
+}
+
+.voltar button:hover{
+  background:var(--marrom);
+  color:#fff;
+}
 </style>
 </head>
 
 <body>
 
-<header><img src="logo.png"></header>
+<header>
+  <img src="../logo.png">
+</header>
+
 <div id="menu"></div>
 
 <div class="container">
@@ -102,11 +152,28 @@ select{
   </div>
 </div>
 
+<div class="voltar">
+  <button onclick="location.href='../app/relatorios.html'">
+    ⬅ Voltar para Relatórios
+  </button>
+</div>
+
 </div>
 
 <script>
-fetch("menu.html").then(r=>r.text()).then(h=>menu.innerHTML=h);
+/* MENU */
+fetch("../menu/menu.html")
+  .then(r=>r.text())
+  .then(h=>{
+    menu.innerHTML=h;
+    document.querySelectorAll("#menu a").forEach(a=>{
+      if(a.getAttribute("href")==="../app/relatorios.html"){
+        a.classList.add("ativo");
+      }
+    });
+  });
 
+/* FIREBASE INIT */
 firebase.initializeApp({
   apiKey:"AIzaSyCW-CuFDrOLO-dteckl_GrPTocmyS-IrzY",
   authDomain:"sitio-corrego-do-pinhal.firebaseapp.com",
