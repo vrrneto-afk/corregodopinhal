@@ -5,10 +5,27 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Relatório de Produção de Leite – Sítio Córrego do Pinhal</title>
 
-<link rel="stylesheet" href="menu.css">
+<link rel="manifest" href="../manifest.json">
+<meta name="theme-color" content="#7b3f2a">
 
+<!-- MENU GLOBAL -->
+<link rel="stylesheet" href="../menu/menu.css">
+
+<!-- FIREBASE -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+<!-- IDENTIFICAÇÃO DA PÁGINA -->
+<script>
+window.PERMISSAO_PAGINA = {
+  area: "app",
+  chave: "relatorios"
+};
+</script>
+
+<!-- AUTH GUARD -->
+<script src="../login/auth-guard.js"></script>
 
 <style>
 :root{
@@ -42,6 +59,7 @@ h2,h3{color:var(--marrom)}
 }
 .contexto span{color:var(--cinza);font-size:14px}
 
+/* FILTROS */
 .filtros{
   display:grid;
   grid-template-columns:1fr 1fr;
@@ -57,6 +75,7 @@ select{
 }
 #periodo{margin-bottom:18px}
 
+/* CARDS */
 .cards{
   display:grid;
   grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
@@ -72,16 +91,41 @@ select{
 }
 .card.alerta{border-left-color:var(--amarelo)}
 .card strong{font-size:22px;display:block}
-.card span{font-size:14px;color:var(--cinza)}
+.card span{font-size:14px;color:var(--cinza);display:block}
 
 .pos{color:var(--verde)}
 .neg{color:var(--vermelho)}
+
+/* BOTÃO VOLTAR */
+.voltar{
+  margin:30px 0 10px;
+  display:flex;
+  justify-content:center;
+}
+.voltar button{
+  background:#fff;
+  border:2px solid var(--marrom);
+  color:var(--marrom);
+  padding:12px 18px;
+  font-size:15px;
+  font-weight:600;
+  border-radius:14px;
+  cursor:pointer;
+  transition:.2s;
+}
+.voltar button:hover{
+  background:var(--marrom);
+  color:#fff;
+}
 </style>
 </head>
 
 <body>
 
-<header><img src="logo.png"></header>
+<header>
+  <img src="../logo.png">
+</header>
+
 <div id="menu"></div>
 
 <div class="container">
@@ -154,16 +198,28 @@ select{
   </div>
 </div>
 
+<div class="voltar">
+  <button onclick="location.href='../app/relatorios.html'">
+    ⬅ Voltar para Relatórios
+  </button>
+</div>
+
 </div>
 
 <script>
-fetch("menu.html").then(r=>r.text()).then(h=>{
-  menu.innerHTML=h;
-  document.querySelectorAll("#menu a").forEach(a=>{
-    if(a.getAttribute("href")==="relatorios.html") a.classList.add("ativo");
+/* MENU */
+fetch("../menu/menu.html")
+  .then(r=>r.text())
+  .then(h=>{
+    menu.innerHTML=h;
+    document.querySelectorAll("#menu a").forEach(a=>{
+      if(a.getAttribute("href")==="../app/relatorios.html"){
+        a.classList.add("ativo");
+      }
+    });
   });
-});
 
+/* FIREBASE INIT */
 firebase.initializeApp({
   apiKey:"AIzaSyCW-CuFDrOLO-dteckl_GrPTocmyS-IrzY",
   authDomain:"sitio-corrego-do-pinhal.firebaseapp.com",
@@ -183,7 +239,6 @@ async function load(){
       data:new Date(r.ano,r.mes-1,r.dia),
       litros:+r.litros_dia||0,
       vacas:+r.vacas_produzindo||0,
-      preco:+r.preco_litro||0,
       receita:+r.valor_dia||0
     };
   });
@@ -203,69 +258,45 @@ async function load(){
 }
 
 function render(){
-  const m = +mes.value;
-  const a = +ano.value;
-  const p = periodo.value;
+  const m=+mes.value,a=+ano.value,p=periodo.value;
+  const mesesBack={mensal:1,bimestral:2,trimestral:3,anual:12}[p];
 
-  const mesesBack = {
-    mensal: 1,
-    bimestral: 2,
-    trimestral: 3,
-    anual: 12
-  }[p];
+  ctxPeriodo.innerText=`${meses[m-1]} / ${a}`;
+  ctxVisao.innerText=`📊 Visão: ${periodo.options[periodo.selectedIndex].text}`;
 
-  ctxPeriodo.innerText = `${meses[m-1]} / ${a}`;
-  ctxVisao.innerText = `📊 Visão: ${periodo.options[periodo.selectedIndex].text}`;
+  const fim=a*12+m;
+  const inicio=fim-mesesBack+1;
 
-  const fim = a * 12 + m;
-  const inicio = fim - mesesBack + 1;
-
-  const dentroPeriodo = d => {
-    const chave = d.data.getFullYear() * 12 + (d.data.getMonth() + 1);
-    return chave >= inicio && chave <= fim;
+  const dentro=d=>{
+    const k=d.data.getFullYear()*12+(d.data.getMonth()+1);
+    return k>=inicio && k<=fim;
   };
 
-  const atual = LEITE.filter(l => dentroPeriodo(l));
-  const anterior = LEITE.filter(l => {
-    const chave = l.data.getFullYear() * 12 + (l.data.getMonth() + 1);
-    return chave >= (inicio - mesesBack) && chave <= (fim - mesesBack);
+  const atual=LEITE.filter(l=>dentro(l));
+  const anterior=LEITE.filter(l=>{
+    const k=l.data.getFullYear()*12+(l.data.getMonth()+1);
+    return k>=inicio-mesesBack && k<=fim-mesesBack;
   });
 
-  /* ===== ATUAL ===== */
-  const litrosA = atual.reduce((s,l)=>s+l.litros,0);
-  const receitaA = atual.reduce((s,l)=>s+l.receita,0);
-  const diasA = atual.length || 1;
-  const vacasA = atual.reduce((s,l)=>s+l.vacas,0) / diasA || 0;
+  const litrosA=atual.reduce((s,l)=>s+l.litros,0);
+  const receitaA=atual.reduce((s,l)=>s+l.receita,0);
+  const diasA=atual.length||1;
+  const vacasA=atual.reduce((s,l)=>s+l.vacas,0)/diasA||0;
 
-  /* ===== ANTERIOR ===== */
-  const litrosP = anterior.reduce((s,l)=>s+l.litros,0);
-  const receitaP = anterior.reduce((s,l)=>s+l.receita,0);
-  const diasP = anterior.length || 1;
+  const litrosP=anterior.reduce((s,l)=>s+l.litros,0);
+  const receitaP=anterior.reduce((s,l)=>s+l.receita,0);
+  const diasP=anterior.length||1;
 
-  /* ===== CARDS ===== */
-  cLitros.innerText = `${litrosA} L`;
-  cReceita.innerText = moeda(receitaA);
-  cMediaDia.innerText = `${(litrosA/diasA).toFixed(1)} L`;
-  cMediaVaca.innerText = vacasA ? `${(litrosA/vacasA).toFixed(1)} L` : "—";
+  cLitros.innerText=`${litrosA} L`;
+  cReceita.innerText=moeda(receitaA);
+  cMediaDia.innerText=`${(litrosA/diasA).toFixed(1)} L`;
+  cMediaVaca.innerText=vacasA?`${(litrosA/vacasA).toFixed(1)} L`:"—";
 
-  /* ===== COMPARATIVO ===== */
-  cmpLitros.innerText = litrosP
-    ? `${litrosA >= litrosP ? "▲" : "▼"} ${Math.abs(litrosA - litrosP)} L`
-    : "—";
+  cmpLitros.innerText=litrosP?`${litrosA>=litrosP?"▲":"▼"} ${Math.abs(litrosA-litrosP)} L`:"—";
+  cmpReceita.innerText=receitaP?`${receitaA>=receitaP?"▲":"▼"} ${moeda(Math.abs(receitaA-receitaP))}`:"—";
+  cmpMedia.innerText=litrosP?`${(litrosA/diasA).toFixed(1)} → ${(litrosP/diasP).toFixed(1)} L`:"—";
 
-  cmpReceita.innerText = receitaP
-    ? `${receitaA >= receitaP ? "▲" : "▼"} ${moeda(Math.abs(receitaA - receitaP))}`
-    : "—";
-
-  cmpMedia.innerText = litrosP
-    ? `${(litrosA/diasA).toFixed(1)} → ${(litrosP/diasP).toFixed(1)} L`
-    : "—";
-
-  /* ===== ALERTA ===== */
-  alerta.innerText =
-    litrosA === 0
-      ? "Sem produção no período"
-      : "Produção dentro do esperado";
+  alerta.innerText=litrosA===0?"Sem produção no período":"Produção dentro do esperado";
 }
 
 load();
