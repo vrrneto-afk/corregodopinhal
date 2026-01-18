@@ -1,51 +1,99 @@
 // auth-guard.js
-// USO EXCLUSIVO EM /app
+// GUARD GLOBAL – APP / ADM / CONFIG
 
-(function(){
+(function () {
 
-  const esperar = setInterval(()=>{
-    if(window.firebase && firebase.auth && firebase.firestore){
-      clearInterval(esperar);
+  const wait = setInterval(() => {
+    if (
+      window.firebase &&
+      firebase.auth
+    ) {
+      clearInterval(wait);
       iniciar();
     }
-  },50);
+  }, 50);
 
-  function iniciar(){
+  async function iniciar() {
     const auth = firebase.auth();
-    const db   = firebase.firestore();
 
-    auth.onAuthStateChanged(async user=>{
-      if(!user){
+    auth.onAuthStateChanged(async (user) => {
+
+      /* ================= NÃO LOGADO ================= */
+      if (!user) {
         location.replace("../login/login.html");
         return;
       }
 
-      try{
+      /* ================= SEM IDENTIFICAÇÃO DA PÁGINA ================= */
+      if (!window.PERMISSAO_PAGINA) {
+        console.error("PERMISSAO_PAGINA não definida.");
+        await auth.signOut();
+        location.replace("../login/login.html");
+        return;
+      }
+
+      /* ================= FIRESTORE OBRIGATÓRIO ================= */
+      if (!firebase.firestore) {
+        console.error("Firestore não carregado.");
+        await auth.signOut();
+        location.replace("../login/login.html");
+        return;
+      }
+
+      const db = firebase.firestore();
+
+      try {
+
+        /* ================= USUÁRIO ================= */
         const snapUser = await db.collection("usuarios").doc(user.uid).get();
-        if(!snapUser.exists || snapUser.data().ativo !== true){
+
+        if (!snapUser.exists || snapUser.data().ativo !== true) {
           await auth.signOut();
           location.replace("../login/login.html");
           return;
         }
 
-        const grupo = snapUser.data().papel;
-        const snapGrupos = await db.collection("config").doc("grupos").get();
-        const grupoCfg = snapGrupos.data().lista.find(g=>g.id===grupo);
+        const papel = snapUser.data().papel;
 
-        if(window.PERMISSAO_PAGINA){
-          const {area,chave} = window.PERMISSAO_PAGINA;
-          if(!grupoCfg?.permissoes?.[area]?.[chave]){
-            alert("Sem permissão.");
-            await auth.signOut();
-            location.replace("../login/login.html");
-            return;
-          }
+        /* ================= GRUPOS ================= */
+        const snapGrupos = await db.collection("config").doc("grupos").get();
+
+        if (!snapGrupos.exists) {
+          throw new Error("Config grupos não encontrada");
         }
 
-        window.USUARIO_ATUAL = {uid:user.uid, grupo};
+        const grupoCfg = snapGrupos.data().lista.find(g => g.id === papel);
 
-      }catch(e){
-        console.error(e);
+        if (!grupoCfg) {
+          throw new Error("Grupo do usuário não existe");
+        }
+
+        /* ================= PERMISSÃO ================= */
+        const { area, chave } = window.PERMISSAO_PAGINA;
+
+        const permitido =
+          grupoCfg.permissoes?.[area]?.[chave] === true ||
+          grupoCfg.permissoes?.[area]?.["tudo"] === true;
+
+        if (!permitido) {
+          alert("Você não tem permissão para acessar esta área.");
+          await auth.signOut();
+          location.replace("../login/login.html");
+          return;
+        }
+
+        /* ================= OK ================= */
+        window.USUARIO_ATUAL = {
+          uid: user.uid,
+          papel,
+          area,
+          chave
+        };
+
+        document.body.style.display = "block";
+
+      } catch (err) {
+        console.error("Erro no auth-guard:", err);
         await auth.signOut();
         location.replace("../login/login.html");
       }
