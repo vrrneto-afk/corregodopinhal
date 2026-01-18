@@ -151,11 +151,12 @@ fetch("../menu/menu-adm.html")
 const auth = firebase.auth();
 const db   = firebase.firestore();
 
-let grupos=[], editando=null;
+let grupos = [];
+let editando = null;
 
 auth.onAuthStateChanged(u=>{
   if(u){
-    document.body.style.display="block";
+    document.body.style.display = "block";
     carregar();
   }
 });
@@ -167,42 +168,72 @@ async function carregar(){
 }
 
 function render(){
-  lista-grupos.innerHTML="";
+  const area = document.getElementById("lista-grupos");
+  area.innerHTML = "";
+
   grupos.forEach((g,i)=>{
-    const b=document.createElement("button");
-    b.className="config-card";
-    b.innerHTML=`<strong>${g.nome}</strong><span>ID: ${g.id}</span>`;
-    b.onclick=()=>editar(i);
-    lista-grupos.appendChild(b);
+    const b = document.createElement("button");
+    b.className = "config-card";
+    b.innerHTML = `<strong>${g.nome}</strong><span>ID: ${g.id}</span>`;
+    b.onclick = () => editar(i);
+    area.appendChild(b);
   });
+
+  const novo = document.createElement("button");
+  novo.className = "config-card";
+  novo.innerHTML = "➕ Novo grupo";
+  novo.onclick = novoGrupo;
+  area.appendChild(novo);
+}
+
+function novoGrupo(){
+  editando = null;
+  grupo_id.value = "";
+  grupo_nome.value = "";
+  document.querySelectorAll("input[type=checkbox]").forEach(c => c.checked = false);
+  editor.classList.remove("hidden");
 }
 
 function editar(i){
-  editando=i;
-  const g=grupos[i];
-  grupo_id.value=g.id;
-  grupo_nome.value=g.nome;
+  editando = i;
+  const g = grupos[i];
+  grupo_id.value = g.id;
+  grupo_nome.value = g.nome;
+
   document.querySelectorAll("input[type=checkbox]").forEach(c=>{
-    c.checked = g.permissoes?.[c.dataset.area]?.[c.dataset.pagina]===true;
+    c.checked = g.permissoes?.[c.dataset.area]?.[c.dataset.pagina] === true;
   });
+
   editor.classList.remove("hidden");
 }
 
 function cancelar(){
   editor.classList.add("hidden");
+  editando = null;
 }
 
 async function salvarGrupo(){
-  const permissoes={};
+  const permissoes = {};
+
   document.querySelectorAll("input[type=checkbox]").forEach(c=>{
     if(!c.checked) return;
-    permissoes[c.dataset.area]=permissoes[c.dataset.area]||{};
-    permissoes[c.dataset.area][c.dataset.pagina]=true;
+    permissoes[c.dataset.area] = permissoes[c.dataset.area] || {};
+    permissoes[c.dataset.area][c.dataset.pagina] = true;
   });
 
-  grupos[editando]={ id:grupo_id.value, nome:grupo_nome.value, permissoes };
-  await db.collection("config").doc("grupos").set({lista:grupos});
-  cancelar(); render();
+  const obj = {
+    id: grupo_id.value.trim(),
+    nome: grupo_nome.value.trim(),
+    permissoes
+  };
+
+  if(editando === null) grupos.push(obj);
+  else grupos[editando] = obj;
+
+  await db.collection("config").doc("grupos").set({ lista: grupos });
+
+  cancelar();
+  render();
 }
 </script>
 
