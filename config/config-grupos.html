@@ -21,16 +21,14 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
 <script>
-if (!firebase.apps.length) {
-  firebase.initializeApp({
-    apiKey: "AIzaSyCW-CuFDrOLO-dteckl_GrPTocmyS-IrzY",
-    authDomain: "sitio-corrego-do-pinhal.firebaseapp.com",
-    projectId: "sitio-corrego-do-pinhal"
-  });
-}
+firebase.initializeApp({
+  apiKey: "AIzaSyCW-CuFDrOLO-dteckl_GrPTocmyS-IrzY",
+  authDomain: "sitio-corrego-do-pinhal.firebaseapp.com",
+  projectId: "sitio-corrego-do-pinhal"
+});
 </script>
 
-<!-- PERMISSÃO GLOBAL -->
+<!-- PERMISSÃO DA PÁGINA -->
 <script>
 window.PERMISSAO_PAGINA = {
   area: "config",
@@ -38,20 +36,32 @@ window.PERMISSAO_PAGINA = {
 };
 </script>
 
-<!-- AUTH GUARD GLOBAL -->
 <script src="../login/auth-guard.js"></script>
+
+<style>
+.permissoes-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(180px,1fr));
+  gap:10px;
+  margin-top:10px;
+}
+.perm-item{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  font-size:14px;
+}
+</style>
 </head>
 
-<body>
+<body style="display:none">
 
 <header>⚙️ Configurações</header>
-
 <div id="menu-adm"></div>
 
 <div class="container">
 
-<h2>Configuração – Grupos de Usuários</h2>
-
+<h2>Grupos de Usuários</h2>
 <div class="cards-grid" id="lista-grupos"></div>
 
 <div id="editor" class="hidden">
@@ -67,80 +77,104 @@ window.PERMISSAO_PAGINA = {
 
 <h3>📱 App</h3>
 <div class="permissoes-grid">
-<label class="perm-item"><input type="checkbox" data-area="app" data-pagina="inicio"> Início</label>
-<label class="perm-item"><input type="checkbox" data-area="app" data-pagina="animais"> Animais</label>
-<label class="perm-item"><input type="checkbox" data-area="app" data-pagina="vacas"> Vacas</label>
-<label class="perm-item"><input type="checkbox" data-area="app" data-pagina="bezerros"> Bezerros</label>
-<label class="perm-item"><input type="checkbox" data-area="app" data-pagina="leite"> Leite</label>
-<label class="perm-item"><input type="checkbox" data-area="app" data-pagina="despesas"> Despesas</label>
-<label class="perm-item"><input type="checkbox" data-area="app" data-pagina="clima"> Clima</label>
+<label class="perm-item"><input type="checkbox" data-area="app" data-pagina="inicio">Início</label>
+<label class="perm-item"><input type="checkbox" data-area="app" data-pagina="tempo">Tempo</label>
+<label class="perm-item"><input type="checkbox" data-area="app" data-pagina="lembretes">Lembretes</label>
+<label class="perm-item"><input type="checkbox" data-area="app" data-pagina="animais">Animais</label>
+<label class="perm-item"><input type="checkbox" data-area="app" data-pagina="vacas">Vacas</label>
+<label class="perm-item"><input type="checkbox" data-area="app" data-pagina="bezerros">Bezerros</label>
+<label class="perm-item"><input type="checkbox" data-area="app" data-pagina="historico">Histórico</label>
+<label class="perm-item"><input type="checkbox" data-area="app" data-pagina="farmacia">Farmácia</label>
+<label class="perm-item"><input type="checkbox" data-area="app" data-pagina="vacinas">Vacinas</label>
+<label class="perm-item"><input type="checkbox" data-area="app" data-pagina="leite">Leite</label>
+<label class="perm-item"><input type="checkbox" data-area="app" data-pagina="despesas">Despesas</label>
+<label class="perm-item"><input type="checkbox" data-area="app" data-pagina="clima">Clima</label>
+</div>
+
+<h4>📊 Relatórios</h4>
+<div class="permissoes-grid">
+<label class="perm-item"><input type="checkbox" data-area="app" data-pagina="relatorio_financeiro">Financeiro</label>
+<label class="perm-item"><input type="checkbox" data-area="app" data-pagina="relatorio_leite">Produção de Leite</label>
+<label class="perm-item"><input type="checkbox" data-area="app" data-pagina="relatorio_rebanho">Rebanho</label>
+<label class="perm-item"><input type="checkbox" data-area="app" data-pagina="relatorio_sanitario">Sanitário</label>
+</div>
+
+<hr>
+
+<h3>🧾 Área Administrativa</h3>
+<div class="permissoes-grid">
+<label class="perm-item"><input type="checkbox" data-area="adm" data-pagina="login">Login</label>
+<label class="perm-item"><input type="checkbox" data-area="adm" data-pagina="cadastro_animais">Animais</label>
+<label class="perm-item"><input type="checkbox" data-area="adm" data-pagina="cadastro_farmacia">Farmácia</label>
+<label class="perm-item"><input type="checkbox" data-area="adm" data-pagina="cadastro_vacinas">Vacinas</label>
+<label class="perm-item"><input type="checkbox" data-area="adm" data-pagina="cadastro_eventos">Eventos</label>
+<label class="perm-item"><input type="checkbox" data-area="adm" data-pagina="cadastro_leite">Leite</label>
+<label class="perm-item"><input type="checkbox" data-area="adm" data-pagina="cadastro_despesas">Despesas</label>
+<label class="perm-item"><input type="checkbox" data-area="adm" data-pagina="cadastro_fotos">Fotos</label>
 </div>
 
 <hr>
 
 <h3>⚙️ Configurações</h3>
 <div class="permissoes-grid">
-<label class="perm-item"><input type="checkbox" data-area="config" data-pagina="config"> Painel</label>
-<label class="perm-item"><input type="checkbox" data-area="config" data-pagina="config-grupos"> Grupos</label>
-<label class="perm-item"><input type="checkbox" data-area="config" data-pagina="config-usuarios"> Usuários</label>
-<label class="perm-item"><input type="checkbox" data-area="config" data-pagina="tudo"> Acesso total</label>
+<label class="perm-item"><input type="checkbox" data-area="config" data-pagina="config">Painel Config</label>
+<label class="perm-item"><input type="checkbox" data-area="config" data-pagina="config-geral">Geral</label>
+<label class="perm-item"><input type="checkbox" data-area="config" data-pagina="config-bezerros">Bezerros</label>
+<label class="perm-item"><input type="checkbox" data-area="config" data-pagina="config-vacinas">Vacinas</label>
+<label class="perm-item"><input type="checkbox" data-area="config" data-pagina="config-vacas">Vacas</label>
+<label class="perm-item"><input type="checkbox" data-area="config" data-pagina="config-leite">Leite</label>
+<label class="perm-item"><input type="checkbox" data-area="config" data-pagina="config-despesas">Despesas</label>
+<label class="perm-item"><input type="checkbox" data-area="config" data-pagina="config-especies">Espécies</label>
+<label class="perm-item"><input type="checkbox" data-area="config" data-pagina="config-farmacia">Farmácia</label>
+<label class="perm-item"><input type="checkbox" data-area="config" data-pagina="config-clima">Clima</label>
+<label class="perm-item"><input type="checkbox" data-area="config" data-pagina="config-menu">Menu</label>
+<label class="perm-item"><input type="checkbox" data-area="config" data-pagina="config-grupos">Grupos</label>
+<label class="perm-item"><input type="checkbox" data-area="config" data-pagina="config-usuarios">Usuários</label>
+<label class="perm-item"><input type="checkbox" data-area="config" data-pagina="tudo">Acesso total</label>
 </div>
 
 </fieldset>
 
 <button class="salvar" onclick="salvarGrupo()">💾 Salvar</button>
-<button class="voltar" onclick="cancelar()">Cancelar</button>
+<button class="voltar" onclick="cancelar()">❌ Cancelar</button>
 </div>
 
-<button class="voltar" onclick="location.href='config.html'">
-⬅ Voltar para Configurações
-</button>
+<button class="voltar" onclick="location.href='config.html'">⬅ Voltar</button>
 
 </div>
 
 <script>
-/* MENU */
 fetch("../menu/menu-adm.html")
   .then(r=>r.text())
-  .then(html=>{
-    document.getElementById("menu-adm").innerHTML = html;
-  });
+  .then(html=>document.getElementById("menu-adm").innerHTML=html);
 
-const db = firebase.firestore();
-let grupos = [];
-let editando = null;
+const auth = firebase.auth();
+const db   = firebase.firestore();
+
+let grupos=[], editando=null;
+
+auth.onAuthStateChanged(u=>{
+  if(u){
+    document.body.style.display="block";
+    carregar();
+  }
+});
 
 async function carregar(){
-  const snap = await db.collection("config").doc("grupos").get();
-  grupos = snap.exists ? snap.data().lista || [] : [];
+  const s = await db.collection("config").doc("grupos").get();
+  grupos = s.exists ? s.data().lista || [] : [];
   render();
 }
 
 function render(){
-  const area = document.getElementById("lista-grupos");
-  area.innerHTML = "";
-
+  lista-grupos.innerHTML="";
   grupos.forEach((g,i)=>{
-    const b = document.createElement("button");
+    const b=document.createElement("button");
     b.className="config-card";
-    b.innerHTML=`<strong>${g.nome}</strong><span>${g.id}</span>`;
+    b.innerHTML=`<strong>${g.nome}</strong><span>ID: ${g.id}</span>`;
     b.onclick=()=>editar(i);
-    area.appendChild(b);
+    lista-grupos.appendChild(b);
   });
-
-  const novo=document.createElement("button");
-  novo.className="config-card";
-  novo.innerText="➕ Novo grupo";
-  novo.onclick=novoGrupo;
-  area.appendChild(novo);
-}
-
-function novoGrupo(){
-  editando=null;
-  grupo_id.value="";
-  grupo_nome.value="";
-  document.querySelectorAll("input[type=checkbox]").forEach(c=>c.checked=false);
-  editor.classList.remove("hidden");
 }
 
 function editar(i){
@@ -148,45 +182,29 @@ function editar(i){
   const g=grupos[i];
   grupo_id.value=g.id;
   grupo_nome.value=g.nome;
-
   document.querySelectorAll("input[type=checkbox]").forEach(c=>{
-    c.checked = g.permissoes?.[c.dataset.area]?.[c.dataset.pagina] === true;
+    c.checked = g.permissoes?.[c.dataset.area]?.[c.dataset.pagina]===true;
   });
-
   editor.classList.remove("hidden");
-}
-
-async function salvarGrupo(){
-  const id=grupo_id.value.trim();
-  const nome=grupo_nome.value.trim();
-  if(!id||!nome) return alert("Informe ID e nome.");
-
-  const permissoes={};
-  document.querySelectorAll("input[type=checkbox]").forEach(c=>{
-    if(c.checked){
-      permissoes[c.dataset.area] ??= {};
-      permissoes[c.dataset.area][c.dataset.pagina]=true;
-    }
-  });
-
-  const obj={id,nome,permissoes};
-  if(editando===null) grupos.push(obj);
-  else grupos[editando]=obj;
-
-  await db.collection("config").doc("grupos").set({lista:grupos});
-  cancelar();
-  render();
 }
 
 function cancelar(){
   editor.classList.add("hidden");
-  editando=null;
 }
 
-carregar();
-</script>
+async function salvarGrupo(){
+  const permissoes={};
+  document.querySelectorAll("input[type=checkbox]").forEach(c=>{
+    if(!c.checked) return;
+    permissoes[c.dataset.area]=permissoes[c.dataset.area]||{};
+    permissoes[c.dataset.area][c.dataset.pagina]=true;
+  });
 
-<script src="../login/logout.js"></script>
+  grupos[editando]={ id:grupo_id.value, nome:grupo_nome.value, permissoes };
+  await db.collection("config").doc("grupos").set({lista:grupos});
+  cancelar(); render();
+}
+</script>
 
 </body>
 </html>
