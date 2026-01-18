@@ -3,62 +3,122 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Configurações</title>
+<title>Configurações – Sistema</title>
 
+<!-- MANIFEST -->
+<link rel="manifest" href="../manifest.json">
+<meta name="theme-color" content="#7b3f2a">
+
+<!-- MENU GLOBAL (PADRÃO ÚNICO) -->
+<link rel="stylesheet" href="../menu/menu.css">
+
+<!-- CONFIG CSS (EXCLUSIVO DO MÓDULO CONFIG) -->
+<link rel="stylesheet" href="../config/config.css">
+
+<!-- FIREBASE -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 
-<link rel="stylesheet" href="menu-adm.css">
-<link rel="stylesheet" href="config.css">
+<script>
+firebase.initializeApp({
+  apiKey: "AIzaSyCW-CuFDrOLO-dteckl_GrPTocmyS-IrzY",
+  authDomain: "sitio-corrego-do-pinhal.firebaseapp.com",
+  projectId: "sitio-corrego-do-pinhal"
+});
+</script>
+
+<!-- IDENTIFICAÇÃO DA PÁGINA (PADRÃO GLOBAL) -->
+<script>
+window.PERMISSAO_PAGINA = {
+  area: "config",
+  chave: "config"
+};
+</script>
+
+<!-- AUTH GUARD GLOBAL -->
+<script src="../login/auth-guard.js"></script>
 </head>
 
-<body style="display:none">
-
-<div id="app" class="hidden">
+<body>
 
 <header>⚙️ Configurações</header>
+
 <div id="menu-adm"></div>
 
 <div class="container">
+
   <h2>Configuração do Sistema</h2>
 
   <div class="cards-grid">
 
-    <button class="config-card" onclick="location.href='config-geral.html'">🧭<span>Geral</span></button>
-    <button class="config-card" onclick="location.href='config-bezerros.html'">🐮<span>Bezerros</span></button>
-    <button class="config-card" onclick="location.href='config-vacinas.html'">💉<span>Vacinas</span></button>
-    <button class="config-card" onclick="location.href='config-vacas.html'">🐄<span>Vacas</span></button>
-    <button class="config-card" onclick="location.href='config-leite.html'">🥛<span>Leite</span></button>
-    <button class="config-card" onclick="location.href='config-despesas.html'">💰<span>Despesas</span></button>
-    <button class="config-card" onclick="location.href='config-especies.html'">🧬<span>Espécies</span></button>
-    <button class="config-card" onclick="location.href='config-farmacia.html'">💊<span>Farmácia</span></button>
-    <button class="config-card" onclick="location.href='config-clima.html'">🌦️<span>Clima</span></button>
-    <button class="config-card" onclick="location.href='config-menu.html'">📋<span>Menu</span></button>
-    <button class="config-card" onclick="location.href='config-usuarios.html'">👦🏼<span>Usuários</span></button>
-    <button class="config-card" onclick="location.href='config-grupos.html'">👬<span>Grupos de Usuários</span></button>
+    <button class="config-card" onclick="location.href='config-geral.html'">
+      🧭 <span>Geral</span>
+    </button>
+
+    <button class="config-card" onclick="location.href='config-bezerros.html'">
+      🐮 <span>Bezerros</span>
+    </button>
+
+    <button class="config-card" onclick="location.href='config-vacinas.html'">
+      💉 <span>Vacinas</span>
+    </button>
+
+    <button class="config-card" onclick="location.href='config-vacas.html'">
+      🐄 <span>Vacas</span>
+    </button>
+
+    <button class="config-card" onclick="location.href='config-leite.html'">
+      🥛 <span>Leite</span>
+    </button>
+
+    <button class="config-card" onclick="location.href='config-despesas.html'">
+      💰 <span>Despesas</span>
+    </button>
+
+    <button class="config-card" onclick="location.href='config-especies.html'">
+      🧬 <span>Espécies</span>
+    </button>
+
+    <button class="config-card" onclick="location.href='config-farmacia.html'">
+      💊 <span>Farmácia</span>
+    </button>
+
+    <button class="config-card" onclick="location.href='config-clima.html'">
+      🌦️ <span>Clima</span>
+    </button>
+
+    <button class="config-card" onclick="location.href='config-menu.html'">
+      📋 <span>Menu</span>
+    </button>
+
+    <button class="config-card" onclick="location.href='config-usuarios.html'">
+      👤 <span>Usuários</span>
+    </button>
+
+    <button class="config-card" onclick="location.href='config-grupos.html'">
+      👥 <span>Grupos de Usuários</span>
+    </button>
 
   </div>
 </div>
-</div>
 
 <script>
-fetch("menu-adm.html")
-  .then(r=>r.text())
-  .then(html=>{
+/* MENU ADM – PADRÃO GLOBAL */
+fetch("../menu/menu-adm.html")
+  .then(r => r.text())
+  .then(html => {
     document.getElementById("menu-adm").innerHTML = html;
+
     document.querySelectorAll(".menu-link").forEach(a=>{
-      if(a.getAttribute("href")==="config.html"){
+      if(a.getAttribute("href")?.includes("config.html")){
         a.classList.add("ativo");
       }
     });
   });
-
-document.body.style.display="block";
-document.getElementById("app").classList.remove("hidden");
 </script>
 
-<script src="auth-guard.js"></script>
-<script src="auth-adm.js"></script>
+<!-- LOGOUT GLOBAL -->
+<script src="../login/logout.js"></script>
 
 </body>
 </html>
