@@ -5,7 +5,27 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Relatórios – Sítio Córrego do Pinhal</title>
 
-<link rel="stylesheet" href="menu.css">
+<link rel="manifest" href="../manifest.json">
+<meta name="theme-color" content="#7b3f2a">
+
+<!-- MENU GLOBAL -->
+<link rel="stylesheet" href="../menu/menu.css">
+
+<!-- FIREBASE -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+<!-- IDENTIFICAÇÃO DA PÁGINA -->
+<script>
+window.PERMISSAO_PAGINA = {
+  area: "app",
+  chave: "relatorios"
+};
+</script>
+
+<!-- AUTH GUARD -->
+<script src="../login/auth-guard.js"></script>
 
 <style>
 :root{
@@ -82,7 +102,7 @@ p.intro{
 <body>
 
 <header>
-  <img src="logo.png">
+  <img src="../logo.png">
 </header>
 
 <div id="menu"></div>
@@ -98,22 +118,22 @@ Os filtros de período e detalhes estarão disponíveis dentro de cada relatóri
 
 <div class="blocos">
 
-  <div class="bloco" onclick="location.href='relatorio-financeiro.html'">
+  <div class="bloco" onclick="location.href='../relatorios/relatorio-financeiro.html'">
     <strong>💰 Financeiro</strong>
     <span>Lucro, despesas e receitas</span>
   </div>
 
-  <div class="bloco" onclick="location.href='relatorio-leite.html'">
+  <div class="bloco" onclick="location.href='../relatorios/relatorio-leite.html'">
     <strong>🥛 Produção de Leite</strong>
     <span>Produção, médias e evolução</span>
   </div>
 
-  <div class="bloco" onclick="location.href='relatorio-rebanho.html'">
+  <div class="bloco" onclick="location.href='../relatorios/relatorio-rebanho.html'">
     <strong>🐄 Rebanho</strong>
     <span>Quantidade, status e gestão</span>
   </div>
 
-  <div class="bloco" onclick="location.href='relatorio-sanitario.html'">
+  <div class="bloco" onclick="location.href='../relatorios/relatorio-sanitario.html'">
     <strong>💉 Sanitário</strong>
     <span>Vacinas, controle e custos</span>
   </div>
@@ -123,16 +143,24 @@ Os filtros de período e detalhes estarão disponíveis dentro de cada relatóri
 </div>
 
 <script>
-fetch("menu.html")
+/* MENU */
+fetch("../menu/menu.html")
   .then(r=>r.text())
   .then(h=>{
-    menu.innerHTML=h;
+    menu.innerHTML = h;
     document.querySelectorAll("#menu a").forEach(a=>{
-      if(a.getAttribute("href")==="relatorios.html") {
+      if(a.getAttribute("href")==="../app/relatorios.html"){
         a.classList.add("ativo");
       }
     });
   });
+
+/* FIREBASE INIT */
+firebase.initializeApp({
+  apiKey:"AIzaSyCW-CuFDrOLO-dteckl_GrPTocmyS-IrzY",
+  authDomain:"sitio-corrego-do-pinhal.firebaseapp.com",
+  projectId:"sitio-corrego-do-pinhal"
+});
 </script>
 
 </body>
