@@ -80,17 +80,9 @@ select{
 .card.negativo{border-left-color:var(--vermelho)}
 .card.amarelo{border-left-color:var(--amarelo)}
 
-.card strong{
-  font-size:22px;
-  display:block
-}
+.card strong{font-size:22px;display:block}
+.card span{font-size:14px;color:var(--cinza)}
 
-.card span{
-  font-size:14px;
-  color:var(--cinza)
-}
-
-/* TABELA */
 table{
   width:100%;
   border-collapse:collapse;
@@ -109,7 +101,6 @@ th{background:#efe3d3}
 th.nome, td.nome { width:30%; text-align:left }
 th.idade, td.idade { width:20% }
 
-/* BOTÃO VOLTAR */
 .voltar{
   margin:30px 0 10px;
   display:flex;
@@ -155,7 +146,6 @@ th.idade, td.idade { width:20% }
   </select>
 </div>
 
-<!-- RESUMO -->
 <div class="cards">
   <div class="card"><strong id="cTotal">0</strong><span>Total de animais</span></div>
   <div class="card"><strong id="cAtivos">0</strong><span>Ativos</span></div>
@@ -163,7 +153,6 @@ th.idade, td.idade { width:20% }
   <div class="card negativo"><strong id="cFalecidos">0</strong><span>Falecidos</span></div>
 </div>
 
-<!-- ESTRUTURA -->
 <h3>🧬 Estrutura do rebanho</h3>
 <div class="cards">
   <div class="card"><strong id="cMachos">0</strong><span>Machos (total)</span></div>
@@ -174,7 +163,6 @@ th.idade, td.idade { width:20% }
   <div class="card"><strong id="cFemeasAtivas">0</strong><span>Fêmeas ativas</span></div>
 </div>
 
-<!-- ALERTAS -->
 <h3>🚨 Alertas</h3>
 <div class="cards">
   <div class="card alerta" id="cardAlerta">
@@ -183,7 +171,6 @@ th.idade, td.idade { width:20% }
   </div>
 </div>
 
-<!-- TABELA -->
 <h3>📋 Detalhamento</h3>
 <table>
 <thead>
@@ -207,7 +194,6 @@ th.idade, td.idade { width:20% }
 </div>
 
 <script>
-/* MENU */
 fetch("../menu/menu.html")
   .then(r=>r.text())
   .then(h=>{
@@ -219,7 +205,6 @@ fetch("../menu/menu.html")
     });
   });
 
-/* FIREBASE INIT */
 firebase.initializeApp({
   apiKey:"AIzaSyCW-CuFDrOLO-dteckl_GrPTocmyS-IrzY",
   authDomain:"sitio-corrego-do-pinhal.firebaseapp.com",
@@ -231,7 +216,6 @@ let ANIMAIS=[];
 
 function calcularIdade(data){
   if(!data) return "—";
-
   let nascimento;
   if(data.seconds){
     nascimento = new Date(data.seconds * 1000);
@@ -241,34 +225,32 @@ function calcularIdade(data){
   }else if(data instanceof Date){
     nascimento = data;
   }
-
   if(!nascimento || isNaN(nascimento)) return "—";
-
   const hoje = new Date();
   let anos = hoje.getFullYear() - nascimento.getFullYear();
   let meses = hoje.getMonth() - nascimento.getMonth();
-
   if(meses < 0){
     anos--;
     meses += 12;
   }
-
   return `${anos}a ${meses}m`;
 }
 
 async function load(){
   ANIMAIS=(await db.collection("animais").get()).docs.map(d=>d.data());
-
   const especies=["Todas",...new Set(ANIMAIS.map(a=>a.especie).filter(Boolean))];
   especie.innerHTML=especies.map(e=>`<option>${e}</option>`).join("");
   especie.onchange=render;
-
   render();
 }
 
 function render(){
   const esp=especie.value;
-  const dados=esp==="Todas"?ANIMAIS:ANIMAIS.filter(a=>a.especie===esp);
+  let dados=esp==="Todas"?ANIMAIS:ANIMAIS.filter(a=>a.especie===esp);
+
+  dados = dados.sort((a,b)=>
+    (a.nome||"").localeCompare(b.nome||"","pt-BR",{sensitivity:"base"})
+  );
 
   const ativos=dados.filter(a=>a.status==="Ativo");
   const vendidos=dados.filter(a=>["Vendido","Doado"].includes(a.status));
