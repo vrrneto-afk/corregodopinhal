@@ -219,9 +219,15 @@ async function carregar(){
 
   eventoExistente.innerHTML='<option value="">Selecione</option>';
   EVENTOS.forEach(e=>{
-    eventoExistente.innerHTML+=`<option value="${e.id}">${e.nome_animal} – ${e.tipo_evento}</option>`;
-  });
-}
+  const nome =
+    e.nome_animal ||
+    e.animal_nome ||
+    e.nome ||
+    "Animal não informado";
+
+  eventoExistente.innerHTML +=
+    `<option value="${e.id}">${nome} – ${e.tipo_evento}</option>`;
+});
 
 acao.onchange = ()=>{
   const editar = acao.value==="editar";
