@@ -195,8 +195,10 @@ fetch("../menu/menu-adm.html")
   .then(html => {
     document.getElementById("menu-adm").innerHTML = html;
 
-    document.querySelectorAll(".menu-link").forEach(a=>{
-      if(a.getAttribute("href") === location.pathname){
+    const atual = location.pathname.split("/").pop();
+
+    document.querySelectorAll(".menu-link").forEach(a => {
+      if (a.getAttribute("href")?.includes(atual)) {
         a.classList.add("ativo");
       }
     });
