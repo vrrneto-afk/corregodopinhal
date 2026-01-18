@@ -5,10 +5,26 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Relatório de Rebanho – Sítio Córrego do Pinhal</title>
 
-<link rel="stylesheet" href="menu.css">
+<link rel="manifest" href="../manifest.json">
+<meta name="theme-color" content="#7b3f2a">
 
+<!-- MENU GLOBAL -->
+<link rel="stylesheet" href="../menu/menu.css">
+
+<!-- FIREBASE -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+<!-- IDENTIFICAÇÃO DA PÁGINA -->
+<script>
+window.PERMISSAO_PAGINA = {
+  area: "app",
+  chave: "relatorios"
+};
+</script>
+
+<!-- AUTH GUARD -->
+<script src="../login/auth-guard.js"></script>
 
 <style>
 :root{
@@ -36,6 +52,7 @@ h2,h3{color:var(--marrom)}
   gap:10px;
   margin-bottom:14px
 }
+
 select{
   padding:12px;
   border-radius:12px;
@@ -50,6 +67,7 @@ select{
   gap:12px;
   margin-bottom:20px
 }
+
 .card{
   background:#fff;
   padding:14px;
@@ -57,12 +75,22 @@ select{
   border-radius:14px;
   box-shadow:0 2px 6px rgba(0,0,0,.05)
 }
+
 .card.alerta{border-left-color:var(--amarelo)}
 .card.negativo{border-left-color:var(--vermelho)}
 .card.amarelo{border-left-color:var(--amarelo)}
-.card strong{font-size:22px;display:block}
-.card span{font-size:14px;color:var(--cinza)}
 
+.card strong{
+  font-size:22px;
+  display:block
+}
+
+.card span{
+  font-size:14px;
+  color:var(--cinza)
+}
+
+/* TABELA */
 table{
   width:100%;
   border-collapse:collapse;
@@ -80,12 +108,39 @@ th{background:#efe3d3}
 
 th.nome, td.nome { width:30%; text-align:left }
 th.idade, td.idade { width:20% }
+
+/* BOTÃO VOLTAR */
+.voltar{
+  margin:30px 0 10px;
+  display:flex;
+  justify-content:center;
+}
+
+.voltar button{
+  background:#fff;
+  border:2px solid var(--marrom);
+  color:var(--marrom);
+  padding:12px 18px;
+  font-size:15px;
+  font-weight:600;
+  border-radius:14px;
+  cursor:pointer;
+  transition:.2s;
+}
+
+.voltar button:hover{
+  background:var(--marrom);
+  color:#fff;
+}
 </style>
 </head>
 
 <body>
 
-<header><img src="logo.png"></header>
+<header>
+  <img src="../logo.png">
+</header>
+
 <div id="menu"></div>
 
 <div class="container">
@@ -143,11 +198,28 @@ th.idade, td.idade { width:20% }
 <tbody id="tbody"></tbody>
 </table>
 
+<div class="voltar">
+  <button onclick="location.href='../app/relatorios.html'">
+    ⬅ Voltar para Relatórios
+  </button>
+</div>
+
 </div>
 
 <script>
-fetch("menu.html").then(r=>r.text()).then(h=>menu.innerHTML=h);
+/* MENU */
+fetch("../menu/menu.html")
+  .then(r=>r.text())
+  .then(h=>{
+    menu.innerHTML=h;
+    document.querySelectorAll("#menu a").forEach(a=>{
+      if(a.getAttribute("href")==="../app/relatorios.html"){
+        a.classList.add("ativo");
+      }
+    });
+  });
 
+/* FIREBASE INIT */
 firebase.initializeApp({
   apiKey:"AIzaSyCW-CuFDrOLO-dteckl_GrPTocmyS-IrzY",
   authDomain:"sitio-corrego-do-pinhal.firebaseapp.com",
