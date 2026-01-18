@@ -10,7 +10,7 @@
 <meta name="theme-color" content="#7b3f2a">
 
 <!-- MENU GLOBAL -->
-<link rel="stylesheet" href="../menu/menu.css">
+<link rel="stylesheet" href="../menu/menu-adm.css">
 
 <!-- FIREBASE -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
@@ -110,7 +110,7 @@ button{
 
 <header>🐄 Cadastro de Animais</header>
 
-<div id="menu"></div>
+<div id="menu-adm"></div>
 
 <div class="container">
 
@@ -190,16 +190,19 @@ button{
 
 <script>
 /* MENU ADM */
+<script>
 fetch("../menu/menu-adm.html")
-  .then(r=>r.text())
-  .then(h=>{
-    menu.innerHTML=h;
-    document.querySelectorAll("#menu a").forEach(a=>{
-      if(a.getAttribute("href")==="cadastro_animais.html"){
+  .then(r => r.text())
+  .then(html => {
+    document.getElementById("menu-adm").innerHTML = html;
+
+    document.querySelectorAll(".menu-link").forEach(a=>{
+      if(a.getAttribute("href") === location.pathname){
         a.classList.add("ativo");
       }
     });
   });
+</script>
 
 const db = firebase.firestore();
 const auth = firebase.auth();
