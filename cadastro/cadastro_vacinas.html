@@ -3,14 +3,38 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Cadastro de Vacinas</title>
+<title>Cadastro de Vacinas – ADM</title>
+
+<!-- MANIFEST -->
+<link rel="manifest" href="../manifest.json">
+<meta name="theme-color" content="#7b3f2a">
+
+<!-- MENU GLOBAL -->
+<link rel="stylesheet" href="../menu/menu.css">
 
 <!-- FIREBASE -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
-<link rel="stylesheet" href="menu-adm.css">
+<script>
+firebase.initializeApp({
+  apiKey: "AIzaSyCW-CuFDrOLO-dteckl_GrPTocmyS-IrzY",
+  authDomain: "sitio-corrego-do-pinhal.firebaseapp.com",
+  projectId: "sitio-corrego-do-pinhal"
+});
+</script>
+
+<!-- IDENTIFICAÇÃO DA PÁGINA -->
+<script>
+window.PERMISSAO_PAGINA = {
+  area: "adm",
+  chave: "cadastro_vacinas"
+};
+</script>
+
+<!-- AUTH GUARD -->
+<script src="../login/auth-guard.js"></script>
 
 <style>
 :root{
@@ -20,20 +44,52 @@
   --vermelho:#b03a2e;
   --logo:#D0B485;
 }
-*{box-sizing:border-box;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
-body{margin:0;background:var(--bege);display:none}
-header{background:var(--logo);padding:14px;text-align:center;font-weight:700;font-size:17px}
-.container{max-width:720px;margin:16px auto;padding:16px;background:#fff;border-radius:12px}
-label{font-weight:600;margin-top:10px;display:block;font-size:14px}
+
+*{
+  box-sizing:border-box;
+  font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+}
+
+body{
+  margin:0;
+  background:var(--bege);
+  color:#333;
+}
+
+header{
+  background:var(--logo);
+  padding:14px;
+  text-align:center;
+  font-weight:800;
+  font-size:17px;
+}
+
+.container{
+  max-width:720px;
+  margin:16px auto;
+  padding:16px;
+  background:#fff;
+  border-radius:12px;
+}
+
+label{
+  font-weight:600;
+  margin-top:10px;
+  display:block;
+  font-size:14px;
+}
+
 input,select,textarea{
   width:100%;
   padding:10px 12px;
   margin-top:4px;
   border-radius:8px;
   border:1px solid #ccc;
-  font-size:14px
+  font-size:14px;
 }
+
 textarea{min-height:70px}
+
 button{
   width:100%;
   padding:12px;
@@ -41,8 +97,9 @@ button{
   border:none;
   font-size:15px;
   cursor:pointer;
-  border-radius:10px
+  border-radius:10px;
 }
+
 .salvar{background:var(--verde);color:#fff}
 .excluir{background:var(--vermelho);color:#fff}
 .hidden{display:none}
@@ -51,9 +108,8 @@ button{
 
 <body>
 
-<div id="app" class="hidden">
-
 <header>💉 Cadastro de Vacinas</header>
+
 <div id="menu-adm"></div>
 
 <div class="container">
@@ -106,38 +162,27 @@ button{
 
 <button class="salvar" onclick="salvar()">💾 Salvar</button>
 <button class="excluir hidden" id="btnExcluir" onclick="excluir()">🗑️ Excluir</button>
-</div>
+
 </div>
 
+<!-- MENU ADM -->
 <script>
-/* MENU ADM */
-fetch("menu-adm.html")
-  .then(r=>r.text())
-  .then(html=>{
+fetch("../menu/menu-adm.html")
+  .then(r => r.text())
+  .then(html => {
     document.getElementById("menu-adm").innerHTML = html;
+
+    const atual = location.pathname.split("/").pop();
     document.querySelectorAll(".menu-link").forEach(a=>{
-      if(a.getAttribute("href")==="cadastro_vacinas.html"){
+      if(a.getAttribute("href")?.includes(atual)){
         a.classList.add("ativo");
       }
     });
   });
+</script>
 
-/* FIREBASE INIT */
-firebase.initializeApp({
-  apiKey:"AIzaSyCW-CuFDrOLO-dteckl_GrPTocmyS-IrzY",
-  authDomain:"sitio-corrego-do-pinhal.firebaseapp.com",
-  projectId:"sitio-corrego-do-pinhal"
-});
-
-const auth = firebase.auth();
+<script>
 const db = firebase.firestore();
-
-/* LOGOUT (CORREÇÃO) */
-function logout(){
-  auth.signOut().then(()=>{
-    location.href = "index.html";
-  });
-}
 
 /* ELEMENTOS */
 const acao = document.getElementById("acao");
@@ -156,16 +201,7 @@ let ANIMAIS = [];
 let VACINAS = [];
 let atual = null;
 
-/* AUTH */
-auth.onAuthStateChanged(user=>{
-  if(user){
-    document.body.style.display="block";
-    app.classList.remove("hidden");
-    carregarAnimais();
-  }
-});
-
-/* CARREGAR ANIMAIS ATIVOS */
+/* LOAD ANIMAIS */
 async function carregarAnimais(){
   const snap = await db.collection("animais")
     .where("status","==","Ativo")
@@ -181,7 +217,7 @@ async function carregarAnimais(){
   });
 }
 
-/* NOVO x EDITAR */
+/* AÇÃO */
 acao.onchange = ()=>{
   const editar = acao.value==="editar";
   blocoEditar.classList.toggle("hidden",!editar);
@@ -190,7 +226,7 @@ acao.onchange = ()=>{
   atual=null;
 };
 
-/* ANIMAL → CARREGAR VACINAS */
+/* ANIMAL */
 animal.onchange = async ()=>{
   existente.innerHTML="";
   atual=null;
@@ -215,7 +251,7 @@ animal.onchange = async ()=>{
   });
 };
 
-/* VACINA → PREENCHER CAMPOS */
+/* EDITAR */
 existente.onchange = ()=>{
   atual = VACINAS.find(v=>v.id===existente.value);
   if(!atual) return;
@@ -247,8 +283,7 @@ async function salvar(){
     repeticao_dias:repeticao_dias.value || "",
     status:status.value,
     observacoes:observacoes.value.trim(),
-    origem:"manual",
-    criado_por:auth.currentUser.email
+    origem_registro:"manual"
   };
 
   Object.keys(dados).forEach(k=>{
@@ -256,30 +291,32 @@ async function salvar(){
   });
 
   if(acao.value==="novo"){
-    dados.criado_em=firebase.firestore.FieldValue.serverTimestamp();
+    dados.criado_em = firebase.firestore.FieldValue.serverTimestamp();
     await db.collection("vacinas").add(dados);
   }else{
     await db.collection("vacinas").doc(atual.id).update(dados);
   }
 
-  alert("Vacina salva com sucesso");
+  alert("Vacina salva com sucesso.");
   location.reload();
 }
 
 /* EXCLUIR */
 async function excluir(){
-  if(!atual){
-    alert("Nenhuma vacina selecionada.");
-    return;
-  }
+  if(!atual) return;
 
   if(confirm(`Excluir a vacina "${atual.nome_vacina}"?`)){
     await db.collection("vacinas").doc(atual.id).delete();
-    alert("Vacina excluída com sucesso");
+    alert("Vacina excluída com sucesso.");
     location.reload();
   }
 }
+
+carregarAnimais();
 </script>
+
+<!-- LOGOUT GLOBAL -->
+<script src="../login/logout.js"></script>
 
 </body>
 </html>
