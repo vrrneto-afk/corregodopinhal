@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Correção de Eventos – ADM</title>
+
+<link rel="manifest" href="../manifest.json">
+<meta name="theme-color" content="#7b3f2a">
+
+<link rel="stylesheet" href="../menu/menu.css">
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+<script>
+firebase.initializeApp({
+  apiKey: "AIzaSyCW-CuFDrOLO-dteckl_GrPTocmyS-IrzY",
+  authDomain: "sitio-corrego-do-pinhal.firebaseapp.com",
+  projectId: "sitio-corrego-do-pinhal"
+});
+</script>
+
+<script>
+window.PERMISSAO_PAGINA = {
+  area: "adm",
+  chave: "corrigir_eventos"
+};
+</script>
+
+<script src="../login/auth-guard.js"></script>
+
+<style>
+:root{
+  --marrom:#7b3f2a;
+  --bege:#f6efe7;
+  --verde:#2f6b2f;
+  --vermelho:#b03a2e;
+  --logo:#D0B485;
+}
+
+body{
+  margin:0;
+  background:var(--bege);
+  font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+}
+
+header{
+  background:var(--logo);
+  padding:14px;
+  text-align:center;
+  font-weight:800;
+}
+
+.container{
+  max-width:800px;
+  margin:16px auto;
+  background:#fff;
+  padding:16px;
+  border-radius:12px;
+}
+
+.evento{
+  border:1px solid #ddd;
+  border-radius:10px;
+  padding:12px;
+  margin-bottom:12px;
+}
+
+.evento strong{
+  display:block;
+  margin-bottom:6px;
+}
+
+select,button{
+  width:100%;
+  padding:10px;
+  margin-top:8px;
+  border-radius:8px;
+  border:1px solid #ccc;
+}
+
+button{
+  background:var(--verde);
+  color:#fff;
+  font-weight:600;
+  cursor:pointer;
+}
+</style>
+</head>
+
+<body>
+
+<header>🛠️ Correção de Eventos sem Animal</header>
+<div id="menu-adm"></div>
+
+<div class="container" id="lista"></div>
+
+<script>
+fetch("../menu/menu-adm.html")
+  .then(r=>r.text())
+  .then(h=>document.getElementById("menu-adm").innerHTML=h);
+
+const db = firebase.firestore();
+
+let ANIMAIS = [];
+
+/* LOAD ANIMAIS */
+async function carregarAnimais(){
+  const snap = await db.collection("animais")
+    .where("status","==","Ativo")
+    .get();
+
+  ANIMAIS = snap.docs.map(d=>({id:d.id,...d.data()}))
+    .sort((a,b)=>(a.nome||"").localeCompare(b.nome||"","pt-BR"));
+}
+
+/* LOAD EVENTOS INCOMPLETOS */
+async function carregarEventos(){
+  const snap = await db.collection("eventos").get();
+  const eventos = snap.docs
+    .map(d=>({id:d.id,...d.data()}))
+    .filter(e=>!e.id_animal);
+
+  const lista = document.getElementById("lista");
+  lista.innerHTML = "";
+
+  if(eventos.length===0){
+    lista.innerHTML = "<p>✅ Nenhum evento pendente de correção.</p>";
+    return;
+  }
+
+  eventos.forEach(e=>{
+    const div = document.createElement("div");
+    div.className = "evento";
+
+    div.innerHTML = `
+      <strong>${e.tipo_evento} — ${e.data_evento || "sem data"}</strong>
+
+      <select>
+        <option value="">Selecione o animal</option>
+        ${ANIMAIS.map(a=>`<option value="${a.id}">${a.nome}</option>`).join("")}
+      </select>
+
+      <button>Corrigir evento</button>
+    `;
+
+    const select = div.querySelector("select");
+    const btn = div.querySelector("button");
+
+    btn.onclick = async ()=>{
+      if(!select.value){
+        alert("Selecione um animal.");
+        return;
+      }
+
+      const animal = ANIMAIS.find(a=>a.id===select.value);
+
+      await db.collection("eventos").doc(e.id).update({
+        id_animal: animal.id,
+        nome_animal: animal.nome,
+        especie: animal.especie || ""
+      });
+
+      div.remove();
+      alert("Evento corrigido com sucesso.");
+    };
+
+    lista.appendChild(div);
+  });
+}
+
+(async ()=>{
+  await carregarAnimais();
+  await carregarEventos();
+})();
+</script>
+
+<script src="../login/logout.js"></script>
+
+</body>
+</html>
