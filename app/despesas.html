@@ -71,6 +71,12 @@ select{
   background:#f2f2f2
 }
 
+/* 🔧 ajuste de espaçamento do filtro */
+#periodo{
+  margin-bottom:22px;
+}
+
+/* CARDS RESUMO */
 .cards{
   display:grid;
   grid-template-columns:repeat(auto-fit,minmax(160px,1fr));
@@ -85,8 +91,20 @@ select{
   border-radius:14px;
   box-shadow:0 2px 6px rgba(0,0,0,.05)
 }
-.card p{margin:4px 0;font-size:14px;color:var(--cinza)}
-.card strong{color:#000}
+
+/* 🔧 quebra correta de linha */
+.card strong{
+  display:block;
+  font-size:18px;
+  color:#000;
+}
+
+.card span{
+  display:block;
+  margin-top:6px;
+  font-size:14px;
+  color:var(--cinza);
+}
 
 .pos{color:var(--verde)}
 .neg{color:var(--vermelho)}
@@ -140,9 +158,18 @@ tfoot td{font-weight:800;background:#efe3d3}
 </select>
 
 <div class="cards">
-  <div class="card"><strong id="cTotal">R$ 0,00</strong><span>Total</span></div>
-  <div class="card"><strong id="cQtd">0</strong><span>Quantidade</span></div>
-  <div class="card"><strong id="cMedia">R$ 0,00</strong><span>Média</span></div>
+  <div class="card">
+    <strong id="cTotal">R$ 0,00</strong>
+    <span>Total</span>
+  </div>
+  <div class="card">
+    <strong id="cQtd">0</strong>
+    <span>Quantidade</span>
+  </div>
+  <div class="card">
+    <strong id="cMedia">R$ 0,00</strong>
+    <span>Média</span>
+  </div>
 </div>
 
 <table>
