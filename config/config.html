@@ -9,11 +9,11 @@
 <link rel="manifest" href="../manifest.json">
 <meta name="theme-color" content="#7b3f2a">
 
-<!-- MENU GLOBAL (PADRÃO ÚNICO DO SISTEMA) -->
+<!-- MENU GLOBAL -->
 <link rel="stylesheet" href="../menu/menu.css">
 
-<!-- CSS EXCLUSIVO DO MÓDULO CONFIG -->
-<link rel="stylesheet" href="../config/config.css">
+<!-- CONFIG CSS -->
+<link rel="stylesheet" href="./config.css">
 
 <!-- FIREBASE -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
@@ -26,6 +26,17 @@ firebase.initializeApp({
   projectId: "sitio-corrego-do-pinhal"
 });
 </script>
+
+<!-- 🔐 IDENTIFICAÇÃO DA PÁGINA (OBRIGATÓRIO) -->
+<script>
+window.PERMISSAO_PAGINA = {
+  area: "config",
+  chave: "config"
+};
+</script>
+
+<!-- 🔐 AUTH GUARD GLOBAL (OBRIGATÓRIO) -->
+<script src="../login/auth-guard.js"></script>
 </head>
 
 <body>
