@@ -3,14 +3,38 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Cadastro de Farmácia</title>
+<title>Cadastro de Farmácia – ADM</title>
+
+<!-- MANIFEST -->
+<link rel="manifest" href="../manifest.json">
+<meta name="theme-color" content="#7b3f2a">
+
+<!-- MENU GLOBAL -->
+<link rel="stylesheet" href="../menu/menu.css">
 
 <!-- FIREBASE -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
-<link rel="stylesheet" href="menu-adm.css">
+<script>
+firebase.initializeApp({
+  apiKey: "AIzaSyCW-CuFDrOLO-dteckl_GrPTocmyS-IrzY",
+  authDomain: "sitio-corrego-do-pinhal.firebaseapp.com",
+  projectId: "sitio-corrego-do-pinhal"
+});
+</script>
+
+<!-- IDENTIFICAÇÃO DA PÁGINA -->
+<script>
+window.PERMISSAO_PAGINA = {
+  area: "adm",
+  chave: "cadastro_farmacia"
+};
+</script>
+
+<!-- AUTH GUARD -->
+<script src="../login/auth-guard.js"></script>
 
 <style>
 :root{
@@ -20,13 +44,60 @@
   --vermelho:#b03a2e;
   --logo:#D0B485;
 }
-*{box-sizing:border-box;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
-body{margin:0;background:var(--bege);display:none}
-header{background:var(--logo);padding:14px;text-align:center;font-weight:700;font-size:17px}
-.container{max-width:720px;margin:16px auto;padding:16px;background:#fff;border-radius:12px}
-label{font-weight:600;margin-top:10px;display:block;font-size:14px}
-input,select{width:100%;padding:10px 12px;margin-top:4px;border-radius:8px;border:1px solid #ccc;font-size:14px}
-button{width:100%;padding:12px;margin-top:14px;border:none;font-size:15px;cursor:pointer;border-radius:10px}
+
+*{
+  box-sizing:border-box;
+  font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+}
+
+body{
+  margin:0;
+  background:var(--bege);
+  color:#333;
+}
+
+header{
+  background:var(--logo);
+  padding:14px;
+  text-align:center;
+  font-weight:800;
+  font-size:17px;
+}
+
+.container{
+  max-width:720px;
+  margin:16px auto;
+  padding:16px;
+  background:#fff;
+  border-radius:12px;
+}
+
+label{
+  font-weight:600;
+  margin-top:10px;
+  display:block;
+  font-size:14px;
+}
+
+input,select{
+  width:100%;
+  padding:10px 12px;
+  margin-top:4px;
+  border-radius:8px;
+  border:1px solid #ccc;
+  font-size:14px;
+}
+
+button{
+  width:100%;
+  padding:12px;
+  margin-top:14px;
+  border:none;
+  font-size:15px;
+  cursor:pointer;
+  border-radius:10px;
+}
+
 .salvar{background:var(--verde);color:#fff}
 .excluir{background:var(--vermelho);color:#fff}
 .hidden{display:none}
@@ -35,9 +106,8 @@ button{width:100%;padding:12px;margin-top:14px;border:none;font-size:15px;cursor
 
 <body>
 
-<div id="app" class="hidden">
-
 <header>💊 Cadastro de Farmácia</header>
+
 <div id="menu-adm"></div>
 
 <div class="container">
@@ -110,37 +180,26 @@ button{width:100%;padding:12px;margin-top:14px;border:none;font-size:15px;cursor
 <button class="excluir hidden" id="btnExcluir" onclick="excluir()">🗑️ Excluir</button>
 
 </div>
-</div>
 
+<!-- MENU ADM -->
 <script>
-/* MENU ADM */
-fetch("menu-adm.html")
+fetch("../menu/menu-adm.html")
   .then(r=>r.text())
   .then(html=>{
     document.getElementById("menu-adm").innerHTML = html;
+
+    const atual = location.pathname.split("/").pop();
     document.querySelectorAll(".menu-link").forEach(a=>{
-      if(a.getAttribute("href") === location.pathname.split("/").pop()){
+      if(a.getAttribute("href")?.includes(atual)){
         a.classList.add("ativo");
       }
     });
   });
+</script>
 
-/* FIREBASE INIT */
-firebase.initializeApp({
-  apiKey:"AIzaSyCW-CuFDrOLO-dteckl_GrPTocmyS-IrzY",
-  authDomain:"sitio-corrego-do-pinhal.firebaseapp.com",
-  projectId:"sitio-corrego-do-pinhal"
-});
-
-const auth = firebase.auth();
+<script>
 const db = firebase.firestore();
-
-/* LOGOUT */
-function logout(){
-  auth.signOut().then(()=>{
-    location.href = "index.html";
-  });
-}
+const auth = firebase.auth();
 
 const acao=document.getElementById("acao");
 const blocoEditar=document.getElementById("blocoEditar");
@@ -149,44 +208,22 @@ const btnExcluir=document.getElementById("btnExcluir");
 
 const dosagem_tipo=document.getElementById("dosagem_tipo");
 const peso_base=document.getElementById("peso_base");
-const nome = document.getElementById("nome");
-const funcao = document.getElementById("funcao");
-const status = document.getElementById("status");
-const quantidade = document.getElementById("quantidade");
-const data_compra = document.getElementById("data_compra");
-const validade = document.getElementById("validade");
-const dosagem_valor = document.getElementById("dosagem_valor");
-const dosagem_unidade = document.getElementById("dosagem_unidade");
-const via = document.getElementById("via");
+
+const nome=document.getElementById("nome");
+const funcao=document.getElementById("funcao");
+const status=document.getElementById("status");
+const quantidade=document.getElementById("quantidade");
+const data_compra=document.getElementById("data_compra");
+const validade=document.getElementById("validade");
+const dosagem_valor=document.getElementById("dosagem_valor");
+const dosagem_unidade=document.getElementById("dosagem_unidade");
+const via=document.getElementById("via");
 
 let medicamentos=[], atual=null;
-
-function limparFormulario(){
-  nome.value="";
-  funcao.value="";
-  status.value="Ativo";
-  quantidade.value="";
-  data_compra.value="";
-  validade.value="";
-  dosagem_tipo.value="unica";
-  dosagem_valor.value="";
-  dosagem_unidade.value="ml";
-  peso_base.value="1";
-  via.value="Intramuscular";
-  peso_base.classList.add("hidden");
-}
 
 dosagem_tipo.onchange=()=>{
   peso_base.classList.toggle("hidden",dosagem_tipo.value!=="peso");
 };
-
-auth.onAuthStateChanged(user=>{
-  if(user){
-    document.body.style.display="block";
-    app.classList.remove("hidden");
-    carregar();
-  }
-});
 
 async function carregar(){
   const snap=await db.collection("farmacia").get();
@@ -205,7 +242,6 @@ acao.onchange=()=>{
   btnExcluir.classList.toggle("hidden",!editar);
   atual=null;
   existente.value="";
-  if(!editar) limparFormulario();
 };
 
 existente.onchange=()=>{
@@ -240,33 +276,35 @@ async function salvar(){
     dosagem_unidade:dosagem_unidade.value,
     peso_base:dosagem_tipo.value==="peso"?peso_base.value:"",
     via:via.value,
-    origem_registro:"manual",
-    criado_por:auth.currentUser.email
+    origem_registro:"manual"
   };
 
-  if(acao.value==="editar" && atual){
+  if(atual){
     await db.collection("farmacia").doc(atual.id).update(dados);
   }else{
     dados.criado_em=firebase.firestore.FieldValue.serverTimestamp();
+    dados.criado_por=auth.currentUser?.email||"";
     await db.collection("farmacia").add(dados);
   }
 
-  alert("Medicamento salvo com sucesso");
+  alert("Medicamento salvo com sucesso.");
   location.reload();
 }
 
 async function excluir(){
-  if(!atual){
-    alert("Nenhum medicamento selecionado.");
-    return;
-  }
+  if(!atual) return;
   if(confirm(`Excluir o medicamento "${atual.nome}"?`)){
     await db.collection("farmacia").doc(atual.id).delete();
-    alert("Medicamento excluído com sucesso");
+    alert("Medicamento excluído.");
     location.reload();
   }
 }
+
+carregar();
 </script>
+
+<!-- LOGOUT GLOBAL -->
+<script src="../login/logout.js"></script>
 
 </body>
 </html>
