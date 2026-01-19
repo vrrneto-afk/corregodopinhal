@@ -171,8 +171,79 @@ function abrirAnimal(id){location.href="../app/animal.html?id="+encodeURICompone
 let CFG_VACAS={};
 
 async function iniciarPagina(){
+  await carregarConfig();
+  await carregarDados();
+}
+
+async function carregarConfig(){
   const snap = await db.collection("config").doc("vacas").get();
   CFG_VACAS = snap.data();
+}
+
+function regraPrenhezConfig(dias){
+  const regras = CFG_VACAS.prenhez_regras
+    .filter(r=>r.ativa!==false && dias>=r.dias_min)
+    .sort((a,b)=>b.dias_min-a.dias_min);
+  return regras[0] || {classe:"ok",mensagem:""};
+}
+
+async function carregarDados(){
+  const animaisSnap=await db.collection("animais").get();
+  const eventosSnap=await db.collection("eventos").get();
+
+  const ANIMAIS=animaisSnap.docs.map(d=>({_id:d.id,...d.data()}));
+  const EVENTOS=eventosSnap.docs.map(d=>d.data());
+
+  const vacas=ANIMAIS.filter(a=>
+    a.status==="Ativo" &&
+    a.especie==="Bovino" &&
+    a.sexo==="F" &&
+    idadeMeses(a.data_nascimento)>=CFG_VACAS.idade_minima_meses
+  );
+
+  const lista=document.getElementById("lista");
+
+  function render(f){
+    lista.innerHTML="";
+    let prenhas=[],paridas=[],vazias=[];
+
+    vacas.forEach(v=>{
+      const ev=EVENTOS.filter(e=>e.id_animal===v._id);
+      const cob=ev.filter(e=>e.tipo_evento==="cobertura").sort((a,b)=>new Date(b.data_evento)-new Date(a.data_evento))[0];
+      const par=ev.filter(e=>e.tipo_evento==="parto").sort((a,b)=>new Date(b.data_evento)-new Date(a.data_evento))[0];
+
+      if(cob && (!par || new Date(cob.data_evento)>new Date(par.data_evento))){
+        const prev=addMonths(new Date(cob.data_evento+"T00:00:00"),CFG_VACAS.gestacao_meses);
+        prenhas.push({v,prev});
+      }else if(par){paridas.push({v,par});}
+      else{vazias.push(v);}
+    });
+
+    prenhas.sort((a,b)=>a.prev-b.prev);
+
+    if(f==="todas"||f==="prenhas"){
+      prenhas.forEach(p=>{
+        const dias=Math.ceil((p.prev-new Date())/86400000);
+        const r=regraPrenhezConfig(dias);
+        lista.innerHTML+=`
+        <div class="card ${r.classe}" onclick="abrirAnimal('${p.v._id}')">
+          <strong>🐄 ${p.v.nome.toUpperCase()} <span class="badge prenha">Prenha</span></strong>
+          <p>Previsão do parto: ${p.prev.toLocaleDateString("pt-BR")}</p>
+          <p class="dias">⏳ Faltam ${dias} dias</p>
+          ${r.mensagem?`<p class="msg">${r.mensagem}</p>`:""}
+          <p>Raça: ${p.v.raca||"-"}</p>
+          <p>Idade: ${idadeTexto(p.v.data_nascimento)}</p>
+        </div>`;
+      });
+    }
+
+    if(!lista.innerHTML){
+      lista.innerHTML=`<div class="vazio">🐄 Nenhuma vaca encontrada.</div>`;
+    }
+  }
+
+  render("todas");
+  filtro.onchange=e=>render(e.target.value);
 }
 </script>
 
