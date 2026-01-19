@@ -98,7 +98,7 @@ h2{
   border:1.5px solid #ddd;
 }
 
-/* CARD */
+/* CARD – COMPACTO DEFINITIVO */
 .card{
   background:#fff;
   padding:12px 14px;
@@ -106,21 +106,26 @@ h2{
   border-left:6px solid var(--verde);
   border-radius:12px;
   box-shadow:0 2px 6px rgba(0,0,0,.06);
-  cursor:pointer;
+}
+
+/* força compactação, ignorando CSS global */
+.card *{
+  line-height:1.2 !important;
 }
 
 .card.venda{border-color:var(--amarelo)}
 .card.falecimento{border-color:var(--vermelho)}
 
 .card strong{
+  display:block;
   font-size:15px;
   font-weight:800;
+  margin-bottom:4px;
 }
 
 .card p{
-  margin:2px 0;
+  margin:2px 0 !important;
   font-size:14px;
-  line-height:1.25;
   color:var(--cinza);
 }
 
