@@ -90,14 +90,21 @@ fetch("../menu/menu-adm.html")
   .then(html => {
     document.getElementById("menu-adm").innerHTML = html;
 
+    /* ✅ MARCAR MENU CONFIG COMO ATIVO */
+    document.querySelectorAll(".menu-link").forEach(link => {
+      if (link.getAttribute("href")?.includes("config")) {
+        link.classList.add("ativo");
+      }
+    });
+
     const s = document.createElement("script");
     s.src = "../menu/menu-permissoes.js";
     s.onload = () => {
-  requestAnimationFrame(() => {
-    document.body.style.display = "block";
-    carregar();
-  });
-};
+      requestAnimationFrame(() => {
+        document.body.style.display = "block";
+        carregar();
+      });
+    };
     document.body.appendChild(s);
   });
 </script>
