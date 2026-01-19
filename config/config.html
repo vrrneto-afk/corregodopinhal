@@ -30,6 +30,7 @@ if (!firebase.apps.length) {
 }
 </script>
 
+<!-- IDENTIFICAÇÃO DA PÁGINA -->
 <script>
 window.PERMISSAO_PAGINA = {
   area: "config",
@@ -37,10 +38,11 @@ window.PERMISSAO_PAGINA = {
 };
 </script>
 
+<!-- AUTH GUARD -->
 <script src="../login/auth-guard.js"></script>
 </head>
 
-<body>
+<body style="display:none">
 
 <header>⚙️ Configurações</header>
 
@@ -104,7 +106,7 @@ window.PERMISSAO_PAGINA = {
 </div>
 
 <script>
-/* MENU ADM – PADRÃO GLOBAL */
+/* MENU ADM – PADRÃO GLOBAL DEFINITIVO */
 fetch("../menu/menu-adm.html")
   .then(r => r.text())
   .then(html => {
@@ -115,16 +117,19 @@ fetch("../menu/menu-adm.html")
         a.classList.add("ativo");
       }
     });
+
+    /* INJEÇÃO OBRIGATÓRIA DO CONTROLE DE PERMISSÕES */
+    const s = document.createElement("script");
+    s.src = "../menu/menu-permissoes.js";
+    s.onload = () => {
+      document.body.style.display = "block";
+    };
+    document.body.appendChild(s);
   });
 </script>
 
 <!-- LOGOUT GLOBAL -->
 <script src="../login/logout.js"></script>
-
-<script>
-/* LIBERA O BODY (config.css usa display:none por padrão) */
-document.body.style.display = "block";
-</script>
 
 </body>
 </html>
