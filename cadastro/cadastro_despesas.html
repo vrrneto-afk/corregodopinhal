@@ -5,35 +5,30 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Cadastro de Despesas – ADM</title>
 
-<!-- MANIFEST -->
 <link rel="manifest" href="../manifest.json">
 <meta name="theme-color" content="#7b3f2a">
 
-<!-- MENU GLOBAL (MESMO DO APP) -->
 <link rel="stylesheet" href="../menu/menu.css">
 
-<!-- FIREBASE -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
 <script>
 firebase.initializeApp({
-  apiKey: "AIzaSyCW-CuFDrOLO-dteckl_GrPTocmyS-IrzY",
-  authDomain: "sitio-corrego-do-pinhal.firebaseapp.com",
-  projectId: "sitio-corrego-do-pinhal"
+  apiKey:"AIzaSyCW-CuFDrOLO-dteckl_GrPTocmyS-IrzY",
+  authDomain:"sitio-corrego-do-pinhal.firebaseapp.com",
+  projectId:"sitio-corrego-do-pinhal"
 });
 </script>
 
-<!-- IDENTIFICAÇÃO DA PÁGINA (PADRÃO GLOBAL) -->
 <script>
 window.PERMISSAO_PAGINA = {
-  area: "adm",
-  chave: "cadastro_despesas"
+  area:"adm",
+  chave:"cadastro_despesas"
 };
 </script>
 
-<!-- AUTH GUARD GLOBAL -->
 <script src="../login/auth-guard.js"></script>
 
 <style>
@@ -45,15 +40,13 @@ window.PERMISSAO_PAGINA = {
   --logo:#D0B485;
 }
 
-*{
-  box-sizing:border-box;
-  font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
-}
+*{box-sizing:border-box;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
 
 body{
   margin:0;
   background:var(--bege);
   color:#333;
+  display:none;
 }
 
 header{
@@ -131,13 +124,13 @@ button{
   <select id="despesaExistente"></select>
 </div>
 
-<label>Nome da despesa</label>
+<label>Nome da despesa *</label>
 <input id="nome_despesa">
 
 <label>Tipo da despesa</label>
 <input id="tipo_despesa">
 
-<label>Categoria</label>
+<label>Categoria *</label>
 <select id="categoria_despesa">
   <option value="">Selecione</option>
   <option>Alimentação</option>
@@ -171,10 +164,10 @@ button{
 <label>Valor unitário</label>
 <input id="valor_unitario" type="number" step="0.01">
 
-<label>Valor total</label>
+<label>Valor total *</label>
 <input id="valor_total" type="number" step="0.01" readonly>
 
-<label>Data de vencimento</label>
+<label>Data de vencimento *</label>
 <input id="data_vencimento" type="date">
 
 <label>Observações</label>
@@ -186,22 +179,30 @@ button{
 </div>
 
 <script>
-/* MENU ADM – PADRÃO GLOBAL */
 fetch("../menu/menu-adm.html")
-  .then(r => r.text())
-  .then(html => {
-    document.getElementById("menu-adm").innerHTML = html;
+  .then(r=>r.text())
+  .then(html=>{
+    menu-adm.innerHTML = html;
 
-    const atual = location.pathname.split("/").pop();
     document.querySelectorAll(".menu-link").forEach(a=>{
-      if(a.getAttribute("href")?.includes(atual)){
+      if(a.getAttribute("href")?.includes("cadastro_despesas")){
         a.classList.add("ativo");
       }
     });
+
+    const s=document.createElement("script");
+    s.src="../menu/menu-permissoes.js";
+    document.body.appendChild(s);
   });
 
 const db = firebase.firestore();
 const auth = firebase.auth();
+
+auth.onAuthStateChanged(user=>{
+  if(!user) return;
+  document.body.style.display="block";
+  carregarDespesas();
+});
 
 let despesas = [];
 let despesaAtual = null;
@@ -209,6 +210,7 @@ let despesaAtual = null;
 /* TOTAL AUTOMÁTICO */
 quantidade.oninput = calcularTotal;
 valor_unitario.oninput = calcularTotal;
+
 function calcularTotal(){
   valor_total.value =
     (Number(quantidade.value||0)*Number(valor_unitario.value||0)).toFixed(2);
@@ -221,7 +223,6 @@ acao.onchange = ()=>{
   limpar();
 };
 
-/* LOAD */
 async function carregarDespesas(){
   const snap = await db.collection("despesas").get();
   despesas = snap.docs.map(d=>({id:d.id,...d.data()}));
@@ -261,31 +262,35 @@ despesaExistente.onchange = ()=>{
   btnExcluir.classList.remove("hidden");
 };
 
-/* SALVAR */
 async function salvar(){
-  if(!nome_despesa.value || !categoria_despesa.value ||
-     !fornecedor.value || !valor_total.value || !data_vencimento.value){
-    alert("Preencha todos os campos obrigatórios.");
+  if(!nome_despesa.value.trim() || !categoria_despesa.value ||
+     !valor_total.value || !data_vencimento.value){
+    alert("Preencha os campos obrigatórios.");
     return;
   }
 
   const hoje = new Date();
+
   const dados = {
-    nome_despesa:nome_despesa.value,
-    tipo_despesa:tipo_despesa.value,
-    categoria_despesa:categoria_despesa.value,
-    fornecedor:fornecedor.value,
-    forma_pagamento:forma_pagamento.value,
-    status_pagamento:status_pagamento.value,
-    quantidade:quantidade.value,
-    valor_unitario:valor_unitario.value,
-    valor_total:valor_total.value,
-    data_vencimento:data_vencimento.value,
-    observacoes:observacoes.value,
-    ano:String(ano.value||hoje.getFullYear()),
-    mes:String(mes.value||hoje.getMonth()+1),
-    dia:String(hoje.getDate())
+    nome_despesa: nome_despesa.value.trim(),
+    tipo_despesa: tipo_despesa.value.trim(),
+    categoria_despesa,
+    fornecedor: fornecedor.value.trim(),
+    forma_pagamento,
+    status_pagamento,
+    quantidade: Number(quantidade.value||0),
+    valor_unitario: Number(valor_unitario.value||0),
+    valor_total: Number(valor_total.value||0),
+    data_vencimento,
+    observacoes: observacoes.value.trim(),
+    ano: String(ano.value||hoje.getFullYear()),
+    mes: String(mes.value||hoje.getMonth()+1),
+    dia: String(hoje.getDate())
   };
+
+  Object.keys(dados).forEach(k=>{
+    if(dados[k]==="" || dados[k]===undefined) delete dados[k];
+  });
 
   if(despesaAtual){
     await db.collection("despesas").doc(despesaAtual.id).update(dados);
@@ -298,8 +303,8 @@ async function salvar(){
   location.reload();
 }
 
-/* EXCLUIR */
 async function excluir(){
+  if(!despesaAtual) return;
   if(confirm("Excluir esta despesa?")){
     await db.collection("despesas").doc(despesaAtual.id).delete();
     alert("Despesa excluída com sucesso.");
@@ -311,10 +316,8 @@ function limpar(){
   document.querySelectorAll("input,select,textarea").forEach(e=>{
     if(!["acao","ano","mes","despesaExistente"].includes(e.id)) e.value="";
   });
-  despesaAtual = null;
+  despesaAtual=null;
 }
-
-carregarDespesas();
 </script>
 
 <script src="../login/logout.js"></script>
