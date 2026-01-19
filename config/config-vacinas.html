@@ -5,18 +5,44 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Configuração – Vacinas</title>
 
+<!-- MANIFEST -->
+<link rel="manifest" href="../manifest.json">
+<meta name="theme-color" content="#7b3f2a">
+
+<!-- MENU GLOBAL -->
+<link rel="stylesheet" href="../menu/menu.css">
+
+<!-- CONFIG CSS -->
+<link rel="stylesheet" href="./config.css">
+
 <!-- FIREBASE -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
-<link rel="stylesheet" href="menu-adm.css">
-<link rel="stylesheet" href="config.css">
+<script>
+if (!firebase.apps.length) {
+  firebase.initializeApp({
+    apiKey: "AIzaSyCW-CuFDrOLO-dteckl_GrPTocmyS-IrzY",
+    authDomain: "sitio-corrego-do-pinhal.firebaseapp.com",
+    projectId: "sitio-corrego-do-pinhal"
+  });
+}
+</script>
+
+<!-- IDENTIFICAÇÃO DA PÁGINA -->
+<script>
+window.PERMISSAO_PAGINA = {
+  area: "config",
+  chave: "config-vacinas"
+};
+</script>
+
+<!-- AUTH GUARD GLOBAL -->
+<script src="../login/auth-guard.js"></script>
 </head>
 
-<body>
-
-<div id="app" class="hidden">
+<body style="display:none">
 
 <header>⚙️ Configurações</header>
 <div id="menu-adm"></div>
@@ -51,45 +77,31 @@
 
   <button class="salvar" onclick="salvar()">💾 Salvar</button>
 
-  <!-- BOTÃO VOLTAR (PADRÃO ANIMAIS) -->
   <button class="voltar" onclick="location.href='config.html'">
     ⬅ Voltar para Configurações
   </button>
 
 </div>
-</div>
 
+<!-- MENU + PERMISSÕES (ORDEM DEFINITIVA) -->
 <script>
-/* MENU ADM */
-fetch("menu-adm.html")
+fetch("../menu/menu-adm.html")
   .then(r => r.text())
   .then(html => {
     document.getElementById("menu-adm").innerHTML = html;
-    document.querySelectorAll(".menu-link").forEach(a => {
-      if (a.getAttribute("href") === "config.html") {
-        a.classList.add("ativo");
-      }
-    });
+
+    const s = document.createElement("script");
+    s.src = "../menu/menu-permissoes.js";
+    s.onload = () => {
+      document.body.style.display = "block";
+      carregar();
+    };
+    document.body.appendChild(s);
   });
+</script>
 
-/* FIREBASE INIT */
-firebase.initializeApp({
-  apiKey: "AIzaSyCW-CuFDrOLO-dteckl_GrPTocmyS-IrzY",
-  authDomain: "sitio-corrego-do-pinhal.firebaseapp.com",
-  projectId: "sitio-corrego-do-pinhal"
-});
-
-const auth = firebase.auth();
-const db   = firebase.firestore();
-
-/* AUTH */
-auth.onAuthStateChanged(user => {
-  if (user) {
-    document.body.style.display = "block";
-    document.getElementById("app").classList.remove("hidden");
-    carregar();
-  }
-});
+<script>
+const db = firebase.firestore();
 
 /* CARREGAR DADOS */
 async function carregar() {
@@ -98,21 +110,20 @@ async function carregar() {
 
   const d = snap.data();
 
-  document.getElementById("prio_atrasada").value   = d.prioridades?.atrasada ?? "";
-  document.getElementById("prio_pendente").value   = d.prioridades?.pendente ?? "";
-  document.getElementById("prio_finalizada").value = d.prioridades?.finalizada ?? "";
+  prio_atrasada.value   = d.prioridades?.atrasada ?? "";
+  prio_pendente.value   = d.prioridades?.pendente ?? "";
+  prio_finalizada.value = d.prioridades?.finalizada ?? "";
 
-  document.getElementById("status_atrasada").value   = d.status?.atrasada ?? "";
-  document.getElementById("status_pendente").value   = d.status?.pendente ?? "";
-  document.getElementById("status_finalizada").value = d.status?.finalizada ?? "";
+  status_atrasada.value   = d.status?.atrasada ?? "";
+  status_pendente.value   = d.status?.pendente ?? "";
+  status_finalizada.value = d.status?.finalizada ?? "";
 }
 
 /* SALVAR */
 async function salvar() {
-
-  const prioA = Number(document.getElementById("prio_atrasada").value);
-  const prioP = Number(document.getElementById("prio_pendente").value);
-  const prioF = Number(document.getElementById("prio_finalizada").value);
+  const prioA = Number(prio_atrasada.value);
+  const prioP = Number(prio_pendente.value);
+  const prioF = Number(prio_finalizada.value);
 
   if ([prioA, prioP, prioF].some(v => isNaN(v))) {
     alert("Informe valores numéricos válidos para as prioridades.");
@@ -126,9 +137,9 @@ async function salvar() {
       finalizada: prioF
     },
     status: {
-      atrasada: document.getElementById("status_atrasada").value.trim(),
-      pendente: document.getElementById("status_pendente").value.trim(),
-      finalizada: document.getElementById("status_finalizada").value.trim()
+      atrasada: status_atrasada.value.trim(),
+      pendente: status_pendente.value.trim(),
+      finalizada: status_finalizada.value.trim()
     }
   });
 
@@ -136,7 +147,8 @@ async function salvar() {
 }
 </script>
 
-<script src="auth-adm.js"></script>
+<!-- LOGOUT GLOBAL -->
+<script src="../login/logout.js"></script>
 
 </body>
 </html>
