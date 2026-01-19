@@ -235,9 +235,20 @@ function render(){
   mes.style.display=visao.value==="mensal"?"block":"none";
   ano.style.display=visao.value!=="geral"?"block":"none";
 
+  const esp = especie.value;
+
+  let animaisFiltrados = ANIMAIS;
+  if(esp !== "Todas"){
+    animaisFiltrados = ANIMAIS.filter(a => a.especie === esp);
+  }
+
+  const idsAnimais = new Set(animaisFiltrados.map(a => a.id));
+
   let atrasadas=[], pendentes=[], finalizadas=[];
 
   VACINAS.forEach(v=>{
+    if(!idsAnimais.has(v.id_animal)) return;
+
     const aplicada=parseData(v.data_aplicacao);
     const repeticao=Number(v.repeticao_dias||0);
     const reaplicar=new Date(aplicada);
