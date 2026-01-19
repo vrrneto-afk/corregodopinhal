@@ -21,11 +21,13 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
 <script>
-firebase.initializeApp({
-  apiKey: "AIzaSyCW-CuFDrOLO-dteckl_GrPTocmyS-IrzY",
-  authDomain: "sitio-corrego-do-pinhal.firebaseapp.com",
-  projectId: "sitio-corrego-do-pinhal"
-});
+if (!firebase.apps.length) {
+  firebase.initializeApp({
+    apiKey: "AIzaSyCW-CuFDrOLO-dteckl_GrPTocmyS-IrzY",
+    authDomain: "sitio-corrego-do-pinhal.firebaseapp.com",
+    projectId: "sitio-corrego-do-pinhal"
+  });
+}
 </script>
 
 <!-- PERMISSÃO DA PÁGINA -->
@@ -36,6 +38,7 @@ window.PERMISSAO_PAGINA = {
 };
 </script>
 
+<!-- AUTH GUARD GLOBAL -->
 <script src="../login/auth-guard.js"></script>
 
 <style>
@@ -89,7 +92,7 @@ window.PERMISSAO_PAGINA = {
 <label class="perm-item"><input type="checkbox" data-area="app" data-pagina="leite">Leite</label>
 <label class="perm-item"><input type="checkbox" data-area="app" data-pagina="despesas">Despesas</label>
 <label class="perm-item"><input type="checkbox" data-area="app" data-pagina="clima">Clima</label>
-<label class="perm-item"><input type="checkbox" data-area="app" data-pagina="relatorios">Relatorios</label>
+<label class="perm-item"><input type="checkbox" data-area="app" data-pagina="relatorios">Relatórios</label>
 </div>
 
 <h4>📊 Relatórios</h4>
@@ -144,23 +147,28 @@ window.PERMISSAO_PAGINA = {
 
 </div>
 
+<!-- MENU ADM – PADRÃO GLOBAL DEFINITIVO -->
 <script>
 fetch("../menu/menu-adm.html")
   .then(r=>r.text())
-  .then(html=>document.getElementById("menu-adm").innerHTML=html);
+  .then(html=>{
+    document.getElementById("menu-adm").innerHTML = html;
 
-const auth = firebase.auth();
-const db   = firebase.firestore();
+    const s = document.createElement("script");
+    s.src = "../menu/menu-permissoes.js";
+    s.onload = () => {
+      document.body.style.display = "block";
+      carregar();
+    };
+    document.body.appendChild(s);
+  });
+</script>
+
+<script>
+const db = firebase.firestore();
 
 let grupos = [];
 let editando = null;
-
-auth.onAuthStateChanged(u=>{
-  if(u){
-    document.body.style.display = "block";
-    carregar();
-  }
-});
 
 async function carregar(){
   const s = await db.collection("config").doc("grupos").get();
@@ -214,47 +222,39 @@ function cancelar(){
 }
 
 async function salvarGrupo(){
-  try{
-    const permissoes = {};
+  const permissoes = {};
 
-    document.querySelectorAll("input[type=checkbox]").forEach(c=>{
-      const area = c.dataset.area;
-      const pag  = c.dataset.pagina;
+  document.querySelectorAll("input[type=checkbox]").forEach(c=>{
+    const area = c.dataset.area;
+    const pag  = c.dataset.pagina;
 
-      permissoes[area] = permissoes[area] || {};
-      permissoes[area][pag] = c.checked === true;
-    });
+    permissoes[area] = permissoes[area] || {};
+    permissoes[area][pag] = c.checked === true;
+  });
 
-    if(!grupo_id.value.trim() || !grupo_nome.value.trim()){
-      alert("Informe o ID e o nome do grupo.");
-      return;
-    }
-
-    const obj = {
-      id: grupo_id.value.trim(),
-      nome: grupo_nome.value.trim(),
-      permissoes
-    };
-
-    if(editando === null){
-      grupos.push(obj);
-    }else{
-      grupos[editando] = obj;
-    }
-
-    await db.collection("config").doc("grupos").set({ lista: grupos });
-
-    alert("Grupo salvo com sucesso.");
-
-    cancelar();
-    render();
-
-  }catch(e){
-    console.error(e);
-    alert("Erro ao salvar o grupo. Verifique o console.");
+  if(!grupo_id.value.trim() || !grupo_nome.value.trim()){
+    alert("Informe o ID e o nome do grupo.");
+    return;
   }
+
+  const obj = {
+    id: grupo_id.value.trim(),
+    nome: grupo_nome.value.trim(),
+    permissoes
+  };
+
+  if(editando === null) grupos.push(obj);
+  else grupos[editando] = obj;
+
+  await db.collection("config").doc("grupos").set({ lista: grupos }, { merge:true });
+
+  alert("Grupo salvo com sucesso.");
+  location.reload();
 }
 </script>
+
+<!-- LOGOUT GLOBAL -->
+<script src="../login/logout.js"></script>
 
 </body>
 </html>
