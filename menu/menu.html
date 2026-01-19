@@ -1,48 +1,17 @@
-<div class="menu-wrapper">
-  <nav class="menu-adm" id="menu-links"></nav>
+<div class="menu-wrapper">  
+  <nav class="menu-adm" id="menu-links">  <a href="../app/index.html" class="menu-link" data-area="app" data-chave="inicio">🏠 <span>Início</span></a>  
+<a href="../app/lembretes.html" class="menu-link" data-area="app" data-chave="lembretes">📝 <span>Lembretes</span></a>  
+<a href="../app/animais.html" class="menu-link" data-area="app" data-chave="animais">🐾 <span>Animais</span></a>  
+<a href="../app/vacas.html" class="menu-link" data-area="app" data-chave="vacas">🐄 <span>Vacas</span></a>  
+<a href="../app/bezerros.html" class="menu-link" data-area="app" data-chave="bezerros">🐮 <span>Bezerros</span></a>  
+<a href="../app/historico.html" class="menu-link" data-area="app" data-chave="historico">📜 <span>Histórico</span></a>  
+<a href="../app/farmacia.html" class="menu-link" data-area="app" data-chave="farmacia">💊 <span>Farmácia</span></a>  
+<a href="../app/vacinas.html" class="menu-link" data-area="app" data-chave="vacinas">💉 <span>Vacinas</span></a>  
+<a href="../app/leite.html" class="menu-link" data-area="app" data-chave="leite">🥛 <span>Leite</span></a>  
+<a href="../app/despesas.html" class="menu-link" data-area="app" data-chave="despesas">💰 <span>Despesas</span></a>  
+<a href="../app/relatorios.html" class="menu-link" data-area="app" data-chave="relatorios">📊 <span>Relatórios</span></a>  
+
+<a href="#" class="menu-link sair" id="btnLogout">🚪 <span>Sair</span></a>
+
+  </nav>  
 </div>
-
-<script>
-(async function carregarMenu() {
-
-  if (typeof firebase === "undefined") return;
-
-  const db = firebase.firestore();
-  const nav = document.getElementById("menu-links");
-
-  try {
-    const snap = await db.collection("config").doc("menu").get();
-    if (!snap.exists) return;
-
-    const itens = (snap.data().itens || [])
-      .filter(i => i.ativo !== false)
-      .sort((a, b) => (a.ordem || 0) - (b.ordem || 0));
-
-    itens.forEach(item => {
-
-      // segurança mínima
-      if (!item.rota || !item.area || !item.chave) return;
-
-      const a = document.createElement("a");
-      a.href = item.rota;
-      a.className = "menu-link";
-      a.dataset.area = item.area;
-      a.dataset.chave = item.chave;
-
-      a.innerHTML = `${item.icone || "📁"} <span>${item.titulo}</span>`;
-      nav.appendChild(a);
-    });
-
-    // BOTÃO SAIR (fixo)
-    const sair = document.createElement("a");
-    sair.href = "#";
-    sair.className = "menu-link sair";
-    sair.id = "btnLogout";
-    sair.innerHTML = "🚪 <span>Sair</span>";
-    nav.appendChild(sair);
-
-  } catch (e) {
-    console.error("Erro ao carregar menu:", e);
-  }
-})();
-</script>
