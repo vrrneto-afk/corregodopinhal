@@ -16,6 +16,14 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
+<script>
+firebase.initializeApp({
+  apiKey:"AIzaSyCW-CuFDrOLO-dteckl_GrPTocmyS-IrzY",
+  authDomain:"sitio-corrego-do-pinhal.firebaseapp.com",
+  projectId:"sitio-corrego-do-pinhal"
+});
+</script>
+
 <!-- IDENTIFICAÇÃO DA PÁGINA -->
 <script>
 window.PERMISSAO_PAGINA = {
@@ -161,28 +169,28 @@ select{
 </div>
 
 <script>
-/* MENU */
 fetch("../menu/menu.html")
   .then(r=>r.text())
   .then(h=>{
     menu.innerHTML=h;
+
     document.querySelectorAll("#menu a").forEach(a=>{
       if(a.getAttribute("href")==="../app/relatorios.html"){
         a.classList.add("ativo");
       }
     });
-  });
 
-/* FIREBASE INIT */
-firebase.initializeApp({
-  apiKey:"AIzaSyCW-CuFDrOLO-dteckl_GrPTocmyS-IrzY",
-  authDomain:"sitio-corrego-do-pinhal.firebaseapp.com",
-  projectId:"sitio-corrego-do-pinhal"
-});
+    const s=document.createElement("script");
+    s.src="../menu/menu-permissoes.js";
+    document.body.appendChild(s);
+  });
+</script>
+
+<script>
 const db = firebase.firestore();
 
 const meses=["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
-const hoje = new Date(new Date().setHours(0,0,0,0));
+const hoje=new Date(new Date().setHours(0,0,0,0));
 
 let VACINAS=[], ANIMAIS=[];
 
@@ -224,8 +232,8 @@ function dentroPeriodo(d){
 }
 
 function render(){
-  mes.style.display = visao.value==="mensal" ? "block" : "none";
-  ano.style.display = visao.value!=="geral" ? "block" : "none";
+  mes.style.display=visao.value==="mensal"?"block":"none";
+  ano.style.display=visao.value!=="geral"?"block":"none";
 
   let atrasadas=[], pendentes=[], finalizadas=[];
 
@@ -259,7 +267,10 @@ function render(){
   cVencendo.innerText=pendentes.length;
   cAtrasadas.innerText=atrasadas.length;
 
-  let txt="Situação controlada", desc="Nenhum risco sanitário imediato", cls="alerta";
+  let txt="Situação controlada";
+  let desc="Nenhum risco sanitário imediato";
+  let cls="alerta";
+
   if(atrasadas.length){
     txt="Situação crítica";
     desc="Existem vacinas atrasadas";
@@ -278,5 +289,6 @@ load();
 </script>
 
 <script src="../login/logout.js"></script>
+
 </body>
 </html>
