@@ -5,17 +5,12 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Configuração – Espécies</title>
 
-<!-- MANIFEST -->
 <link rel="manifest" href="../manifest.json">
 <meta name="theme-color" content="#7b3f2a">
 
-<!-- MENU GLOBAL -->
 <link rel="stylesheet" href="../menu/menu.css">
-
-<!-- CONFIG CSS -->
 <link rel="stylesheet" href="./config.css">
 
-<!-- FIREBASE -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
@@ -30,7 +25,6 @@ if (!firebase.apps.length) {
 }
 </script>
 
-<!-- IDENTIFICAÇÃO DA PÁGINA -->
 <script>
 window.PERMISSAO_PAGINA = {
   area: "config",
@@ -38,7 +32,6 @@ window.PERMISSAO_PAGINA = {
 };
 </script>
 
-<!-- AUTH GUARD GLOBAL -->
 <script src="../login/auth-guard.js"></script>
 
 <style>
@@ -61,84 +54,77 @@ window.PERMISSAO_PAGINA = {
 
 <div class="container">
 
-  <h2>Configuração – Espécies</h2>
+<h2>Configuração – Espécies</h2>
 
-  <div class="cards-grid" id="lista-especies"></div>
+<div class="cards-grid" id="lista-especies"></div>
 
-  <div id="editor" class="hidden">
-    <fieldset>
+<div id="editor" class="hidden">
+<fieldset>
 
-      <label>Nome da espécie</label>
-      <input type="text" id="esp_id">
+<label>Nome da espécie</label>
+<input type="text" id="esp_id">
 
-      <label>Ícone da espécie (emoji)</label>
-      <input type="text" id="esp_icone" placeholder="Ex: 🐄 🐓 🐶">
+<label>Ícone da espécie (emoji)</label>
+<input type="text" id="esp_icone" placeholder="Ex: 🐄 🐓 🐶">
 
-      <div class="check-row">
-        <input type="checkbox" id="esp_ativo" checked>
-        <label for="esp_ativo">Espécie ativa</label>
-      </div>
+<div class="check-row">
+  <input type="checkbox" id="esp_ativo" checked>
+  <label>Espécie ativa</label>
+</div>
 
-      <div class="check-row">
-        <input type="checkbox" id="possui_gestacao">
-        <label for="possui_gestacao">Possui gestação</label>
-      </div>
+<div class="check-row">
+  <input type="checkbox" id="possui_gestacao">
+  <label>Possui gestação</label>
+</div>
 
-      <div class="check-row">
-        <input type="checkbox" id="possui_incubacao">
-        <label for="possui_incubacao">Possui incubação</label>
-      </div>
+<div class="check-row">
+  <input type="checkbox" id="possui_incubacao">
+  <label>Possui incubação</label>
+</div>
 
-      <div id="campo_gestacao" class="hidden">
-        <label>Gestação (meses)</label>
-        <input type="number" id="gestacao_meses" min="0">
-      </div>
+<div id="campo_gestacao" class="hidden">
+  <label>Gestação (meses)</label>
+  <input type="number" id="gestacao_meses" min="0">
+</div>
 
-      <div id="campo_incubacao" class="hidden">
-        <label>Incubação (dias)</label>
-        <input type="number" id="incubacao_dias" min="0">
-      </div>
+<div id="campo_incubacao" class="hidden">
+  <label>Incubação (dias)</label>
+  <input type="number" id="incubacao_dias" min="0">
+</div>
 
-    </fieldset>
+</fieldset>
 
-    <button class="salvar" onclick="salvarEspecie()">💾 Salvar</button>
+<button class="salvar" onclick="salvarEspecie()">💾 Salvar</button>
 
-    <button class="voltar" id="btnExcluir"
-      onclick="excluirEspecie()"
-      style="background:#b03a2e;color:#fff">
-      🗑 Excluir espécie
-    </button>
+<button class="voltar" id="btnExcluir"
+  onclick="excluirEspecie()"
+  style="background:#b03a2e;color:#fff">
+  🗑 Excluir espécie
+</button>
 
-    <button class="voltar" onclick="cancelarEdicao()">❌ Cancelar</button>
-  </div>
+<button class="voltar" onclick="cancelarEdicao()">❌ Cancelar</button>
+</div>
 
-  <button class="voltar" onclick="location.href='config.html'">
-    ⬅ Voltar para Configurações
-  </button>
+<button class="voltar" onclick="location.href='config.html'">
+⬅ Voltar para Configurações
+</button>
 
 </div>
 
 <script>
-/* MENU ADM – PADRÃO GLOBAL */
 fetch("../menu/menu-adm.html")
-  .then(r => r.text())
-  .then(html => {
-    document.getElementById("menu-adm").innerHTML = html;
+.then(r=>r.text())
+.then(html=>{
+  document.getElementById("menu-adm").innerHTML = html;
 
-    document.querySelectorAll(".menu-link").forEach(a=>{
-      if(a.getAttribute("href")?.includes("config.html")){
-        a.classList.add("ativo");
-      }
-    });
-
-    const s = document.createElement("script");
-    s.src = "../menu/menu-permissoes.js";
-    s.onload = () => {
-      document.body.style.display = "block";
-      carregar();
-    };
-    document.body.appendChild(s);
-  });
+  const s=document.createElement("script");
+  s.src="../menu/menu-permissoes.js";
+  s.onload=()=>{
+    document.body.style.display="block";
+    carregar();
+  };
+  document.body.appendChild(s);
+});
 </script>
 
 <script>
@@ -147,42 +133,33 @@ const db = firebase.firestore();
 let especies = [];
 let indiceEditando = null;
 
-/* CARREGAR */
 async function carregar(){
   const snap = await db.collection("config").doc("especies").get();
-  if(!snap.exists) return;
-  especies = snap.data().lista || [];
+  especies = snap.exists ? snap.data().lista || [] : [];
   renderizarCards();
 }
 
 function renderizarCards(){
-  const area = document.getElementById("lista-especies");
-  area.innerHTML = "";
-
+  lista_especies.innerHTML="";
   especies.forEach((e,i)=>{
-    const btn = document.createElement("button");
+    const btn=document.createElement("button");
     btn.className="config-card";
     btn.onclick=()=>editarEspecie(i);
-
     if(e.ativo===false) btn.style.opacity="0.5";
 
-    const icone = e.icone || "🐾";
     let desc="";
     if(e.possui_gestacao) desc=`Gestação: ${e.gestacao_meses} meses`;
     if(e.possui_incubacao) desc=`Incubação: ${e.incubacao_dias} dias`;
 
-    btn.innerHTML =
-      `<strong>${icone} ${e.id}${e.ativo===false?" (Inativa)":""}</strong>
-       <span>${desc}</span>`;
-
-    area.appendChild(btn);
+    btn.innerHTML=`<strong>${e.icone||"🐾"} ${e.id}</strong><span>${desc}</span>`;
+    lista_especies.appendChild(btn);
   });
 
-  const novo = document.createElement("button");
+  const novo=document.createElement("button");
   novo.className="config-card";
   novo.innerHTML="➕ Nova espécie";
-  novo.onclick=()=>novaEspecie();
-  area.appendChild(novo);
+  novo.onclick=novaEspecie;
+  lista_especies.appendChild(novo);
 }
 
 function novaEspecie(){
@@ -194,40 +171,29 @@ function novaEspecie(){
 
 function editarEspecie(i){
   indiceEditando=i;
-  const e = especies[i];
-
-  esp_id.value = e.id || "";
-  esp_icone.value = e.icone || "";
-  esp_ativo.checked = e.ativo !== false;
-  possui_gestacao.checked = e.possui_gestacao === true;
-  possui_incubacao.checked = e.possui_incubacao === true;
-  gestacao_meses.value = e.gestacao_meses ?? "";
-  incubacao_dias.value = e.incubacao_dias ?? "";
-
+  const e=especies[i];
+  esp_id.value=e.id||"";
+  esp_icone.value=e.icone||"";
+  esp_ativo.checked=e.ativo!==false;
+  possui_gestacao.checked=!!e.possui_gestacao;
+  possui_incubacao.checked=!!e.possui_incubacao;
+  gestacao_meses.value=e.gestacao_meses||"";
+  incubacao_dias.value=e.incubacao_dias||"";
   ajustarCampos();
   btnExcluir.style.display="block";
   editor.classList.remove("hidden");
 }
 
 function ajustarCampos(){
-  campo_gestacao.classList.toggle("hidden", !possui_gestacao.checked);
-  campo_incubacao.classList.toggle("hidden", !possui_incubacao.checked);
+  campo_gestacao.classList.toggle("hidden",!possui_gestacao.checked);
+  campo_incubacao.classList.toggle("hidden",!possui_incubacao.checked);
 }
 
-possui_gestacao.onchange=()=>{
-  possui_incubacao.checked=false;
-  ajustarCampos();
-};
-possui_incubacao.onchange=()=>{
-  possui_gestacao.checked=false;
-  ajustarCampos();
-};
-
 async function salvarEspecie(){
-  const obj = {
-    id: esp_id.value.trim(),
-    icone: esp_icone.value.trim(),
-    ativo: esp_ativo.checked
+  const obj={
+    id:esp_id.value.trim(),
+    icone:esp_icone.value.trim(),
+    ativo:esp_ativo.checked
   };
 
   if(!obj.id){
@@ -239,7 +205,6 @@ async function salvarEspecie(){
     obj.possui_gestacao=true;
     obj.gestacao_meses=Number(gestacao_meses.value||0);
   }
-
   if(possui_incubacao.checked){
     obj.possui_incubacao=true;
     obj.incubacao_dias=Number(incubacao_dias.value||0);
@@ -248,43 +213,36 @@ async function salvarEspecie(){
   if(indiceEditando===null) especies.push(obj);
   else especies[indiceEditando]=obj;
 
-  await db.collection("config").doc("especies")
-    .set({ lista: especies }, { merge:true });
+  await db.collection("config").doc("especies").set({lista:especies},{merge:true});
 
-  cancelarEdicao();
-  renderizarCards();
+  alert("Configuração salva com sucesso.");
+  location.reload();
 }
 
 async function excluirEspecie(){
   if(!confirm("Excluir definitivamente esta espécie?")) return;
   especies.splice(indiceEditando,1);
-
-  await db.collection("config").doc("especies")
-    .set({ lista: especies }, { merge:true });
-
-  cancelarEdicao();
-  renderizarCards();
+  await db.collection("config").doc("especies").set({lista:especies},{merge:true});
+  alert("Espécie excluída com sucesso.");
+  location.reload();
 }
 
 function cancelarEdicao(){
   editor.classList.add("hidden");
-  limparFormulario();
 }
 
 function limparFormulario(){
   esp_id.value="";
   esp_icone.value="";
   esp_ativo.checked=true;
-  gestacao_meses.value="";
-  incubacao_dias.value="";
   possui_gestacao.checked=false;
   possui_incubacao.checked=false;
+  gestacao_meses.value="";
+  incubacao_dias.value="";
   ajustarCampos();
 }
 </script>
 
-<!-- LOGOUT GLOBAL -->
 <script src="../login/logout.js"></script>
-
 </body>
 </html>
