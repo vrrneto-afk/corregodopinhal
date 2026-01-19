@@ -16,6 +16,14 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
+<script>
+firebase.initializeApp({
+  apiKey:"AIzaSyCW-CuFDrOLO-dteckl_GrPTocmyS-IrzY",
+  authDomain:"sitio-corrego-do-pinhal.firebaseapp.com",
+  projectId:"sitio-corrego-do-pinhal"
+});
+</script>
+
 <!-- IDENTIFICAÇÃO DA PÁGINA -->
 <script>
 window.PERMISSAO_PAGINA = {
@@ -112,7 +120,7 @@ p.intro{
 <h2>📊 Relatórios</h2>
 
 <p class="intro">
-Selecione o tipo de relatório que deseja analisar.  
+Selecione o tipo de relatório que deseja analisar.<br>
 Os filtros de período e detalhes estarão disponíveis dentro de cada relatório.
 </p>
 
@@ -148,20 +156,20 @@ fetch("../menu/menu.html")
   .then(r=>r.text())
   .then(h=>{
     menu.innerHTML = h;
+
     document.querySelectorAll("#menu a").forEach(a=>{
       if(a.getAttribute("href")==="../app/relatorios.html"){
         a.classList.add("ativo");
       }
     });
-  });
 
-/* FIREBASE INIT */
-firebase.initializeApp({
-  apiKey:"AIzaSyCW-CuFDrOLO-dteckl_GrPTocmyS-IrzY",
-  authDomain:"sitio-corrego-do-pinhal.firebaseapp.com",
-  projectId:"sitio-corrego-do-pinhal"
-});
+    const s = document.createElement("script");
+    s.src = "../menu/menu-permissoes.js";
+    document.body.appendChild(s);
+  });
 </script>
+
+<script src="../login/logout.js"></script>
 
 </body>
 </html>
