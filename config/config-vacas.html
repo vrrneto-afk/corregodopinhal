@@ -77,6 +77,10 @@ window.PERMISSAO_PAGINA = {
   <input type="number" id="idade_minima_meses" min="0">
 </fieldset>
 
+<button class="salvar" onclick="salvarParametros()">
+💾 Salvar parâmetros gerais
+</button>
+
 <!-- REGRAS -->
 <h3 style="margin-top:18px;color:var(--marrom)">Regras de Prenhez</h3>
 <div class="cards-grid" id="lista-regras"></div>
@@ -233,6 +237,15 @@ async function salvarRegra(){
   alert("Regra salva com sucesso.");
   cancelar();
   renderizar();
+}
+
+async function salvarParametros(){
+  await db.collection("config").doc("vacas").update({
+    gestacao_meses: Number(gestacao_meses.value),
+    idade_minima_meses: Number(idade_minima_meses.value)
+  });
+
+  alert("Parâmetros gerais salvos com sucesso.");
 }
 
 /* EXCLUIR */
