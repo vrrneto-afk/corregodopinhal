@@ -13,6 +13,7 @@
 
 <!-- FIREBASE -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
 <script>
@@ -101,10 +102,6 @@ h2{
   border-radius:12px;
   border:1.5px solid #ddd;
 }
-.form input:focus{
-  outline:none;
-  border-color:var(--marrom);
-}
 .form button{
   width:100%;
   padding:12px;
@@ -128,7 +125,6 @@ h2{
   justify-content:space-between;
   gap:12px;
 }
-
 .card .texto{
   font-size:16px;
   font-weight:600;
@@ -136,14 +132,10 @@ h2{
   flex:1;
   word-break:break-word;
 }
-
 .card .acoes{
   display:flex;
   gap:6px;
-  align-items:flex-start;
 }
-
-/* BOTÕES */
 .card button{
   border:none;
   padding:6px 10px;
@@ -151,16 +143,8 @@ h2{
   cursor:pointer;
   font-size:13px;
 }
-
-.btn-edit{
-  background:#f0f0f0;
-  color:#333;
-}
-
-.btn-del{
-  background:var(--vermelho);
-  color:#fff;
-}
+.btn-edit{background:#f0f0f0}
+.btn-del{background:var(--vermelho);color:#fff}
 </style>
 </head>
 
@@ -195,16 +179,21 @@ h2{
 </div>
 
 <script>
-/* MENU DINÂMICO */
+/* MENU */
 fetch("../menu/menu.html")
   .then(r=>r.text())
   .then(html=>{
     document.getElementById("menu").innerHTML = html;
+
     document.querySelectorAll("#menu a").forEach(a=>{
       if(a.getAttribute("href")==="../app/lembretes.html"){
         a.classList.add("ativo");
       }
     });
+
+    const s = document.createElement("script");
+    s.src = "../menu/menu-permissoes.js";
+    document.body.appendChild(s);
   });
 
 const db = firebase.firestore();
@@ -213,7 +202,6 @@ let editTipo = null;
 
 async function carregar(){
   const snap = await db.collection("lembretes").get();
-
   listaCompra.innerHTML = "";
   listaTarefa.innerHTML = "";
 
