@@ -8,10 +8,10 @@
 <link rel="manifest" href="../manifest.json">
 <meta name="theme-color" content="#7b3f2a">
 
-<!-- MENU GLOBAL (OBRIGATÓRIO) -->
+<!-- MENU GLOBAL -->
 <link rel="stylesheet" href="../menu/menu.css">
 
-<!-- FIREBASE (PADRÃO GLOBAL) -->
+<!-- FIREBASE -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
@@ -108,7 +108,7 @@ h2{
   box-shadow:0 2px 6px rgba(0,0,0,.06);
 }
 
-/* força compactação, ignorando CSS global */
+/* força compactação */
 .card *{
   line-height:1.2 !important;
 }
@@ -174,16 +174,21 @@ h2{
 </div>
 
 <script>
-/* MENU DINÂMICO */
+/* CARREGA MENU + PERMISSÕES (SEM PISCAR) */
 fetch("../menu/menu.html")
-  .then(r=>r.text())
-  .then(html=>{
+  .then(r => r.text())
+  .then(html => {
     document.getElementById("menu").innerHTML = html;
+
     document.querySelectorAll("#menu a").forEach(a=>{
       if(a.getAttribute("href")==="../app/historico.html"){
         a.classList.add("ativo");
       }
     });
+
+    const s = document.createElement("script");
+    s.src = "../menu/menu-permissoes.js";
+    document.body.appendChild(s);
   });
 </script>
 
@@ -233,7 +238,7 @@ function render(){
 
       if(ev.tipo_evento === "parto"){
         lista.innerHTML += `
-        <div class="card" onclick="abrirAnimal('${animal._id}')">
+        <div class="card">
           <strong>🐮 CRIOU DIA</strong>
           <p>Animal: <span class="animal-nome">${animal.nome}</span></p>
           <p>Espécie: ${animal.especie}</p>
@@ -243,7 +248,7 @@ function render(){
 
       if(ev.tipo_evento === "venda"){
         lista.innerHTML += `
-        <div class="card venda" onclick="abrirAnimal('${animal._id}')">
+        <div class="card venda">
           <strong>💰 VENDIDO</strong>
           <p>Animal: <span class="animal-nome">${animal.nome}</span></p>
           <p>Espécie: ${animal.especie}</p>
@@ -253,7 +258,7 @@ function render(){
 
       if(ev.tipo_evento === "falecimento"){
         lista.innerHTML += `
-        <div class="card falecimento" onclick="abrirAnimal('${animal._id}')">
+        <div class="card falecimento">
           <strong>💀 FALECIMENTO</strong>
           <p>Animal: <span class="animal-nome">${animal.nome}</span></p>
           <p>Espécie: ${animal.especie}</p>
