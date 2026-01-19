@@ -16,6 +16,14 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
+<script>
+firebase.initializeApp({
+  apiKey: "AIzaSyCW-CuFDrOLO-dteckl_GrPTocmyS-IrzY",
+  authDomain: "sitio-corrego-do-pinhal.firebaseapp.com",
+  projectId: "sitio-corrego-do-pinhal"
+});
+</script>
+
 <!-- IDENTIFICAÇÃO DA PÁGINA -->
 <script>
 window.PERMISSAO_PAGINA = {
@@ -99,8 +107,8 @@ th,td{
 }
 th{background:#efe3d3}
 
-th.nome, td.nome { width:30%; text-align:left }
-th.idade, td.idade { width:20% }
+th.nome, td.nome{width:30%;text-align:left}
+th.idade, td.idade{width:20%}
 
 .voltar{
   margin:30px 0 10px;
@@ -199,41 +207,47 @@ fetch("../menu/menu.html")
   .then(r=>r.text())
   .then(h=>{
     menu.innerHTML=h;
+
     document.querySelectorAll("#menu a").forEach(a=>{
       if(a.getAttribute("href")==="../app/relatorios.html"){
         a.classList.add("ativo");
       }
     });
+
+    const s=document.createElement("script");
+    s.src="../menu/menu-permissoes.js";
+    document.body.appendChild(s);
   });
+</script>
 
-firebase.initializeApp({
-  apiKey:"AIzaSyCW-CuFDrOLO-dteckl_GrPTocmyS-IrzY",
-  authDomain:"sitio-corrego-do-pinhal.firebaseapp.com",
-  projectId:"sitio-corrego-do-pinhal"
-});
+<script>
 const db=firebase.firestore();
-
 let ANIMAIS=[];
 
 function calcularIdade(data){
   if(!data) return "—";
   let nascimento;
+
   if(data.seconds){
-    nascimento = new Date(data.seconds * 1000);
-  }else if(typeof data === "string"){
-    const [y,m,d] = data.split("-");
-    nascimento = new Date(y,m-1,d);
+    nascimento=new Date(data.seconds*1000);
+  }else if(typeof data==="string"){
+    const [y,m,d]=data.split("-");
+    nascimento=new Date(y,m-1,d);
   }else if(data instanceof Date){
-    nascimento = data;
+    nascimento=data;
   }
-  if(!nascimento || isNaN(nascimento)) return "—";
-  const hoje = new Date();
-  let anos = hoje.getFullYear() - nascimento.getFullYear();
-  let meses = hoje.getMonth() - nascimento.getMonth();
-  if(meses < 0){
+
+  if(!nascimento||isNaN(nascimento)) return "—";
+
+  const hoje=new Date();
+  let anos=hoje.getFullYear()-nascimento.getFullYear();
+  let meses=hoje.getMonth()-nascimento.getMonth();
+
+  if(meses<0){
     anos--;
-    meses += 12;
+    meses+=12;
   }
+
   return `${anos}a ${meses}m`;
 }
 
@@ -249,7 +263,7 @@ function render(){
   const esp=especie.value;
   let dados=esp==="Todas"?ANIMAIS:ANIMAIS.filter(a=>a.especie===esp);
 
-  dados = dados.sort((a,b)=>
+  dados=dados.sort((a,b)=>
     (a.nome||"").localeCompare(b.nome||"","pt-BR",{sensitivity:"base"})
   );
 
@@ -263,14 +277,8 @@ function render(){
   const machosAtivos=machos.filter(a=>a.status==="Ativo");
   const femeasAtivas=femeas.filter(a=>a.status==="Ativo");
 
-  const jovens=dados.filter(a=>{
-    const i=calcularIdade(a.data_nascimento);
-    return i!=="—" && parseInt(i)<2;
-  });
-  const adultos=dados.filter(a=>{
-    const i=calcularIdade(a.data_nascimento);
-    return i!=="—" && parseInt(i)>=2;
-  });
+  const jovens=dados.filter(a=>parseInt(calcularIdade(a.data_nascimento))<2);
+  const adultos=dados.filter(a=>parseInt(calcularIdade(a.data_nascimento))>=2);
 
   cTotal.innerText=dados.length;
   cAtivos.innerText=ativos.length;
@@ -319,5 +327,6 @@ load();
 </script>
 
 <script src="../login/logout.js"></script>
+
 </body>
 </html>
