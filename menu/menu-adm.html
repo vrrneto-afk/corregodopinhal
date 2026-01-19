@@ -2,45 +2,135 @@
 <div class="menu-wrapper">
   <nav class="menu-adm" id="menu-links">
 
-    <a href="../app/index.html" class="menu-link">
+    <a href="../app/index.html"
+       class="menu-link"
+       data-area="app"
+       data-chave="inicio">
       🏠 <span>Início</span>
     </a>
 
-    <a href="../cadastro/cadastro_animais.html" class="menu-link">
+    <a href="../cadastro/cadastro_animais.html"
+       class="menu-link"
+       data-area="adm"
+       data-chave="cadastro_animais">
       🐄 <span>Animais</span>
     </a>
 
-    <a href="../cadastro/cadastro_farmacia.html" class="menu-link">
+    <a href="../cadastro/cadastro_farmacia.html"
+       class="menu-link"
+       data-area="adm"
+       data-chave="cadastro_farmacia">
       💊 <span>Farmácia</span>
     </a>
 
-    <a href="../cadastro/cadastro_vacinas.html" class="menu-link">
+    <a href="../cadastro/cadastro_vacinas.html"
+       class="menu-link"
+       data-area="adm"
+       data-chave="cadastro_vacinas">
       💉 <span>Vacinas</span>
     </a>
 
-    <a href="../cadastro/cadastro_eventos.html" class="menu-link">
+    <a href="../cadastro/cadastro_eventos.html"
+       class="menu-link"
+       data-area="adm"
+       data-chave="cadastro_eventos">
       📅 <span>Eventos</span>
     </a>
 
-    <a href="../cadastro/cadastro_leite.html" class="menu-link">
+    <a href="../cadastro/cadastro_leite.html"
+       class="menu-link"
+       data-area="adm"
+       data-chave="cadastro_leite">
       🥛 <span>Leite</span>
     </a>
 
-    <a href="../cadastro/cadastro_despesas.html" class="menu-link">
+    <a href="../cadastro/cadastro_despesas.html"
+       class="menu-link"
+       data-area="adm"
+       data-chave="cadastro_despesas">
       💰 <span>Despesas</span>
     </a>
 
-    <a href="../cadastro/cadastro_fotos.html" class="menu-link">
+    <a href="../cadastro/cadastro_fotos.html"
+       class="menu-link"
+       data-area="adm"
+       data-chave="cadastro_fotos">
       📸 <span>Fotos</span>
     </a>
 
-    <a href="../config/config.html" class="menu-link">
+    <a href="../config/config.html"
+       class="menu-link"
+       data-area="config"
+       data-chave="config">
       ⚙️ <span>Config</span>
     </a>
 
-    <a href="#" class="menu-link sair" id="btnLogout">
-  🚪 <span>Sair</span>
-</a>
+    <a href="#"
+       class="menu-link sair"
+       id="btnLogout">
+      🚪 <span>Sair</span>
+    </a>
 
   </nav>
 </div>
+
+<script>
+/* ======================================================
+   CONTROLE DE PERMISSÕES DO MENU ADM
+   ====================================================== */
+
+(function(){
+
+  const esperar = setInterval(()=>{
+    if(window.USUARIO_ATUAL && window.firebase){
+      clearInterval(esperar);
+      aplicarPermissoes();
+    }
+  },50);
+
+  async function aplicarPermissoes(){
+    try{
+      const db = firebase.firestore();
+
+      const snap = await db
+        .collection("config")
+        .doc("grupos")
+        .get();
+
+      const grupo = snap.data().lista.find(
+        g => g.id === window.USUARIO_ATUAL.grupo
+      );
+
+      document.querySelectorAll(".menu-link").forEach(link=>{
+        const area  = link.dataset.area;
+        const chave = link.dataset.chave;
+
+        if(!area || !chave) return;
+
+        const permitido =
+          grupo?.permissoes?.[area]?.[chave] === true ||
+          grupo?.permissoes?.config?.tudo === true;
+
+        if(!permitido){
+          link.remove();
+        }
+      });
+
+    }catch(e){
+      console.error("Erro ao aplicar permissões do menu ADM:", e);
+    }
+  }
+
+})();
+</script>
+
+<script>
+/* ======================================================
+   LOGOUT
+   ====================================================== */
+document.getElementById("btnLogout")?.addEventListener("click", async e=>{
+  e.preventDefault();
+  await firebase.auth().signOut();
+  location.href = "../login/login.html";
+});
+</script>
