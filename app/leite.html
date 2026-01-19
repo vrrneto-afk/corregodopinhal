@@ -16,6 +16,14 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
+<script>
+firebase.initializeApp({
+  apiKey:"AIzaSyCW-CuFDrOLO-dteckl_GrPTocmyS-IrzY",
+  authDomain:"sitio-corrego-do-pinhal.firebaseapp.com",
+  projectId:"sitio-corrego-do-pinhal"
+});
+</script>
+
 <!-- IDENTIFICAÇÃO DA PÁGINA -->
 <script>
 window.PERMISSAO_PAGINA = {
@@ -94,10 +102,6 @@ select{
 .card span{font-size:14px;color:var(--cinza)}
 .card small{display:block;margin-top:4px;font-size:13px}
 
-/* COMPARATIVOS */
-.comp-positivo{color:var(--verde);font-weight:600}
-.comp-negativo{color:var(--vermelho);font-weight:600}
-
 /* TABELA */
 table{
   width:100%;
@@ -132,6 +136,7 @@ tfoot td{font-weight:800;background:#efe3d3}
   <img src="../logo.png">
 </header>
 
+<!-- MENU -->
 <div id="menu"></div>
 
 <div class="container">
@@ -196,28 +201,27 @@ tfoot td{font-weight:800;background:#efe3d3}
 </div>
 
 <script>
-/* MENU */
+/* MENU + PERMISSÕES (SEM PISCAR) */
 fetch("../menu/menu.html")
   .then(r=>r.text())
   .then(html=>{
-    menu.innerHTML = html;
+    document.getElementById("menu").innerHTML = html;
+
     document.querySelectorAll("#menu a").forEach(a=>{
       if(a.getAttribute("href")==="../app/leite.html"){
         a.classList.add("ativo");
       }
     });
+
+    const s = document.createElement("script");
+    s.src = "../menu/menu-permissoes.js";
+    document.body.appendChild(s);
   });
+</script>
 
-/* FIREBASE INIT */
-firebase.initializeApp({
-  apiKey:"AIzaSyCW-CuFDrOLO-dteckl_GrPTocmyS-IrzY",
-  authDomain:"sitio-corrego-do-pinhal.firebaseapp.com",
-  projectId:"sitio-corrego-do-pinhal"
-});
-
+<script>
 const db = firebase.firestore();
 
-/* CONFIG PADRÃO */
 let CONFIG = {
   moeda:{codigo:"BRL",locale:"pt-BR"},
   textos:{
@@ -231,10 +235,8 @@ let CONFIG = {
 const mesesNomes=["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
 let rows=[];
 
-/* UTIL */
 const moeda = v => v.toLocaleString(CONFIG.moeda.locale,{style:"currency",currency:CONFIG.moeda.codigo});
 
-/* LOAD */
 async function load(){
   const cfg = await db.collection("config").doc("leite").get();
   if(cfg.exists){
@@ -266,7 +268,6 @@ async function load(){
   render();
 }
 
-/* RENDER (REGRA ORIGINAL PRESERVADA) */
 function render(){
   const m=+mes.value,a=+ano.value,p=+periodo.value;
 
@@ -278,30 +279,15 @@ function render(){
     return diff>=0 && diff<p;
   });
 
-  const anterior = rows.filter(r=>{
-    const diff=(a*12+m)-(r.ano*12+r.mes);
-    return diff>=p && diff<p*2;
-  });
-
   const soma = arr => arr.reduce((s,r)=>s+r.litros_dia,0);
   const somaV = arr => arr.reduce((s,r)=>s+r.valor_dia,0);
-  const mediaV = arr => {
-    const m=arr.map(r=>r.vacas_produzindo?r.litros_dia/r.vacas_produzindo:0);
-    return m.reduce((a,b)=>a+b,0)/(m.length||1);
-  };
 
-  const L=soma(atual), Lp=soma(anterior);
-  const V=somaV(atual), Vp=somaV(anterior);
-  const M=mediaV(atual), Mp=mediaV(anterior);
+  const L=soma(atual);
+  const V=somaV(atual);
 
   cLitros.innerText=L;
   cValor.innerText=moeda(V);
-  cMediaVaca.innerText=M.toFixed(2);
   cDias.innerText=atual.length;
-
-  dLitros.innerText = Lp ? (L-Lp>=0?`▲ ${L-Lp}`:`▼ ${Math.abs(L-Lp)}`) : "";
-  dValor.innerText = Vp ? (V-Vp>=0?`▲ ${moeda(V-Vp)}`:`▼ ${moeda(Math.abs(V-Vp))}`) : "";
-  dMedia.innerText = Mp ? (M-Mp>=0?`▲ ${(M-Mp).toFixed(2)}`:`▼ ${Math.abs(M-Mp).toFixed(2)}`) : "";
 
   const mensal = rows.filter(r=>r.mes===m && r.ano===a).sort((a,b)=>a.dia-b.dia);
   tbody.innerHTML="";
@@ -339,5 +325,6 @@ function render(){
 load();
 </script>
 
+<script src="../login/logout.js"></script>
 </body>
 </html>
