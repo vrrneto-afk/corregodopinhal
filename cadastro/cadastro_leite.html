@@ -5,11 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Cadastro de Leite – ADM</title>
 
-<!-- MANIFEST -->
 <link rel="manifest" href="../manifest.json">
 <meta name="theme-color" content="#7b3f2a">
 
-<!-- MENU GLOBAL -->
 <link rel="stylesheet" href="../menu/menu.css">
 
 <!-- FIREBASE -->
@@ -19,17 +17,17 @@
 
 <script>
 firebase.initializeApp({
-  apiKey: "AIzaSyCW-CuFDrOLO-dteckl_GrPTocmyS-IrzY",
-  authDomain: "sitio-corrego-do-pinhal.firebaseapp.com",
-  projectId: "sitio-corrego-do-pinhal"
+  apiKey:"AIzaSyCW-CuFDrOLO-dteckl_GrPTocmyS-IrzY",
+  authDomain:"sitio-corrego-do-pinhal.firebaseapp.com",
+  projectId:"sitio-corrego-do-pinhal"
 });
 </script>
 
 <!-- IDENTIFICAÇÃO DA PÁGINA -->
 <script>
 window.PERMISSAO_PAGINA = {
-  area: "adm",
-  chave: "cadastro_leite"
+  area:"adm",
+  chave:"cadastro_leite"
 };
 </script>
 
@@ -54,6 +52,7 @@ body{
   margin:0;
   background:var(--bege);
   color:#333;
+  display:none;
 }
 
 header{
@@ -152,24 +151,32 @@ button{
 
 </div>
 
-<!-- MENU ADM -->
 <script>
+/* MENU ADM – PADRÃO DEFINITIVO */
 fetch("../menu/menu-adm.html")
   .then(r => r.text())
   .then(html => {
     document.getElementById("menu-adm").innerHTML = html;
 
-    const atual = location.pathname.split("/").pop();
     document.querySelectorAll(".menu-link").forEach(a=>{
-      if(a.getAttribute("href")?.includes(atual)){
+      if(a.getAttribute("href")?.includes("cadastro_leite")){
         a.classList.add("ativo");
       }
     });
-  });
-</script>
 
-<script>
+    const s=document.createElement("script");
+    s.src="../menu/menu-permissoes.js";
+    document.body.appendChild(s);
+  });
+
+const auth = firebase.auth();
 const db = firebase.firestore();
+
+auth.onAuthStateChanged(user=>{
+  if(!user) return;
+  document.body.style.display="block";
+  init();
+});
 
 const ano = document.getElementById("ano");
 const mes = document.getElementById("mes");
@@ -321,11 +328,8 @@ function limparFormulario(){
   preco_mes.value="";
   gerarTabela();
 }
-
-init();
 </script>
 
-<!-- LOGOUT GLOBAL -->
 <script src="../login/logout.js"></script>
 
 </body>
