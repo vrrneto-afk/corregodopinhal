@@ -65,7 +65,7 @@ window.PERMISSAO_PAGINA = {
 <input type="text" id="esp_id">
 
 <label>Ícone da espécie (emoji)</label>
-<input type="text" id="esp_icone" placeholder="Ex: 🐄 🐓 🐶">
+<input type="text" id="esp_icone">
 
 <div class="check-row">
   <input type="checkbox" id="esp_ativo" checked>
@@ -96,10 +96,8 @@ window.PERMISSAO_PAGINA = {
 
 <button class="salvar" onclick="salvarEspecie()">💾 Salvar</button>
 
-<button class="voltar" id="btnExcluir"
-  onclick="excluirEspecie()"
-  style="background:#b03a2e;color:#fff">
-  🗑 Excluir espécie
+<button class="voltar" id="btnExcluir" style="background:#b03a2e;color:#fff" onclick="excluirEspecie()">
+🗑 Excluir espécie
 </button>
 
 <button class="voltar" onclick="cancelarEdicao()">❌ Cancelar</button>
@@ -117,6 +115,12 @@ fetch("../menu/menu-adm.html")
 .then(html=>{
   document.getElementById("menu-adm").innerHTML = html;
 
+  document.querySelectorAll(".menu-link").forEach(a=>{
+    if(a.getAttribute("href")?.includes("config.html")){
+      a.classList.add("ativo");
+    }
+  });
+
   const s=document.createElement("script");
   s.src="../menu/menu-permissoes.js";
   s.onload=()=>{
@@ -130,21 +134,40 @@ fetch("../menu/menu-adm.html")
 <script>
 const db = firebase.firestore();
 
+/* ELEMENTOS */
+const listaEspecies = document.getElementById("lista-especies");
+const editor = document.getElementById("editor");
+const btnExcluir = document.getElementById("btnExcluir");
+
+const esp_id = document.getElementById("esp_id");
+const esp_icone = document.getElementById("esp_icone");
+const esp_ativo = document.getElementById("esp_ativo");
+const possui_gestacao = document.getElementById("possui_gestacao");
+const possui_incubacao = document.getElementById("possui_incubacao");
+const gestacao_meses = document.getElementById("gestacao_meses");
+const incubacao_dias = document.getElementById("incubacao_dias");
+const campo_gestacao = document.getElementById("campo_gestacao");
+const campo_incubacao = document.getElementById("campo_incubacao");
+
 let especies = [];
 let indiceEditando = null;
 
+/* CARREGAR */
 async function carregar(){
   const snap = await db.collection("config").doc("especies").get();
   especies = snap.exists ? snap.data().lista || [] : [];
   renderizarCards();
 }
 
+/* RENDER */
 function renderizarCards(){
-  lista_especies.innerHTML="";
+  listaEspecies.innerHTML="";
+
   especies.forEach((e,i)=>{
     const btn=document.createElement("button");
     btn.className="config-card";
     btn.onclick=()=>editarEspecie(i);
+
     if(e.ativo===false) btn.style.opacity="0.5";
 
     let desc="";
@@ -152,16 +175,17 @@ function renderizarCards(){
     if(e.possui_incubacao) desc=`Incubação: ${e.incubacao_dias} dias`;
 
     btn.innerHTML=`<strong>${e.icone||"🐾"} ${e.id}</strong><span>${desc}</span>`;
-    lista_especies.appendChild(btn);
+    listaEspecies.appendChild(btn);
   });
 
   const novo=document.createElement("button");
   novo.className="config-card";
   novo.innerHTML="➕ Nova espécie";
   novo.onclick=novaEspecie;
-  lista_especies.appendChild(novo);
+  listaEspecies.appendChild(novo);
 }
 
+/* AÇÕES */
 function novaEspecie(){
   indiceEditando=null;
   limparFormulario();
@@ -172,6 +196,7 @@ function novaEspecie(){
 function editarEspecie(i){
   indiceEditando=i;
   const e=especies[i];
+
   esp_id.value=e.id||"";
   esp_icone.value=e.icone||"";
   esp_ativo.checked=e.ativo!==false;
@@ -179,6 +204,7 @@ function editarEspecie(i){
   possui_incubacao.checked=!!e.possui_incubacao;
   gestacao_meses.value=e.gestacao_meses||"";
   incubacao_dias.value=e.incubacao_dias||"";
+
   ajustarCampos();
   btnExcluir.style.display="block";
   editor.classList.remove("hidden");
@@ -189,6 +215,7 @@ function ajustarCampos(){
   campo_incubacao.classList.toggle("hidden",!possui_incubacao.checked);
 }
 
+/* SALVAR */
 async function salvarEspecie(){
   const obj={
     id:esp_id.value.trim(),
@@ -205,6 +232,7 @@ async function salvarEspecie(){
     obj.possui_gestacao=true;
     obj.gestacao_meses=Number(gestacao_meses.value||0);
   }
+
   if(possui_incubacao.checked){
     obj.possui_incubacao=true;
     obj.incubacao_dias=Number(incubacao_dias.value||0);
@@ -219,10 +247,13 @@ async function salvarEspecie(){
   location.reload();
 }
 
+/* EXCLUIR */
 async function excluirEspecie(){
   if(!confirm("Excluir definitivamente esta espécie?")) return;
+
   especies.splice(indiceEditando,1);
   await db.collection("config").doc("especies").set({lista:especies},{merge:true});
+
   alert("Espécie excluída com sucesso.");
   location.reload();
 }
