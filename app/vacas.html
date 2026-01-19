@@ -136,11 +136,17 @@ fetch("../menu/menu.html")
     const s = document.createElement("script");
     s.src = "../menu/menu-permissoes.js";
     s.onload = () => {
-      document.body.style.display = "block";
-      iniciarPagina();
-    };
-    document.body.appendChild(s);
+
+  // 🔹 MARCAR MENU ATIVO (PADRÃO APP)
+  document.querySelectorAll(".menu-link").forEach(link=>{
+    if(link.dataset.area === "app" && link.dataset.chave === "vacas"){
+      link.classList.add("ativo");
+    }
   });
+
+  document.body.style.display = "block";
+  iniciarPagina();
+};
 </script>
 
 <script>
