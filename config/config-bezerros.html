@@ -14,7 +14,7 @@
 <link rel="stylesheet" href="config.css">
 </head>
 
-<body>
+<body style="display:none">
 
 <div id="app" class="hidden">
 
@@ -26,22 +26,21 @@
   <h2>Configuração – Bezerros / Crias</h2>
 
   <label>Idade máxima da cria (meses)</label>
-  <input type="number" id="idade_cria_meses" min="0">
+  <input type="number" id="idade_cria_meses" min="0" step="1">
 
   <label>Idade máxima do bezerro (meses)</label>
-  <input type="number" id="idade_bezerro_meses" min="0">
+  <input type="number" id="idade_bezerro_meses" min="0" step="1">
 
   <fieldset>
     <label>Título da tela</label>
-    <input type="text" id="texto_titulo">
+    <input type="text" id="texto_titulo" maxlength="100">
 
     <label>Mensagem quando não houver animais</label>
-    <input type="text" id="texto_vazio">
+    <input type="text" id="texto_vazio" maxlength="150">
   </fieldset>
 
   <button class="salvar" onclick="salvar()">💾 Salvar</button>
 
-  <!-- BOTÃO VOLTAR NO PADRÃO ANIMAIS -->
   <button class="voltar" onclick="location.href='config.html'">
     ⬅ Voltar para Configurações
   </button>
@@ -50,17 +49,6 @@
 </div>
 
 <script>
-fetch("menu-adm.html")
-  .then(r=>r.text())
-  .then(html=>{
-    document.getElementById("menu-adm").innerHTML = html;
-    document.querySelectorAll(".menu-link").forEach(a=>{
-      if(a.getAttribute("href")==="config.html"){
-        a.classList.add("ativo");
-      }
-    });
-  });
-
 firebase.initializeApp({
   apiKey:"AIzaSyCW-CuFDrOLO-dteckl_GrPTocmyS-IrzY",
   authDomain:"sitio-corrego-do-pinhal.firebaseapp.com",
@@ -68,14 +56,30 @@ firebase.initializeApp({
 });
 
 const auth = firebase.auth();
-const db = firebase.firestore();
+const db   = firebase.firestore();
+</script>
 
+<script>
+fetch("menu-adm.html")
+  .then(r=>r.text())
+  .then(html=>{
+    document.getElementById("menu-adm").innerHTML = html;
+
+    document.querySelectorAll(".menu-link").forEach(a=>{
+      if(a.getAttribute("href")==="config.html"){
+        a.classList.add("ativo");
+      }
+    });
+  });
+</script>
+
+<script>
 auth.onAuthStateChanged(user=>{
-  if(user){
-    document.body.style.display="block";
-    document.getElementById("app").classList.remove("hidden");
-    carregar();
-  }
+  if(!user) return;
+
+  document.body.style.display="block";
+  document.getElementById("app").classList.remove("hidden");
+  carregar();
 });
 
 async function carregar(){
@@ -84,29 +88,33 @@ async function carregar(){
 
   const d = snap.data();
 
-  document.getElementById("idade_cria_meses").value = d.idade_cria_meses ?? "";
-  document.getElementById("idade_bezerro_meses").value = d.idade_bezerro_meses ?? "";
-  document.getElementById("texto_titulo").value = d.textos?.titulo ?? "";
-  document.getElementById("texto_vazio").value = d.textos?.vazio ?? "";
+  idade_cria_meses.value = d.idade_cria_meses ?? "";
+  idade_bezerro_meses.value = d.idade_bezerro_meses ?? "";
+  texto_titulo.value = d.textos?.titulo ?? "";
+  texto_vazio.value  = d.textos?.vazio ?? "";
 }
 
 async function salvar(){
-  const idadeCria = Number(document.getElementById("idade_cria_meses").value);
-  const idadeBez  = Number(document.getElementById("idade_bezerro_meses").value);
+  const idadeCria = Number(idade_cria_meses.value);
+  const idadeBez  = Number(idade_bezerro_meses.value);
 
-  if(isNaN(idadeCria)||isNaN(idadeBez)){
-    alert("Informe valores válidos.");
+  if(!Number.isInteger(idadeCria) || idadeCria < 0 ||
+     !Number.isInteger(idadeBez)  || idadeBez  < 0){
+    alert("Informe idades válidas (números inteiros ≥ 0).");
     return;
   }
 
-  await db.collection("config").doc("bezerros").update({
-    idade_cria_meses:idadeCria,
-    idade_bezerro_meses:idadeBez,
+  const titulo = texto_titulo.value.trim();
+  const vazio  = texto_vazio.value.trim();
+
+  await db.collection("config").doc("bezerros").set({
+    idade_cria_meses: idadeCria,
+    idade_bezerro_meses: idadeBez,
     textos:{
-      titulo:document.getElementById("texto_titulo").value.trim(),
-      vazio:document.getElementById("texto_vazio").value.trim()
+      titulo,
+      vazio
     }
-  });
+  }, { merge:true });
 
   alert("Configuração salva com sucesso.");
 }
