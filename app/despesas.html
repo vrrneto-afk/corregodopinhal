@@ -8,25 +8,23 @@
 <link rel="manifest" href="../manifest.json">
 <meta name="theme-color" content="#7b3f2a">
 
+<!-- MENU GLOBAL -->
 <link rel="stylesheet" href="../menu/menu.css">
 
+<!-- FIREBASE -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
-<script>
-firebase.initializeApp({
-  apiKey:"AIzaSyCW-CuFDrOLO-dteckl_GrPTocmyS-IrzY",
-  authDomain:"sitio-corrego-do-pinhal.firebaseapp.com",
-  projectId:"sitio-corrego-do-pinhal"
-});
-</script>
-
+<!-- IDENTIFICAÇÃO DA PÁGINA -->
 <script>
 window.PERMISSAO_PAGINA = { area:"app", chave:"despesas" };
 </script>
 
+<!-- AUTH GUARD -->
 <script src="../login/auth-guard.js"></script>
+
+<!-- CONTROLE DE PERMISSÕES DO MENU -->
 <script src="../menu/menu-permissoes.js"></script>
 
 <style>
@@ -39,12 +37,42 @@ window.PERMISSAO_PAGINA = { area:"app", chave:"despesas" };
   --cinza:#666;
   --logo:#D0B485;
 }
-*{box-sizing:border-box;font-family:'Inter',system-ui,Arial}
-body{margin:0;background:var(--bege);color:#333}
-header{background:var(--logo);padding:15px;text-align:center}
-header img{max-width:260px;width:100%}
-.container{max-width:900px;margin:18px auto;padding:0 15px}
-h2{color:var(--marrom);display:flex;gap:8px;align-items:center;margin-bottom:10px}
+
+*{
+  box-sizing:border-box;
+  font-family:'Inter',system-ui,Arial;
+}
+
+body{
+  margin:0;
+  background:var(--bege);
+  color:#333;
+}
+
+header{
+  background:var(--logo);
+  padding:15px;
+  text-align:center;
+}
+
+header img{
+  max-width:260px;
+  width:100%;
+}
+
+.container{
+  max-width:900px;
+  margin:18px auto;
+  padding:0 15px;
+}
+
+h2{
+  color:var(--marrom);
+  display:flex;
+  gap:8px;
+  align-items:center;
+  margin-bottom:10px;
+}
 
 .contexto{
   background:#fff;
@@ -54,16 +82,17 @@ h2{color:var(--marrom);display:flex;gap:8px;align-items:center;margin-bottom:10p
   display:flex;
   justify-content:space-between;
   align-items:center;
-  box-shadow:0 2px 6px rgba(0,0,0,.05)
+  box-shadow:0 2px 6px rgba(0,0,0,.05);
 }
-.contexto span{color:var(--cinza);font-size:14px}
 
-.vencimentos{margin-bottom:18px}
-.vencimentos .card{
-  border-left:6px solid var(--amarelo);
-  margin-bottom:8px;
+.contexto span{
+  color:var(--cinza);
+  font-size:14px;
 }
-.vencimentos .card.atrasada{border-left-color:var(--vermelho)}
+
+.vencimentos{
+  margin-bottom:18px;
+}
 
 .controles{
   display:grid;
@@ -77,10 +106,12 @@ select{
   font-size:15px;
   border-radius:12px;
   border:1.5px solid #ddd;
-  background:#f2f2f2
+  background:#f2f2f2;
 }
 
-#periodo{margin-bottom:22px}
+#periodo{
+  margin-bottom:22px;
+}
 
 .cards{
   display:grid;
@@ -89,16 +120,26 @@ select{
   margin-bottom:18px;
 }
 
-.card{
+.cards .card{
   background:#fff;
   padding:14px;
   border-left:6px solid var(--verde);
   border-radius:14px;
-  box-shadow:0 2px 6px rgba(0,0,0,.05)
+  box-shadow:0 2px 6px rgba(0,0,0,.05);
 }
 
-.cards .card strong{display:block;font-size:18px}
-.cards .card span{display:block;margin-top:6px;font-size:14px;color:var(--cinza)}
+.cards .card strong{
+  display:block;
+  font-size:18px;
+}
+
+.cards .card span{
+  display:block;
+  margin-top:6px;
+  font-size:14px;
+  color:var(--cinza);
+}
+
 .pos{color:var(--verde)}
 .neg{color:var(--vermelho)}
 
@@ -107,22 +148,33 @@ table{
   border-collapse:collapse;
   background:#fff;
   border-radius:14px;
-  overflow:hidden
+  overflow:hidden;
 }
+
 th,td{
   padding:10px;
   text-align:center;
   border-bottom:1px solid #eee;
-  font-size:14px
+  font-size:14px;
 }
-th{background:#efe3d3}
-tfoot td{font-weight:800;background:#efe3d3}
+
+th{
+  background:#efe3d3;
+}
+
+tfoot td{
+  font-weight:800;
+  background:#efe3d3;
+}
 </style>
 </head>
 
 <body>
 
-<header><img src="../logo.png"></header>
+<header>
+  <img src="../logo.png">
+</header>
+
 <div id="menu"></div>
 
 <div class="container">
@@ -151,27 +203,42 @@ tfoot td{font-weight:800;background:#efe3d3}
 </select>
 
 <div class="cards">
-  <div class="card"><strong id="cTotal">R$ 0,00</strong><span>Total</span></div>
-  <div class="card"><strong id="cQtd">0</strong><span>Quantidade</span></div>
-  <div class="card"><strong id="cMedia">R$ 0,00</strong><span>Média</span></div>
+  <div class="card">
+    <strong id="cTotal">R$ 0,00</strong>
+    <span>Total</span>
+  </div>
+  <div class="card">
+    <strong id="cQtd">0</strong>
+    <span>Quantidade</span>
+  </div>
+  <div class="card">
+    <strong id="cMedia">R$ 0,00</strong>
+    <span>Média</span>
+  </div>
 </div>
 
 <table>
 <thead>
-<tr><th>Vencimento</th><th>Tipo</th><th>Fornecedor</th><th>Valor</th></tr>
+<tr>
+  <th>Vencimento</th>
+  <th>Tipo</th>
+  <th>Fornecedor</th>
+  <th>Valor</th>
+</tr>
 </thead>
 <tbody id="tbody"></tbody>
 <tfoot>
-<tr><td colspan="3">Total</td><td id="tValor">R$ 0,00</td></tr>
+<tr>
+  <td colspan="3">Total</td>
+  <td id="tValor">R$ 0,00</td>
+</tr>
 </tfoot>
 </table>
 
 </div>
 
 <script>
-const db = firebase.firestore();
-const menu = document.getElementById("menu");
-
+/* MENU */
 fetch("../menu/menu.html")
   .then(r=>r.text())
   .then(h=>{
@@ -181,79 +248,114 @@ fetch("../menu/menu.html")
         a.classList.add("ativo");
       }
     });
-    if(window.aplicarPermissoesMenu){
-      window.aplicarPermissoesMenu();
-    }
   });
 
-const meses=["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
-const moeda=v=>Number(v||0).toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
-const parseData=v=>v?.seconds?new Date(v.seconds*1000):new Date(v);
+firebase.initializeApp({
+  apiKey:"AIzaSyCW-CuFDrOLO-dteckl_GrPTocmyS-IrzY",
+  authDomain:"sitio-corrego-do-pinhal.firebaseapp.com",
+  projectId:"sitio-corrego-do-pinhal"
+});
 
-let rows=[];
-let CONFIG={ vencimentos_max:5, textos:{ atrasada_ha:"Atrasada há", vence_em:"Vence em" } };
+const db = firebase.firestore();
+
+let CONFIG = {
+  vencimentos_max:5,
+  textos:{
+    atrasada_ha:"Atrasada há",
+    vence_em:"Vence em"
+  }
+};
+
+const meses = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
+const moeda = v => Number(v||0).toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
+
+function parseData(v){
+  if(v?.seconds) return new Date(v.seconds*1000);
+  const [y,m,d] = String(v).split("-");
+  return new Date(y,m-1,d);
+}
+
+let rows = [];
 
 async function load(){
-  const cfg=await db.collection("config").doc("despesas").get();
-  if(cfg.exists) CONFIG={...CONFIG,...cfg.data(),textos:{...CONFIG.textos,...(cfg.data().textos||{})}};
+  const cfg = await db.collection("config").doc("despesas").get();
+  if(cfg.exists){
+    const d = cfg.data();
+    CONFIG.vencimentos_max = d.vencimentos_max ?? CONFIG.vencimentos_max;
+    CONFIG.textos = {...CONFIG.textos,...(d.textos||{})};
+  }
 
-  const snap=await db.collection("despesas").get();
-  rows=snap.docs.map(d=>({...d.data(),vencimento:parseData(d.data().data_vencimento)}));
+  const snap = await db.collection("despesas").get();
+  rows = snap.docs.map(d=>({
+    ...d.data(),
+    vencimento: parseData(d.data().data_vencimento)
+  }));
 
-  mes.innerHTML=meses.map((m,i)=>`<option value="${i+1}">${m}</option>`).join("");
-  ano.innerHTML=[...new Set(rows.map(r=>r.vencimento.getFullYear()))].sort().map(a=>`<option>${a}</option>`).join("");
+  mes.innerHTML = meses.map((m,i)=>`<option value="${i+1}">${m}</option>`).join("");
+  ano.innerHTML = [...new Set(rows.map(r=>r.vencimento.getFullYear()))]
+    .sort()
+    .map(a=>`<option>${a}</option>`).join("");
 
-  ano.value=Math.max(...rows.map(r=>r.vencimento.getFullYear()));
-  mes.value=new Date().getMonth()+1;
+  ano.value = Math.max(...rows.map(r=>r.vencimento.getFullYear()));
+  mes.value = new Date().getMonth()+1;
 
-  mes.onchange=render;
-  ano.onchange=render;
-  periodo.onchange=render;
+  mes.onchange = render;
+  ano.onchange = render;
+  periodo.onchange = render;
 
   renderVencimentos();
   render();
 }
 
 function renderVencimentos(){
-  const hoje=new Date();
-  vencimentos.innerHTML="";
-  rows.filter(r=>r.status_pagamento!=="pago")
+  const hoje = new Date();
+  vencimentos.innerHTML = "";
+
+  rows
+    .filter(r=>r.status_pagamento!=="pago")
     .map(r=>({...r,dias:Math.ceil((r.vencimento-hoje)/86400000)}))
     .sort((a,b)=>a.dias-b.dias)
     .slice(0,CONFIG.vencimentos_max)
     .forEach(r=>{
-      vencimentos.innerHTML+=`
-      <div class="card ${r.dias<0?'atrasada':''}">
+      vencimentos.innerHTML += `
+      <div class="card-vencimento ${r.dias<0?'atrasada':''}">
         <p><strong>Fornecedor:</strong> ${r.fornecedor}</p>
         <p><strong>Despesa:</strong> ${r.tipo_despesa}</p>
         <p><strong>Valor:</strong> ${moeda(r.valor_total)}</p>
         <p><strong>Vencimento:</strong> ${r.vencimento.toLocaleDateString("pt-BR")}</p>
         <p class="${r.dias>=0?'pos':'neg'}">
-          ${r.dias>=0?`⏳ ${CONFIG.textos.vence_em} ${r.dias} dias`:`⚠️ ${CONFIG.textos.atrasada_ha} ${Math.abs(r.dias)} dias`}
+          ${r.dias>=0
+            ? `⏳ ${CONFIG.textos.vence_em} ${r.dias} dias`
+            : `⚠️ ${CONFIG.textos.atrasada_ha} ${Math.abs(r.dias)} dias`}
         </p>
       </div>`;
     });
 }
 
 function render(){
-  const m=+mes.value,a=+ano.value,p=periodo.value;
-  ctxMes.innerText=`${meses[m-1]} / ${a}`;
-  ctxVisao.innerText=`📊 Visão: ${periodo.options[periodo.selectedIndex].text}`;
+  const m = +mes.value;
+  const a = +ano.value;
+  const p = periodo.value;
 
-  let mesesBack={mensal:1,bimestral:2,trimestral:3,semestral:6,anual:12}[p];
-  const atual=rows.filter(r=>{
-    const diff=(a*12+m)-(r.vencimento.getFullYear()*12+(r.vencimento.getMonth()+1));
+  ctxMes.innerText = `${meses[m-1]} / ${a}`;
+  ctxVisao.innerText = `📊 Visão: ${periodo.options[periodo.selectedIndex].text}`;
+
+  const mesesBack = {mensal:1,bimestral:2,trimestral:3,semestral:6,anual:12}[p];
+
+  const atual = rows.filter(r=>{
+    const diff = (a*12+m)-(r.vencimento.getFullYear()*12+(r.vencimento.getMonth()+1));
     return diff>=0 && diff<mesesBack;
   });
 
-  const total=atual.reduce((s,r)=>s+Number(r.valor_total||0),0);
-  cTotal.innerText=moeda(total);
-  cQtd.innerText=atual.length;
-  cMedia.innerText=moeda(atual.length?total/atual.length:0);
+  const total = atual.reduce((s,r)=>s+Number(r.valor_total||0),0);
 
-  tbody.innerHTML="";
+  cTotal.innerText = moeda(total);
+  cQtd.innerText = atual.length;
+  cMedia.innerText = moeda(atual.length ? total/atual.length : 0);
+
+  tbody.innerHTML = "";
   atual.sort((a,b)=>a.vencimento-b.vencimento).forEach(r=>{
-    tbody.innerHTML+=`
+    tbody.innerHTML += `
     <tr>
       <td>${r.vencimento.toLocaleDateString("pt-BR")}</td>
       <td>${r.tipo_despesa}</td>
@@ -262,7 +364,7 @@ function render(){
     </tr>`;
   });
 
-  tValor.innerText=moeda(total);
+  tValor.innerText = moeda(total);
 }
 
 load();
