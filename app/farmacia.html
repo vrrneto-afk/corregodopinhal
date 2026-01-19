@@ -8,26 +8,25 @@
 <link rel="manifest" href="../manifest.json">
 <meta name="theme-color" content="#7b3f2a">
 
-<!-- MENU GLOBAL -->
 <link rel="stylesheet" href="../menu/menu.css">
 
-<!-- FIREBASE -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
-<!-- IDENTIFICAÇÃO DA PÁGINA -->
 <script>
-window.PERMISSAO_PAGINA = {
-  area: "app",
-  chave: "farmacia"
-};
+firebase.initializeApp({
+  apiKey: "AIzaSyCW-CuFDrOLO-dteckl_GrPTocmyS-IrzY",
+  authDomain: "sitio-corrego-do-pinhal.firebaseapp.com",
+  projectId: "sitio-corrego-do-pinhal"
+});
 </script>
 
-<!-- AUTH GUARD -->
-<script src="../login/auth-guard.js"></script>
+<script>
+window.PERMISSAO_PAGINA = { area: "app", chave: "farmacia" };
+</script>
 
-<!-- CONTROLE DE PERMISSÕES DO MENU (APP) -->
+<script src="../login/auth-guard.js"></script>
 <script src="../menu/menu-permissoes.js"></script>
 
 <style>
@@ -52,18 +51,17 @@ body{
   color:#333;
 }
 
-/* HEADER */
 header{
   background:var(--logo);
   padding:15px 10px;
   text-align:center;
 }
+
 header img{
   max-width:260px;
   width:100%;
 }
 
-/* CONTAINER */
 .container{
   max-width:900px;
   margin:20px auto;
@@ -77,13 +75,13 @@ h2{
   gap:8px;
 }
 
-/* FILTROS */
 .filtros{
   display:flex;
   gap:10px;
   flex-wrap:wrap;
   margin-bottom:20px;
 }
+
 .filtros select{
   flex:1;
   min-width:200px;
@@ -93,7 +91,6 @@ h2{
   border:1.5px solid #ddd;
 }
 
-/* CARD */
 .card{
   background:#fff;
   padding:16px;
@@ -101,7 +98,6 @@ h2{
   border-left:6px solid var(--verde);
   border-radius:12px;
   box-shadow:0 2px 6px rgba(0,0,0,.06);
-  pointer-events:none;
 }
 
 .card.sem-estoque{border-color:var(--vermelho)}
@@ -121,7 +117,6 @@ h2{
   color:var(--cinza);
 }
 
-/* BADGE */
 .badge{
   display:inline-block;
   margin-top:6px;
@@ -131,6 +126,7 @@ h2{
   font-weight:700;
   color:#fff;
 }
+
 .ok{background:var(--verde)}
 .alerta{background:var(--amarelo)}
 .erro{background:var(--vermelho)}
@@ -171,33 +167,14 @@ h2{
 </div>
 
 <script>
-/* MENU */
-fetch("../menu/menu.html")
-  .then(r=>r.text())
-  .then(html=>{
-    document.getElementById("menu").innerHTML = html;
-    document.querySelectorAll("#menu a").forEach(a=>{
-      if(a.getAttribute("href")==="../app/farmacia.html"){
-        a.classList.add("ativo");
-      }
-    });
-  });
-</script>
-
-<script>
-/* FIREBASE INIT */
-firebase.initializeApp({
-  apiKey:"AIzaSyCW-CuFDrOLO-dteckl_GrPTocmyS-IrzY",
-  authDomain:"sitio-corrego-do-pinhal.firebaseapp.com",
-  projectId:"sitio-corrego-do-pinhal"
-});
-
 const db = firebase.firestore();
 
 const lista = document.getElementById("lista");
+const filtroStatus = document.getElementById("filtroStatus");
+const filtroVia = document.getElementById("filtroVia");
+
 let MEDS = [];
 
-/* CONFIG PADRÃO */
 let CONFIG = {
   quantidade_minima: 1,
   validade_alerta_dias: 30,
@@ -244,7 +221,7 @@ function render(){
       classe="sem-estoque";
       badge=`<span class="badge erro">${CONFIG.textos.sem_estoque}</span>`;
     }else if(validade){
-      const dias = Math.ceil((validade-hoje)/(1000*60*60*24));
+      const dias = Math.ceil((validade-hoje)/86400000);
       if(dias<0){
         classe="vencido";
         badge=`<span class="badge erro">${CONFIG.textos.vencido}</span>`;
@@ -259,16 +236,17 @@ function render(){
       ? ` - a cada ${m.peso_base}kg`
       : " - Dose única";
 
-    lista.innerHTML+=`
+    lista.innerHTML += `
       <div class="card ${classe}">
         <strong>💊 ${m.nome.toUpperCase()}</strong>
         <p>${m.funcao}</p>
         <p>Dosagem: ${dosagem}</p>
         <p>Via: ${m.via}</p>
-        <p>Validade: ${validade?validade.toLocaleDateString("pt-BR"):"-"}</p>
+        <p>Validade: ${validade ? validade.toLocaleDateString("pt-BR") : "-"}</p>
         <p>Quantidade: ${m.quantidade}</p>
         ${badge}
-      </div>`;
+      </div>
+    `;
   });
 }
 
@@ -276,14 +254,10 @@ async function load(){
   const cfg = await db.collection("config").doc("farmacia").get();
   if(cfg.exists){
     const data = cfg.data();
-
     CONFIG.quantidade_minima = Number(data.quantidade_minima ?? CONFIG.quantidade_minima);
     CONFIG.validade_alerta_dias = Number(data.validade_alerta_dias ?? CONFIG.validade_alerta_dias);
-
     if(data.textos){
-      CONFIG.textos.sem_estoque = data.textos.sem_estoque ?? CONFIG.textos.sem_estoque;
-      CONFIG.textos.vence_em = data.textos.vence_em ?? CONFIG.textos.vence_em;
-      CONFIG.textos.vencido = data.textos.vencido ?? CONFIG.textos.vencido;
+      CONFIG.textos = { ...CONFIG.textos, ...data.textos };
     }
   }
 
@@ -293,12 +267,29 @@ async function load(){
   filtroVia.innerHTML = `<option value="todas">Todas as vias</option>`;
   [...new Set(MEDS.map(m=>m.via).filter(Boolean))]
     .sort()
-    .forEach(v=>filtroVia.innerHTML+=`<option>${v}</option>`);
+    .forEach(v=>filtroVia.innerHTML += `<option>${v}</option>`);
 
   filtroStatus.onchange = render;
   filtroVia.onchange = render;
   render();
 }
+
+/* MENU */
+fetch("../menu/menu.html")
+  .then(r=>r.text())
+  .then(html=>{
+    document.getElementById("menu").innerHTML = html;
+
+    document.querySelectorAll("#menu a").forEach(a=>{
+      if(a.getAttribute("href")==="../app/farmacia.html"){
+        a.classList.add("ativo");
+      }
+    });
+
+    if(window.aplicarPermissoesMenu){
+      window.aplicarPermissoesMenu();
+    }
+  });
 
 load();
 </script>
