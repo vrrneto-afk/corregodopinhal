@@ -93,9 +93,11 @@ fetch("../menu/menu-adm.html")
     const s = document.createElement("script");
     s.src = "../menu/menu-permissoes.js";
     s.onload = () => {
-      document.body.style.display = "block";
-      carregar();
-    };
+  requestAnimationFrame(() => {
+    document.body.style.display = "block";
+    carregar();
+  });
+};
     document.body.appendChild(s);
   });
 </script>
