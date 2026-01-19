@@ -2,86 +2,51 @@
 <div class="menu-wrapper">
   <nav class="menu-adm" id="menu-links">
 
-    <a href="../app/index.html"
-       class="menu-link"
-       data-area="app"
-       data-chave="inicio">
+    <a href="../app/index.html" class="menu-link" data-area="app" data-chave="inicio">
       🏠 <span>Início</span>
     </a>
 
-    <a href="../app/lembretes.html"
-       class="menu-link"
-       data-area="app"
-       data-chave="lembretes">
+    <a href="../app/lembretes.html" class="menu-link" data-area="app" data-chave="lembretes">
       📝 <span>Lembretes</span>
     </a>
 
-    <a href="../app/animais.html"
-       class="menu-link"
-       data-area="app"
-       data-chave="animais">
+    <a href="../app/animais.html" class="menu-link" data-area="app" data-chave="animais">
       🐾 <span>Animais</span>
     </a>
 
-    <a href="../app/vacas.html"
-       class="menu-link"
-       data-area="app"
-       data-chave="vacas">
+    <a href="../app/vacas.html" class="menu-link" data-area="app" data-chave="vacas">
       🐄 <span>Vacas</span>
     </a>
 
-    <a href="../app/bezerros.html"
-       class="menu-link"
-       data-area="app"
-       data-chave="bezerros">
+    <a href="../app/bezerros.html" class="menu-link" data-area="app" data-chave="bezerros">
       🐮 <span>Bezerros</span>
     </a>
 
-    <a href="../app/historico.html"
-       class="menu-link"
-       data-area="app"
-       data-chave="historico">
+    <a href="../app/historico.html" class="menu-link" data-area="app" data-chave="historico">
       📜 <span>Histórico</span>
     </a>
 
-    <a href="../app/farmacia.html"
-       class="menu-link"
-       data-area="app"
-       data-chave="farmacia">
+    <a href="../app/farmacia.html" class="menu-link" data-area="app" data-chave="farmacia">
       💊 <span>Farmácia</span>
     </a>
 
-    <a href="../app/vacinas.html"
-       class="menu-link"
-       data-area="app"
-       data-chave="vacinas">
+    <a href="../app/vacinas.html" class="menu-link" data-area="app" data-chave="vacinas">
       💉 <span>Vacinas</span>
     </a>
 
-    <a href="../app/leite.html"
-       class="menu-link"
-       data-area="app"
-       data-chave="leite">
+    <a href="../app/leite.html" class="menu-link" data-area="app" data-chave="leite">
       🥛 <span>Leite</span>
     </a>
 
-    <a href="../app/despesas.html"
-       class="menu-link"
-       data-area="app"
-       data-chave="despesas">
+    <a href="../app/despesas.html" class="menu-link" data-area="app" data-chave="despesas">
       💰 <span>Despesas</span>
     </a>
 
-    <a href="../app/relatorios.html"
-       class="menu-link"
-       data-area="app"
-       data-chave="relatorios">
+    <a href="../app/relatorios.html" class="menu-link" data-area="app" data-chave="relatorios">
       📊 <span>Relatórios</span>
     </a>
 
-    <a href="#"
-       class="menu-link sair"
-       id="btnLogout">
+    <a href="#" class="menu-link sair" id="btnLogout">
       🚪 <span>Sair</span>
     </a>
 
@@ -93,46 +58,63 @@
    CONTROLE DE PERMISSÕES DO MENU (APP)
    ====================================================== */
 
-(function(){
+(async function(){
 
-  const esperar = setInterval(()=>{
-    if(window.USUARIO_ATUAL && window.firebase){
-      clearInterval(esperar);
-      aplicarPermissoes();
+  const auth = firebase.auth();
+  const db   = firebase.firestore();
+
+  auth.onAuthStateChanged(async user=>{
+    if(!user){
+      ocultarTudo();
+      return;
     }
-  },50);
 
-  async function aplicarPermissoes(){
     try{
-      const db = firebase.firestore();
+      const snapUser = await db.collection("usuarios").doc(user.uid).get();
+      if(!snapUser.exists){
+        ocultarTudo();
+        return;
+      }
 
-      const snap = await db
-        .collection("config")
-        .doc("grupos")
-        .get();
+      const grupoId = snapUser.data().papel;
 
-      const grupo = snap.data().lista.find(
-        g => g.id === window.USUARIO_ATUAL.grupo
-      );
+      const snapCfg = await db.collection("config").doc("grupos").get();
+      if(!snapCfg.exists){
+        ocultarTudo();
+        return;
+      }
 
-      document.querySelectorAll(".menu-link").forEach(link=>{
+      const grupo = snapCfg.data().lista.find(g => g.id === grupoId);
+      if(!grupo){
+        ocultarTudo();
+        return;
+      }
+
+      document.querySelectorAll(".menu-link[data-area]").forEach(link=>{
         const area  = link.dataset.area;
         const chave = link.dataset.chave;
 
-        if(!area || !chave) return;
-
         const permitido =
-          grupo?.permissoes?.[area]?.[chave] === true ||
-          grupo?.permissoes?.config?.tudo === true;
+          grupo.permissoes?.[area]?.[chave] === true ||
+          grupo.permissoes?.config?.tudo === true;
 
         if(!permitido){
-          link.remove();
+          link.style.display = "none";
         }
       });
 
-    }catch(e){
-      console.error("Erro ao aplicar permissões do menu:", e);
+    }catch(err){
+      console.error("Erro ao aplicar permissões do menu:", err);
+      ocultarTudo();
     }
+  });
+
+  function ocultarTudo(){
+    document.querySelectorAll(".menu-link").forEach(l=>{
+      if(!l.classList.contains("sair")){
+        l.style.display = "none";
+      }
+    });
   }
 
 })();
