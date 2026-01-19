@@ -202,7 +202,10 @@ function parseData(v){
 
 async function load(){
   VACINAS=(await db.collection("vacinas").get()).docs.map(d=>d.data());
-  ANIMAIS=(await db.collection("animais").get()).docs.map(d=>d.data());
+  ANIMAIS = (await db.collection("animais").get()).docs.map(d => ({
+  id: d.id,
+  ...d.data()
+}));
 
   especie.innerHTML=["Todas",...new Set(ANIMAIS.map(a=>a.especie).filter(Boolean))]
     .map(e=>`<option>${e}</option>`).join("");
