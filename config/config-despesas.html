@@ -5,20 +5,47 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Configuração – Despesas</title>
 
+<!-- MANIFEST -->
+<link rel="manifest" href="../manifest.json">
+<meta name="theme-color" content="#7b3f2a">
+
+<!-- MENU GLOBAL -->
+<link rel="stylesheet" href="../menu/menu.css">
+
+<!-- CONFIG CSS -->
+<link rel="stylesheet" href="./config.css">
+
 <!-- FIREBASE -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
-<link rel="stylesheet" href="menu-adm.css">
-<link rel="stylesheet" href="config.css">
+<script>
+if (!firebase.apps.length) {
+  firebase.initializeApp({
+    apiKey: "AIzaSyCW-CuFDrOLO-dteckl_GrPTocmyS-IrzY",
+    authDomain: "sitio-corrego-do-pinhal.firebaseapp.com",
+    projectId: "sitio-corrego-do-pinhal"
+  });
+}
+</script>
+
+<!-- IDENTIFICAÇÃO DA PÁGINA -->
+<script>
+window.PERMISSAO_PAGINA = {
+  area: "config",
+  chave: "config-despesas"
+};
+</script>
+
+<!-- AUTH GUARD GLOBAL -->
+<script src="../login/auth-guard.js"></script>
 </head>
 
-<body>
-
-<div id="app" class="hidden">
+<body style="display:none">
 
 <header>⚙️ Configurações</header>
+
 <div id="menu-adm"></div>
 
 <div class="container">
@@ -30,10 +57,10 @@
 
   <fieldset>
     <label>Texto – Despesa atrasada</label>
-    <input type="text" id="texto_atrasada_ha">
+    <input type="text" id="texto_atrasada_ha" maxlength="120">
 
     <label>Texto – Vence em</label>
-    <input type="text" id="texto_vence_em">
+    <input type="text" id="texto_vence_em" maxlength="120">
   </fieldset>
 
   <button class="salvar" onclick="salvar()">💾 Salvar</button>
@@ -43,39 +70,32 @@
   </button>
 
 </div>
-</div>
 
 <script>
-/* MENU ADM */
-fetch("menu-adm.html")
+/* MENU ADM – PADRÃO GLOBAL DEFINITIVO */
+fetch("../menu/menu-adm.html")
   .then(r => r.text())
   .then(html => {
     document.getElementById("menu-adm").innerHTML = html;
-    document.querySelectorAll(".menu-link").forEach(a => {
-      if (a.getAttribute("href") === "config.html") {
+
+    document.querySelectorAll(".menu-link").forEach(a=>{
+      if(a.getAttribute("href")?.includes("config.html")){
         a.classList.add("ativo");
       }
     });
+
+    const s = document.createElement("script");
+    s.src = "../menu/menu-permissoes.js";
+    s.onload = () => {
+      document.body.style.display = "block";
+      carregar();
+    };
+    document.body.appendChild(s);
   });
+</script>
 
-/* FIREBASE INIT */
-firebase.initializeApp({
-  apiKey: "AIzaSyCW-CuFDrOLO-dteckl_GrPTocmyS-IrzY",
-  authDomain: "sitio-corrego-do-pinhal.firebaseapp.com",
-  projectId: "sitio-corrego-do-pinhal"
-});
-
-const auth = firebase.auth();
-const db   = firebase.firestore();
-
-/* AUTH */
-auth.onAuthStateChanged(user => {
-  if (user) {
-    document.body.style.display = "block";
-    document.getElementById("app").classList.remove("hidden");
-    carregar();
-  }
-});
+<script>
+const db = firebase.firestore();
 
 /* CARREGAR */
 async function carregar(){
@@ -84,31 +104,34 @@ async function carregar(){
 
   const d = snap.data();
 
-  document.getElementById("vencimentos_max").value =
-    d.vencimentos_max ?? "";
-
-  document.getElementById("texto_atrasada_ha").value =
-    d.textos?.atrasada_ha ?? "";
-
-  document.getElementById("texto_vence_em").value =
-    d.textos?.vence_em ?? "";
+  vencimentos_max.value = d.vencimentos_max ?? "";
+  texto_atrasada_ha.value = d.textos?.atrasada_ha ?? "";
+  texto_vence_em.value = d.textos?.vence_em ?? "";
 }
 
 /* SALVAR */
 async function salvar(){
+  const max = Number(vencimentos_max.value);
 
-  await db.collection("config").doc("despesas").update({
-    vencimentos_max: Number(document.getElementById("vencimentos_max").value),
+  if(!Number.isInteger(max) || max < 1){
+    alert("Informe uma quantidade válida (mínimo 1).");
+    return;
+  }
+
+  await db.collection("config").doc("despesas").set({
+    vencimentos_max: max,
     textos:{
-      atrasada_ha: document.getElementById("texto_atrasada_ha").value.trim(),
-      vence_em: document.getElementById("texto_vence_em").value.trim()
+      atrasada_ha: texto_atrasada_ha.value.trim(),
+      vence_em: texto_vence_em.value.trim()
     }
-  });
+  }, { merge:true });
 
   alert("Configuração de despesas salva com sucesso.");
 }
 </script>
 
-<script src="auth-adm.js"></script>
+<!-- LOGOUT GLOBAL -->
+<script src="../login/logout.js"></script>
+
 </body>
 </html>
