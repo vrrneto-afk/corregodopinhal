@@ -15,12 +15,18 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
 <script>
-window.PERMISSAO_PAGINA = { area: "app", chave: "despesas" };
+firebase.initializeApp({
+  apiKey:"AIzaSyCW-CuFDrOLO-dteckl_GrPTocmyS-IrzY",
+  authDomain:"sitio-corrego-do-pinhal.firebaseapp.com",
+  projectId:"sitio-corrego-do-pinhal"
+});
+</script>
+
+<script>
+window.PERMISSAO_PAGINA = { area:"app", chave:"despesas" };
 </script>
 
 <script src="../login/auth-guard.js"></script>
-
-<!-- CONTROLE DE PERMISSÕES DO MENU (APP) -->
 <script src="../menu/menu-permissoes.js"></script>
 
 <style>
@@ -74,9 +80,7 @@ select{
   background:#f2f2f2
 }
 
-#periodo{
-  margin-bottom:22px;
-}
+#periodo{margin-bottom:22px}
 
 .cards{
   display:grid;
@@ -93,31 +97,8 @@ select{
   box-shadow:0 2px 6px rgba(0,0,0,.05)
 }
 
-/* 🔧 COMPACTAÇÃO APENAS DOS CARDS DE VENCIMENTOS */
-.vencimentos .card p{
-  margin:2px 0;
-  font-size:14px;
-  line-height:1.25;
-}
-
-.vencimentos .card p:last-child{
-  margin-top:6px;
-}
-
-/* 🔒 APLICAÇÃO SOMENTE NOS CARDS DE RESUMO */
-.cards .card strong{
-  display:block;
-  font-size:18px;
-  color:#000;
-}
-
-.cards .card span{
-  display:block;
-  margin-top:6px;
-  font-size:14px;
-  color:var(--cinza);
-}
-
+.cards .card strong{display:block;font-size:18px}
+.cards .card span{display:block;margin-top:6px;font-size:14px;color:var(--cinza)}
 .pos{color:var(--verde)}
 .neg{color:var(--vermelho)}
 
@@ -170,28 +151,14 @@ tfoot td{font-weight:800;background:#efe3d3}
 </select>
 
 <div class="cards">
-  <div class="card">
-    <strong id="cTotal">R$ 0,00</strong>
-    <span>Total</span>
-  </div>
-  <div class="card">
-    <strong id="cQtd">0</strong>
-    <span>Quantidade</span>
-  </div>
-  <div class="card">
-    <strong id="cMedia">R$ 0,00</strong>
-    <span>Média</span>
-  </div>
+  <div class="card"><strong id="cTotal">R$ 0,00</strong><span>Total</span></div>
+  <div class="card"><strong id="cQtd">0</strong><span>Quantidade</span></div>
+  <div class="card"><strong id="cMedia">R$ 0,00</strong><span>Média</span></div>
 </div>
 
 <table>
 <thead>
-<tr>
-  <th>Vencimento</th>
-  <th>Tipo</th>
-  <th>Fornecedor</th>
-  <th>Valor</th>
-</tr>
+<tr><th>Vencimento</th><th>Tipo</th><th>Fornecedor</th><th>Valor</th></tr>
 </thead>
 <tbody id="tbody"></tbody>
 <tfoot>
@@ -202,40 +169,33 @@ tfoot td{font-weight:800;background:#efe3d3}
 </div>
 
 <script>
-fetch("../menu/menu.html").then(r=>r.text()).then(h=>{
-  menu.innerHTML=h;
-  document.querySelectorAll("#menu a").forEach(a=>{
-    if(a.getAttribute("href")==="../app/despesas.html") a.classList.add("ativo");
+const db = firebase.firestore();
+const menu = document.getElementById("menu");
+
+fetch("../menu/menu.html")
+  .then(r=>r.text())
+  .then(h=>{
+    menu.innerHTML = h;
+    document.querySelectorAll("#menu a").forEach(a=>{
+      if(a.getAttribute("href")==="../app/despesas.html"){
+        a.classList.add("ativo");
+      }
+    });
+    if(window.aplicarPermissoesMenu){
+      window.aplicarPermissoesMenu();
+    }
   });
-});
-
-firebase.initializeApp({
-  apiKey:"AIzaSyCW-CuFDrOLO-dteckl_GrPTocmyS-IrzY",
-  authDomain:"sitio-corrego-do-pinhal.firebaseapp.com",
-  projectId:"sitio-corrego-do-pinhal"
-});
-const db=firebase.firestore();
-
-let CONFIG={ vencimentos_max:5, textos:{ atrasada_ha:"Atrasada há", vence_em:"Vence em" } };
 
 const meses=["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
 const moeda=v=>Number(v||0).toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
-
-function parseData(v){
-  if(v?.seconds) return new Date(v.seconds*1000);
-  const [y,m,d]=String(v).split("-");
-  return new Date(y,m-1,d);
-}
+const parseData=v=>v?.seconds?new Date(v.seconds*1000):new Date(v);
 
 let rows=[];
+let CONFIG={ vencimentos_max:5, textos:{ atrasada_ha:"Atrasada há", vence_em:"Vence em" } };
 
 async function load(){
   const cfg=await db.collection("config").doc("despesas").get();
-  if(cfg.exists){
-    const d=cfg.data();
-    CONFIG.vencimentos_max=d.vencimentos_max??CONFIG.vencimentos_max;
-    CONFIG.textos={...CONFIG.textos,...(d.textos||{})};
-  }
+  if(cfg.exists) CONFIG={...CONFIG,...cfg.data(),textos:{...CONFIG.textos,...(cfg.data().textos||{})}};
 
   const snap=await db.collection("despesas").get();
   rows=snap.docs.map(d=>({...d.data(),vencimento:parseData(d.data().data_vencimento)}));
@@ -257,7 +217,6 @@ async function load(){
 function renderVencimentos(){
   const hoje=new Date();
   vencimentos.innerHTML="";
-
   rows.filter(r=>r.status_pagamento!=="pago")
     .map(r=>({...r,dias:Math.ceil((r.vencimento-hoje)/86400000)}))
     .sort((a,b)=>a.dias-b.dias)
@@ -270,9 +229,7 @@ function renderVencimentos(){
         <p><strong>Valor:</strong> ${moeda(r.valor_total)}</p>
         <p><strong>Vencimento:</strong> ${r.vencimento.toLocaleDateString("pt-BR")}</p>
         <p class="${r.dias>=0?'pos':'neg'}">
-          ${r.dias>=0
-            ? `⏳ ${CONFIG.textos.vence_em} ${r.dias} dias`
-            : `⚠️ ${CONFIG.textos.atrasada_ha} ${Math.abs(r.dias)} dias`}
+          ${r.dias>=0?`⏳ ${CONFIG.textos.vence_em} ${r.dias} dias`:`⚠️ ${CONFIG.textos.atrasada_ha} ${Math.abs(r.dias)} dias`}
         </p>
       </div>`;
     });
