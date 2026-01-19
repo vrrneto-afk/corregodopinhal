@@ -5,20 +5,47 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Configuração – Geral</title>
 
+<!-- MANIFEST -->
+<link rel="manifest" href="../manifest.json">
+<meta name="theme-color" content="#7b3f2a">
+
+<!-- MENU GLOBAL -->
+<link rel="stylesheet" href="../menu/menu.css">
+
+<!-- CONFIG CSS -->
+<link rel="stylesheet" href="./config.css">
+
 <!-- FIREBASE -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
-<link rel="stylesheet" href="menu-adm.css">
-<link rel="stylesheet" href="config.css">
+<script>
+if (!firebase.apps.length) {
+  firebase.initializeApp({
+    apiKey: "AIzaSyCW-CuFDrOLO-dteckl_GrPTocmyS-IrzY",
+    authDomain: "sitio-corrego-do-pinhal.firebaseapp.com",
+    projectId: "sitio-corrego-do-pinhal"
+  });
+}
+</script>
+
+<!-- IDENTIFICAÇÃO DA PÁGINA -->
+<script>
+window.PERMISSAO_PAGINA = {
+  area: "config",
+  chave: "config-geral"
+};
+</script>
+
+<!-- AUTH GUARD GLOBAL -->
+<script src="../login/auth-guard.js"></script>
 </head>
 
-<body>
-
-<div id="app" class="hidden">
+<body style="display:none">
 
 <header>⚙️ Configurações</header>
+
 <div id="menu-adm"></div>
 
 <div class="container">
@@ -26,76 +53,77 @@
   <h2>Configuração – Geral</h2>
 
   <label>Título do aplicativo</label>
-  <input type="text" id="titulo_app">
+  <input type="text" id="titulo_app" maxlength="80">
 
   <label>Versão do sistema</label>
-  <input type="text" id="versao">
+  <input type="text" id="versao" maxlength="20">
 
   <button class="salvar" onclick="salvar()">💾 Salvar</button>
 
-  <!-- BOTÃO VOLTAR – PADRÃO ANIMAIS -->
   <button class="voltar" onclick="location.href='config.html'">
     ⬅ Voltar para Configurações
   </button>
 
 </div>
-</div>
 
 <script>
-/* MENU ADM */
-fetch("menu-adm.html")
+/* MENU ADM – PADRÃO GLOBAL DEFINITIVO */
+fetch("../menu/menu-adm.html")
   .then(r => r.text())
   .then(html => {
     document.getElementById("menu-adm").innerHTML = html;
-    document.querySelectorAll(".menu-link").forEach(a => {
-      if (a.getAttribute("href") === "config.html") {
+
+    document.querySelectorAll(".menu-link").forEach(a=>{
+      if(a.getAttribute("href")?.includes("config.html")){
         a.classList.add("ativo");
       }
     });
+
+    const s = document.createElement("script");
+    s.src = "../menu/menu-permissoes.js";
+    s.onload = () => {
+      document.body.style.display = "block";
+      carregar();
+    };
+    document.body.appendChild(s);
   });
+</script>
 
-/* FIREBASE INIT */
-firebase.initializeApp({
-  apiKey: "AIzaSyCW-CuFDrOLO-dteckl_GrPTocmyS-IrzY",
-  authDomain: "sitio-corrego-do-pinhal.firebaseapp.com",
-  projectId: "sitio-corrego-do-pinhal"
-});
+<script>
+const db = firebase.firestore();
 
-const auth = firebase.auth();
-const db   = firebase.firestore();
-
-/* AUTH */
-auth.onAuthStateChanged(user => {
-  if (user) {
-    document.body.style.display = "block";
-    document.getElementById("app").classList.remove("hidden");
-    carregar();
-  }
-});
-
-/* CARREGAR DADOS */
-async function carregar() {
+/* CARREGAR */
+async function carregar(){
   const snap = await db.collection("config").doc("geral").get();
-  if (!snap.exists) return;
+  if(!snap.exists) return;
 
   const d = snap.data();
-  document.getElementById("titulo_app").value = d.titulo_app ?? "";
-  document.getElementById("versao").value     = d.versao ?? "";
+  titulo_app.value = d.titulo_app ?? "";
+  versao.value = d.versao ?? "";
 }
 
 /* SALVAR */
-async function salvar() {
+async function salvar(){
+  const titulo = titulo_app.value.trim();
+  const ver = versao.value.trim();
 
-  await db.collection("config").doc("geral").update({
-    titulo_app: document.getElementById("titulo_app").value.trim(),
-    versao: document.getElementById("versao").value.trim()
-  });
+  if(!titulo){
+    alert("Informe o título do aplicativo.");
+    return;
+  }
+
+  await db.collection("config").doc("geral").set({
+    titulo_app: titulo,
+    versao: ver
+  }, { merge:true });
 
   alert("Configuração geral salva com sucesso.");
+  location.reload();
 }
 </script>
 
-<script src="auth-adm.js"></script>
+<!-- LOGOUT GLOBAL -->
+<script src="../login/logout.js"></script>
 
 </body>
 </html>
