@@ -1,11 +1,9 @@
-/* ===== MENU GLOBAL – PADRÃO ÚNICO (APP + ADM) ===== */
-
 .menu-wrapper{
   position:relative;
   z-index:100;
+  visibility:hidden;
 }
 
-/* NAV */
 .menu-adm{
   background:#7b3f2a;
   display:flex;
@@ -15,7 +13,6 @@
   padding:10px 8px;
 }
 
-/* LINKS */
 .menu-adm .menu-link{
   color:#fff;
   text-decoration:none;
@@ -35,13 +32,11 @@
   white-space:nowrap;
 }
 
-/* HOVER */
 .menu-adm .menu-link:hover{
   background:rgba(255,255,255,.15);
   opacity:1;
 }
 
-/* ATIVO */
 .menu-adm .menu-link.ativo{
   background:rgba(255,255,255,.25);
   font-weight:700;
@@ -58,7 +53,6 @@
   border-radius:10px;
 }
 
-/* SAIR */
 .menu-adm .menu-link.sair{
   background:rgba(0,0,0,.35);
 }
