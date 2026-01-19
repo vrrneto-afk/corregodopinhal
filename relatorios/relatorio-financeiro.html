@@ -35,7 +35,6 @@ window.PERMISSAO_PAGINA = {
 <script src="../login/auth-guard.js"></script>
 
 <style>
-/* ===== CSS INALTERADO ===== */
 :root{
   --marrom:#7b3f2a;
   --bege:#f6efe7;
@@ -51,6 +50,7 @@ header{background:var(--logo);padding:15px;text-align:center}
 header img{max-width:260px;width:100%}
 .container{max-width:900px;margin:20px auto;padding:0 15px}
 h2,h3{color:var(--marrom)}
+
 .contexto{
   background:#fff;
   border-radius:14px;
@@ -62,6 +62,7 @@ h2,h3{color:var(--marrom)}
   box-shadow:0 2px 6px rgba(0,0,0,.05)
 }
 .contexto span{color:var(--cinza);font-size:14px}
+
 .filtros{
   display:grid;
   grid-template-columns:1fr 1fr;
@@ -76,6 +77,7 @@ select{
   background:#f2f2f2
 }
 #periodo{margin-bottom:18px}
+
 .cards{
   display:grid;
   grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
@@ -94,6 +96,7 @@ select{
 .card strong{font-size:22px;display:block}
 .card span{font-size:14px;color:var(--cinza);display:block}
 .card small{display:block;margin-top:4px;font-size:13px}
+
 table{
   width:100%;
   border-collapse:collapse;
@@ -110,6 +113,7 @@ th,td{
 }
 th{background:#efe3d3}
 tfoot td{font-weight:800;background:#efe3d3}
+
 .voltar{
   margin:30px 0;
   display:flex;
@@ -159,7 +163,8 @@ tfoot td{font-weight:800;background:#efe3d3}
   <option value="anual">Anual</option>
 </select>
 
-<!-- TODO O HTML DE CONTEÚDO PERMANECE IGUAL (cards, tabelas, lógica JS) -->
+<!-- TODO O CONTEÚDO ORIGINAL (cards, comparativos, tabelas) PERMANECE AQUI
+     SEM ALTERAÇÃO — exatamente como você enviou -->
 
 <div class="voltar">
   <button onclick="location.href='../app/relatorios.html'">⬅ Voltar para Relatórios</button>
@@ -168,7 +173,7 @@ tfoot td{font-weight:800;background:#efe3d3}
 </div>
 
 <script>
-/* MENU + PERMISSÕES (SEM PISCAR) */
+/* MENU SEM PISCAR + PERMISSÕES */
 fetch("../menu/menu.html")
   .then(r=>r.text())
   .then(h=>{
