@@ -2,21 +2,149 @@
 <div class="menu-wrapper">
   <nav class="menu-adm" id="menu-links">
 
-    <a href="../app/index.html" class="menu-link">🏠 <span>Início</span></a>
-    <a href="../app/lembretes.html" class="menu-link">📝 <span>Lembretes</span></a>
-    <a href="../app/animais.html" class="menu-link">🐾 <span>Animais</span></a>
-    <a href="../app/vacas.html" class="menu-link">🐄 <span>Vacas</span></a>
-    <a href="../app/bezerros.html" class="menu-link">🐮 <span>Bezerros</span></a>
-    <a href="../app/historico.html" class="menu-link">📜 <span>Histórico</span></a>
-    <a href="../app/farmacia.html" class="menu-link">💊 <span>Farmácia</span></a>
-    <a href="../app/vacinas.html" class="menu-link">💉 <span>Vacinas</span></a>
-    <a href="../app/leite.html" class="menu-link">🥛 <span>Leite</span></a>
-    <a href="../app/despesas.html" class="menu-link">💰 <span>Despesas</span></a>
-    <a href="../app/relatorios.html" class="menu-link">📊 <span>Relatórios</span></a>
+    <a href="../app/index.html"
+       class="menu-link"
+       data-area="app"
+       data-chave="inicio">
+      🏠 <span>Início</span>
+    </a>
 
-    <a href="#" class="menu-link sair" id="btnLogout">
+    <a href="../app/lembretes.html"
+       class="menu-link"
+       data-area="app"
+       data-chave="lembretes">
+      📝 <span>Lembretes</span>
+    </a>
+
+    <a href="../app/animais.html"
+       class="menu-link"
+       data-area="app"
+       data-chave="animais">
+      🐾 <span>Animais</span>
+    </a>
+
+    <a href="../app/vacas.html"
+       class="menu-link"
+       data-area="app"
+       data-chave="vacas">
+      🐄 <span>Vacas</span>
+    </a>
+
+    <a href="../app/bezerros.html"
+       class="menu-link"
+       data-area="app"
+       data-chave="bezerros">
+      🐮 <span>Bezerros</span>
+    </a>
+
+    <a href="../app/historico.html"
+       class="menu-link"
+       data-area="app"
+       data-chave="historico">
+      📜 <span>Histórico</span>
+    </a>
+
+    <a href="../app/farmacia.html"
+       class="menu-link"
+       data-area="app"
+       data-chave="farmacia">
+      💊 <span>Farmácia</span>
+    </a>
+
+    <a href="../app/vacinas.html"
+       class="menu-link"
+       data-area="app"
+       data-chave="vacinas">
+      💉 <span>Vacinas</span>
+    </a>
+
+    <a href="../app/leite.html"
+       class="menu-link"
+       data-area="app"
+       data-chave="leite">
+      🥛 <span>Leite</span>
+    </a>
+
+    <a href="../app/despesas.html"
+       class="menu-link"
+       data-area="app"
+       data-chave="despesas">
+      💰 <span>Despesas</span>
+    </a>
+
+    <a href="../app/relatorios.html"
+       class="menu-link"
+       data-area="app"
+       data-chave="relatorios">
+      📊 <span>Relatórios</span>
+    </a>
+
+    <a href="#"
+       class="menu-link sair"
+       id="btnLogout">
       🚪 <span>Sair</span>
     </a>
 
   </nav>
 </div>
+
+<script>
+/* ======================================================
+   CONTROLE DE PERMISSÕES DO MENU (APP)
+   ====================================================== */
+
+(function(){
+
+  const esperar = setInterval(()=>{
+    if(window.USUARIO_ATUAL && window.firebase){
+      clearInterval(esperar);
+      aplicarPermissoes();
+    }
+  },50);
+
+  async function aplicarPermissoes(){
+    try{
+      const db = firebase.firestore();
+
+      const snap = await db
+        .collection("config")
+        .doc("grupos")
+        .get();
+
+      const grupo = snap.data().lista.find(
+        g => g.id === window.USUARIO_ATUAL.grupo
+      );
+
+      document.querySelectorAll(".menu-link").forEach(link=>{
+        const area  = link.dataset.area;
+        const chave = link.dataset.chave;
+
+        if(!area || !chave) return;
+
+        const permitido =
+          grupo?.permissoes?.[area]?.[chave] === true ||
+          grupo?.permissoes?.config?.tudo === true;
+
+        if(!permitido){
+          link.remove();
+        }
+      });
+
+    }catch(e){
+      console.error("Erro ao aplicar permissões do menu:", e);
+    }
+  }
+
+})();
+</script>
+
+<script>
+/* ======================================================
+   LOGOUT
+   ====================================================== */
+document.getElementById("btnLogout")?.addEventListener("click", async e=>{
+  e.preventDefault();
+  await firebase.auth().signOut();
+  location.href = "../login/login.html";
+});
+</script>
