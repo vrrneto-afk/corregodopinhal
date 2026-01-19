@@ -150,15 +150,14 @@ window.PERMISSAO_PAGINA = {
 <!-- MENU ADM – PADRÃO GLOBAL DEFINITIVO -->
 <script>
 fetch("../menu/menu-adm.html")
-  .then(r=>r.text())
-  .then(html=>{
+  .then(r => r.text())
+  .then(html => {
     document.getElementById("menu-adm").innerHTML = html;
 
     const s = document.createElement("script");
     s.src = "../menu/menu-permissoes.js";
     s.onload = () => {
       document.body.style.display = "block";
-      carregar();
     };
     document.body.appendChild(s);
   });
