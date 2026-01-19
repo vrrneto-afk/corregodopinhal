@@ -60,3 +60,43 @@
 .menu-adm .menu-link.sair:hover{
   background:rgba(0,0,0,.5);
 }
+
+/* =========================================
+   CARD – DESPESAS / VENCIMENTOS (PADRÃO)
+   ========================================= */
+
+.card-vencimento{
+  background:#fff;
+  padding:12px 14px;
+  margin-bottom:8px;
+  border-left:6px solid var(--amarelo);
+  border-radius:14px;
+  box-shadow:0 2px 6px rgba(0,0,0,.05);
+}
+
+.card-vencimento.atrasada{
+  border-left-color:var(--vermelho);
+}
+
+.card-vencimento p{
+  margin:2px 0;
+  padding:0;
+  font-size:14px;
+  line-height:1.25;
+  color:var(--cinza);
+}
+
+.card-vencimento p strong{
+  font-weight:700;
+  color:#000;
+}
+
+.card-vencimento .pos{
+  color:var(--verde);
+  font-weight:700;
+}
+
+.card-vencimento .neg{
+  color:var(--vermelho);
+  font-weight:700;
+}
