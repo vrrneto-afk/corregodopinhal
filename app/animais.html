@@ -32,6 +32,9 @@ window.PERMISSAO_PAGINA = { area:"app", chave:"animais" };
 <!-- AUTH GUARD (SEMPRE DEPOIS DO FIREBASE COMPLETO) -->
 <script src="../login/auth-guard.js"></script>
 
+<!-- CONTROLE DE PERMISSÕES DO MENU (APP) -->
+<script src="../menu/menu-permissoes.js"></script>
+
 <style>
 :root{
   --marrom:#7b3f2a;
@@ -128,9 +131,6 @@ fetch("../menu/menu.html")
         a.classList.add("ativo");
       }
     });
-  const s = document.createElement("script");
-    s.src = "../menu/menu-permissoes.js";
-    document.body.appendChild(s);
   });
 
 const ORDEM_STATUS = {
