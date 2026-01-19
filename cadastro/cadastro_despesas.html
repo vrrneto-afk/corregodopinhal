@@ -10,6 +10,7 @@
 
 <link rel="stylesheet" href="../menu/menu.css">
 
+<!-- FIREBASE -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
@@ -22,6 +23,7 @@ firebase.initializeApp({
 });
 </script>
 
+<!-- IDENTIFICAÇÃO DA PÁGINA -->
 <script>
 window.PERMISSAO_PAGINA = {
   area:"adm",
@@ -29,6 +31,7 @@ window.PERMISSAO_PAGINA = {
 };
 </script>
 
+<!-- AUTH GUARD -->
 <script src="../login/auth-guard.js"></script>
 
 <style>
@@ -40,7 +43,10 @@ window.PERMISSAO_PAGINA = {
   --logo:#D0B485;
 }
 
-*{box-sizing:border-box;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
+*{
+  box-sizing:border-box;
+  font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif
+}
 
 body{
   margin:0;
@@ -179,10 +185,11 @@ button{
 </div>
 
 <script>
+/* MENU ADM – PADRÃO DEFINITIVO */
 fetch("../menu/menu-adm.html")
   .then(r=>r.text())
   .then(html=>{
-    menu-adm.innerHTML = html;
+    document.getElementById("menu-adm").innerHTML = html;
 
     document.querySelectorAll(".menu-link").forEach(a=>{
       if(a.getAttribute("href")?.includes("cadastro_despesas")){
@@ -190,8 +197,8 @@ fetch("../menu/menu-adm.html")
       }
     });
 
-    const s=document.createElement("script");
-    s.src="../menu/menu-permissoes.js";
+    const s = document.createElement("script");
+    s.src = "../menu/menu-permissoes.js";
     document.body.appendChild(s);
   });
 
@@ -213,7 +220,7 @@ valor_unitario.oninput = calcularTotal;
 
 function calcularTotal(){
   valor_total.value =
-    (Number(quantidade.value||0)*Number(valor_unitario.value||0)).toFixed(2);
+    (Number(quantidade.value||0) * Number(valor_unitario.value||0)).toFixed(2);
 }
 
 /* AÇÃO */
@@ -245,9 +252,11 @@ ano.onchange = ()=>{
 
 mes.onchange = ()=>{
   despesaExistente.innerHTML='<option value="">Selecione</option>';
-  despesas.filter(d=>d.ano===ano.value && d.mes===mes.value)
+  despesas
+    .filter(d=>d.ano===ano.value && d.mes===mes.value)
     .forEach(d=>{
-      despesaExistente.innerHTML+=`<option value="${d.id}">${d.nome_despesa}</option>`;
+      despesaExistente.innerHTML+=
+        `<option value="${d.id}">${d.nome_despesa}</option>`;
     });
 };
 
@@ -256,15 +265,19 @@ despesaExistente.onchange = ()=>{
   if(!despesaAtual) return;
 
   Object.keys(despesaAtual).forEach(k=>{
-    if(document.getElementById(k)) document.getElementById(k).value = despesaAtual[k];
+    if(document.getElementById(k)){
+      document.getElementById(k).value = despesaAtual[k];
+    }
   });
 
   btnExcluir.classList.remove("hidden");
 };
 
 async function salvar(){
-  if(!nome_despesa.value.trim() || !categoria_despesa.value ||
-     !valor_total.value || !data_vencimento.value){
+  if(!nome_despesa.value.trim() ||
+     !categoria_despesa.value ||
+     !valor_total.value ||
+     !data_vencimento.value){
     alert("Preencha os campos obrigatórios.");
     return;
   }
@@ -274,17 +287,17 @@ async function salvar(){
   const dados = {
     nome_despesa: nome_despesa.value.trim(),
     tipo_despesa: tipo_despesa.value.trim(),
-    categoria_despesa,
+    categoria_despesa: categoria_despesa.value,
     fornecedor: fornecedor.value.trim(),
-    forma_pagamento,
-    status_pagamento,
+    forma_pagamento: forma_pagamento.value,
+    status_pagamento: status_pagamento.value,
     quantidade: Number(quantidade.value||0),
     valor_unitario: Number(valor_unitario.value||0),
     valor_total: Number(valor_total.value||0),
-    data_vencimento,
+    data_vencimento: data_vencimento.value,
     observacoes: observacoes.value.trim(),
-    ano: String(ano.value||hoje.getFullYear()),
-    mes: String(mes.value||hoje.getMonth()+1),
+    ano: String(ano.value || hoje.getFullYear()),
+    mes: String(mes.value || hoje.getMonth()+1),
     dia: String(hoje.getDate())
   };
 
@@ -314,7 +327,9 @@ async function excluir(){
 
 function limpar(){
   document.querySelectorAll("input,select,textarea").forEach(e=>{
-    if(!["acao","ano","mes","despesaExistente"].includes(e.id)) e.value="";
+    if(!["acao","ano","mes","despesaExistente"].includes(e.id)){
+      e.value="";
+    }
   });
   despesaAtual=null;
 }
