@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Cadastro de Animais – ADM</title>
 
-<!-- MANIFEST -->
 <link rel="manifest" href="../manifest.json">
 <meta name="theme-color" content="#7b3f2a">
 
@@ -25,7 +24,7 @@ firebase.initializeApp({
 });
 </script>
 
-<!-- IDENTIFICAÇÃO DA PÁGINA (PADRÃO GLOBAL) -->
+<!-- IDENTIFICAÇÃO DA PÁGINA -->
 <script>
 window.PERMISSAO_PAGINA = {
   area: "adm",
@@ -33,7 +32,7 @@ window.PERMISSAO_PAGINA = {
 };
 </script>
 
-<!-- AUTH GUARD ADM -->
+<!-- AUTH GUARD -->
 <script src="../login/auth-guard.js"></script>
 
 <style>
@@ -54,6 +53,7 @@ body{
   margin:0;
   background:var(--bege);
   color:#333;
+  display:none;
 }
 
 header{
@@ -125,10 +125,10 @@ button{
   <select id="animalExistente"></select>
 </div>
 
-<label>Nome</label>
+<label>Nome *</label>
 <input id="nome">
 
-<label>Espécie</label>
+<label>Espécie *</label>
 <select id="especie">
   <option value="">Selecione</option>
   <option>Ave - Angola</option>
@@ -149,7 +149,7 @@ button{
 <label>Raça</label>
 <input id="raca">
 
-<label>Sexo</label>
+<label>Sexo *</label>
 <select id="sexo">
   <option value="">Selecione</option>
   <option value="F">Fêmea</option>
@@ -172,7 +172,7 @@ button{
 <label>Pai</label>
 <select id="id_pai"></select>
 
-<label>Status</label>
+<label>Status *</label>
 <select id="status">
   <option>Ativo</option>
   <option>Inativo</option>
@@ -191,22 +191,29 @@ button{
 <script>
 /* MENU ADM */
 fetch("../menu/menu-adm.html")
-  .then(r => r.text())
-  .then(html => {
+  .then(r=>r.text())
+  .then(html=>{
     document.getElementById("menu-adm").innerHTML = html;
 
-    const atual = location.pathname.split("/").pop();
-
-    document.querySelectorAll(".menu-link").forEach(a => {
-      if (a.getAttribute("href")?.includes(atual)) {
+    document.querySelectorAll(".menu-link").forEach(a=>{
+      if(a.getAttribute("href")?.includes("cadastro_animais")){
         a.classList.add("ativo");
       }
     });
-  });
 
+    const s=document.createElement("script");
+    s.src="../menu/menu-permissoes.js";
+    document.body.appendChild(s);
+  });
 
 const db = firebase.firestore();
 const auth = firebase.auth();
+
+auth.onAuthStateChanged(user=>{
+  if(!user) return;
+  document.body.style.display="block";
+  carregar();
+});
 
 const acao = document.getElementById("acao");
 const blocoEditar = document.getElementById("blocoEditar");
@@ -273,6 +280,11 @@ animalExistente.onchange = ()=>{
 };
 
 async function salvar(){
+  if(!nome.value.trim() || !especie.value || !sexo.value){
+    alert("Preencha os campos obrigatórios.");
+    return;
+  }
+
   if(acao.value==="editar" && !atual){
     alert("Selecione um animal para editar.");
     return;
@@ -283,7 +295,7 @@ async function salvar(){
     especie:especie.value,
     raca:raca.value.trim(),
     sexo:sexo.value,
-    data_nascimento:data_nascimento.value,
+    data_nascimento:data_nascimento.value || "",
     origem:origem.value,
     id_mae:id_mae.value||"",
     id_pai:id_pai.value||"",
@@ -304,15 +316,12 @@ async function salvar(){
     await db.collection("animais").doc(atual.id).update(dados);
   }
 
-  alert("Salvo com sucesso");
+  alert("Salvo com sucesso.");
   location.reload();
 }
 
 async function excluir(){
-  if(!atual){
-    alert("Nenhum animal selecionado.");
-    return;
-  }
+  if(!atual) return;
 
   if(confirm(`Confirma a exclusão do animal "${atual.nome}"?`)){
     await db.collection("animais").doc(atual.id).delete();
@@ -320,10 +329,9 @@ async function excluir(){
     location.reload();
   }
 }
-
-carregar();
 </script>
 
 <script src="../login/logout.js"></script>
+
 </body>
 </html>
