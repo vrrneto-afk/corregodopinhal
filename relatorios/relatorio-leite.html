@@ -16,6 +16,14 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
+<script>
+firebase.initializeApp({
+  apiKey: "AIzaSyCW-CuFDrOLO-dteckl_GrPTocmyS-IrzY",
+  authDomain: "sitio-corrego-do-pinhal.firebaseapp.com",
+  projectId: "sitio-corrego-do-pinhal"
+});
+</script>
+
 <!-- IDENTIFICAÇÃO DA PÁGINA -->
 <script>
 window.PERMISSAO_PAGINA = {
@@ -59,7 +67,6 @@ h2,h3{color:var(--marrom)}
 }
 .contexto span{color:var(--cinza);font-size:14px}
 
-/* FILTROS */
 .filtros{
   display:grid;
   grid-template-columns:1fr 1fr;
@@ -75,7 +82,6 @@ select{
 }
 #periodo{margin-bottom:18px}
 
-/* CARDS */
 .cards{
   display:grid;
   grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
@@ -93,10 +99,6 @@ select{
 .card strong{font-size:22px;display:block}
 .card span{font-size:14px;color:var(--cinza);display:block}
 
-.pos{color:var(--verde)}
-.neg{color:var(--vermelho)}
-
-/* BOTÃO VOLTAR */
 .voltar{
   margin:30px 0 10px;
   display:flex;
@@ -149,47 +151,32 @@ select{
   <option value="anual">Anual</option>
 </select>
 
-<!-- RESUMO -->
 <div class="cards">
   <div class="card">
     <strong id="cLitros">0 L</strong>
     <span>Total produzido</span>
   </div>
-
   <div class="card">
     <strong id="cReceita">R$ 0,00</strong>
     <span>Receita do leite</span>
   </div>
-
   <div class="card">
     <strong id="cMediaDia">0 L</strong>
     <span>Média diária</span>
   </div>
-
   <div class="card">
     <strong id="cMediaVaca">0 L</strong>
     <span>Média por vaca</span>
   </div>
 </div>
 
-<!-- COMPARATIVO -->
 <h3>🆚 Comparativo com período anterior</h3>
 <div class="cards">
-  <div class="card">
-    <strong id="cmpLitros">—</strong>
-    <span>Produção</span>
-  </div>
-  <div class="card">
-    <strong id="cmpReceita">—</strong>
-    <span>Receita</span>
-  </div>
-  <div class="card">
-    <strong id="cmpMedia">—</strong>
-    <span>Média diária</span>
-  </div>
+  <div class="card"><strong id="cmpLitros">—</strong><span>Produção</span></div>
+  <div class="card"><strong id="cmpReceita">—</strong><span>Receita</span></div>
+  <div class="card"><strong id="cmpMedia">—</strong><span>Média diária</span></div>
 </div>
 
-<!-- ALERTA -->
 <h3>🚨 Alertas</h3>
 <div class="cards">
   <div class="card alerta">
@@ -207,24 +194,24 @@ select{
 </div>
 
 <script>
-/* MENU */
 fetch("../menu/menu.html")
   .then(r=>r.text())
   .then(h=>{
     menu.innerHTML=h;
+
     document.querySelectorAll("#menu a").forEach(a=>{
       if(a.getAttribute("href")==="../app/relatorios.html"){
         a.classList.add("ativo");
       }
     });
-  });
 
-/* FIREBASE INIT */
-firebase.initializeApp({
-  apiKey:"AIzaSyCW-CuFDrOLO-dteckl_GrPTocmyS-IrzY",
-  authDomain:"sitio-corrego-do-pinhal.firebaseapp.com",
-  projectId:"sitio-corrego-do-pinhal"
-});
+    const s=document.createElement("script");
+    s.src="../menu/menu-permissoes.js";
+    document.body.appendChild(s);
+  });
+</script>
+
+<script>
 const db=firebase.firestore();
 
 const meses=["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
@@ -235,7 +222,7 @@ let LEITE=[];
 async function load(){
   LEITE=(await db.collection("producao_leite").get()).docs.map(d=>{
     const r=d.data();
-    return {
+    return{
       data:new Date(r.ano,r.mes-1,r.dia),
       litros:+r.litros_dia||0,
       vacas:+r.vacas_produzindo||0,
@@ -269,13 +256,13 @@ function render(){
 
   const dentro=d=>{
     const k=d.data.getFullYear()*12+(d.data.getMonth()+1);
-    return k>=inicio && k<=fim;
+    return k>=inicio&&k<=fim;
   };
 
   const atual=LEITE.filter(l=>dentro(l));
   const anterior=LEITE.filter(l=>{
     const k=l.data.getFullYear()*12+(l.data.getMonth()+1);
-    return k>=inicio-mesesBack && k<=fim-mesesBack;
+    return k>=inicio-mesesBack&&k<=fim-mesesBack;
   });
 
   const litrosA=atual.reduce((s,l)=>s+l.litros,0);
