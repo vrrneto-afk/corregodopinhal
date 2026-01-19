@@ -54,59 +54,59 @@ window.PERMISSAO_PAGINA = {
 
   <div class="cards-grid">
 
-    <button class="config-card" onclick="location.href='config-geral.html'">
+    <button class="config-card" data-permissao="config-geral" onclick="location.href='config-geral.html'">
       🧭 <span>Geral</span>
     </button>
 
-    <button class="config-card" onclick="location.href='config-bezerros.html'">
+    <button class="config-card" data-permissao="config-bezerros" onclick="location.href='config-bezerros.html'">
       🐮 <span>Bezerros</span>
     </button>
 
-    <button class="config-card" onclick="location.href='config-vacinas.html'">
+    <button class="config-card" data-permissao="config-vacinas" onclick="location.href='config-vacinas.html'">
       💉 <span>Vacinas</span>
     </button>
 
-    <button class="config-card" onclick="location.href='config-vacas.html'">
+    <button class="config-card" data-permissao="config-vacas" onclick="location.href='config-vacas.html'">
       🐄 <span>Vacas</span>
     </button>
 
-    <button class="config-card" onclick="location.href='config-leite.html'">
+    <button class="config-card" data-permissao="config-leite" onclick="location.href='config-leite.html'">
       🥛 <span>Leite</span>
     </button>
 
-    <button class="config-card" onclick="location.href='config-despesas.html'">
+    <button class="config-card" data-permissao="config-despesas" onclick="location.href='config-despesas.html'">
       💰 <span>Despesas</span>
     </button>
 
-    <button class="config-card" onclick="location.href='config-especies.html'">
+    <button class="config-card" data-permissao="config-especies" onclick="location.href='config-especies.html'">
       🧬 <span>Espécies</span>
     </button>
 
-    <button class="config-card" onclick="location.href='config-farmacia.html'">
+    <button class="config-card" data-permissao="config-farmacia" onclick="location.href='config-farmacia.html'">
       💊 <span>Farmácia</span>
     </button>
 
-    <button class="config-card" onclick="location.href='config-clima.html'">
+    <button class="config-card" data-permissao="config-clima" onclick="location.href='config-clima.html'">
       🌦️ <span>Clima</span>
     </button>
 
-    <button class="config-card" onclick="location.href='config-menu.html'">
+    <button class="config-card" data-permissao="config-menu" onclick="location.href='config-menu.html'">
       📋 <span>Menu</span>
     </button>
 
-    <button class="config-card" onclick="location.href='config-usuarios.html'">
+    <button class="config-card" data-permissao="config-usuarios" onclick="location.href='config-usuarios.html'">
       👤 <span>Usuários</span>
     </button>
 
-    <button class="config-card" onclick="location.href='config-grupos.html'">
+    <button class="config-card" data-permissao="config-grupos" onclick="location.href='config-grupos.html'">
       👥 <span>Grupos de Usuários</span>
     </button>
 
   </div>
 </div>
 
+<!-- MENU ADM – PADRÃO GLOBAL DEFINITIVO -->
 <script>
-/* MENU ADM – PADRÃO GLOBAL DEFINITIVO */
 fetch("../menu/menu-adm.html")
   .then(r => r.text())
   .then(html => {
@@ -118,10 +118,21 @@ fetch("../menu/menu-adm.html")
       }
     });
 
-    /* INJEÇÃO OBRIGATÓRIA DO CONTROLE DE PERMISSÕES */
     const s = document.createElement("script");
     s.src = "../menu/menu-permissoes.js";
     s.onload = () => {
+
+      /* 🔒 FILTRO DE PERMISSÃO DOS CARDS */
+      document.querySelectorAll(".config-card").forEach(card=>{
+        const chave = card.dataset.permissao;
+        if (
+          !PERMISSOES?.config?.tudo &&
+          !PERMISSOES?.config?.[chave]
+        ){
+          card.remove();
+        }
+      });
+
       document.body.style.display = "block";
     };
     document.body.appendChild(s);
