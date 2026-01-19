@@ -5,20 +5,47 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Configuração – Farmácia</title>
 
+<!-- MANIFEST -->
+<link rel="manifest" href="../manifest.json">
+<meta name="theme-color" content="#7b3f2a">
+
+<!-- MENU GLOBAL -->
+<link rel="stylesheet" href="../menu/menu.css">
+
+<!-- CONFIG CSS -->
+<link rel="stylesheet" href="./config.css">
+
 <!-- FIREBASE -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
-<link rel="stylesheet" href="menu-adm.css">
-<link rel="stylesheet" href="config.css">
+<script>
+if (!firebase.apps.length) {
+  firebase.initializeApp({
+    apiKey: "AIzaSyCW-CuFDrOLO-dteckl_GrPTocmyS-IrzY",
+    authDomain: "sitio-corrego-do-pinhal.firebaseapp.com",
+    projectId: "sitio-corrego-do-pinhal"
+  });
+}
+</script>
+
+<!-- IDENTIFICAÇÃO DA PÁGINA -->
+<script>
+window.PERMISSAO_PAGINA = {
+  area: "config",
+  chave: "config-farmacia"
+};
+</script>
+
+<!-- AUTH GUARD GLOBAL -->
+<script src="../login/auth-guard.js"></script>
 </head>
 
-<body>
-
-<div id="app" class="hidden">
+<body style="display:none">
 
 <header>⚙️ Configurações</header>
+
 <div id="menu-adm"></div>
 
 <div class="container">
@@ -33,56 +60,48 @@
 
   <fieldset>
     <label>Texto – Sem estoque</label>
-    <input type="text" id="texto_sem_estoque">
+    <input type="text" id="texto_sem_estoque" maxlength="120">
 
     <label>Texto – Vence em</label>
-    <input type="text" id="texto_vence_em">
+    <input type="text" id="texto_vence_em" maxlength="120">
 
     <label>Texto – Vencido</label>
-    <input type="text" id="texto_vencido">
+    <input type="text" id="texto_vencido" maxlength="120">
   </fieldset>
 
   <button class="salvar" onclick="salvar()">💾 Salvar</button>
 
-  <!-- BOTÃO VOLTAR – PADRÃO -->
   <button class="voltar" onclick="location.href='config.html'">
     ⬅ Voltar para Configurações
   </button>
 
 </div>
-</div>
 
 <script>
-/* MENU ADM */
-fetch("menu-adm.html")
+/* MENU ADM – PADRÃO GLOBAL DEFINITIVO */
+fetch("../menu/menu-adm.html")
   .then(r => r.text())
   .then(html => {
     document.getElementById("menu-adm").innerHTML = html;
-    document.querySelectorAll(".menu-link").forEach(a => {
-      if (a.getAttribute("href") === "config.html") {
+
+    document.querySelectorAll(".menu-link").forEach(a=>{
+      if(a.getAttribute("href")?.includes("config.html")){
         a.classList.add("ativo");
       }
     });
+
+    const s = document.createElement("script");
+    s.src = "../menu/menu-permissoes.js";
+    s.onload = () => {
+      document.body.style.display = "block";
+      carregar();
+    };
+    document.body.appendChild(s);
   });
+</script>
 
-/* FIREBASE INIT */
-firebase.initializeApp({
-  apiKey: "AIzaSyCW-CuFDrOLO-dteckl_GrPTocmyS-IrzY",
-  authDomain: "sitio-corrego-do-pinhal.firebaseapp.com",
-  projectId: "sitio-corrego-do-pinhal"
-});
-
-const auth = firebase.auth();
-const db   = firebase.firestore();
-
-/* AUTH */
-auth.onAuthStateChanged(user => {
-  if (user) {
-    document.body.style.display = "block";
-    document.getElementById("app").classList.remove("hidden");
-    carregar();
-  }
-});
+<script>
+const db = firebase.firestore();
 
 /* CARREGAR */
 async function carregar(){
@@ -91,44 +110,40 @@ async function carregar(){
 
   const d = snap.data();
 
-  document.getElementById("quantidade_minima").value =
-    d.quantidade_minima ?? "";
-
-  document.getElementById("validade_alerta_dias").value =
-    d.validade_alerta_dias ?? "";
-
-  document.getElementById("texto_sem_estoque").value =
-    d.textos?.sem_estoque ?? "";
-
-  document.getElementById("texto_vence_em").value =
-    d.textos?.vence_em ?? "";
-
-  document.getElementById("texto_vencido").value =
-    d.textos?.vencido ?? "";
+  quantidade_minima.value = d.quantidade_minima ?? "";
+  validade_alerta_dias.value = d.validade_alerta_dias ?? "";
+  texto_sem_estoque.value = d.textos?.sem_estoque ?? "";
+  texto_vence_em.value = d.textos?.vence_em ?? "";
+  texto_vencido.value = d.textos?.vencido ?? "";
 }
 
 /* SALVAR */
 async function salvar(){
+  const qtd = Number(quantidade_minima.value);
+  const dias = Number(validade_alerta_dias.value);
 
-  await db.collection("config").doc("farmacia").update({
-    quantidade_minima: Number(
-      document.getElementById("quantidade_minima").value
-    ),
-    validade_alerta_dias: Number(
-      document.getElementById("validade_alerta_dias").value
-    ),
+  if(qtd < 0 || dias < 0){
+    alert("Os valores não podem ser negativos.");
+    return;
+  }
+
+  await db.collection("config").doc("farmacia").set({
+    quantidade_minima: qtd,
+    validade_alerta_dias: dias,
     textos:{
-      sem_estoque: document.getElementById("texto_sem_estoque").value.trim(),
-      vence_em: document.getElementById("texto_vence_em").value.trim(),
-      vencido: document.getElementById("texto_vencido").value.trim()
+      sem_estoque: texto_sem_estoque.value.trim(),
+      vence_em: texto_vence_em.value.trim(),
+      vencido: texto_vencido.value.trim()
     }
-  });
+  }, { merge:true });
 
   alert("Configuração da farmácia salva com sucesso.");
+  location.reload();
 }
 </script>
 
-<script src="auth-adm.js"></script>
+<!-- LOGOUT GLOBAL -->
+<script src="../login/logout.js"></script>
 
 </body>
 </html>
