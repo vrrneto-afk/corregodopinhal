@@ -147,18 +147,25 @@ window.PERMISSAO_PAGINA = {
 
 </div>
 
-<!-- MENU + PERMISSÕES (ORDEM CORRETA) -->
+<!-- MENU + PERMISSÕES (PADRÃO GLOBAL CORRETO) -->
 <script>
 fetch("../menu/menu-adm.html")
   .then(r => r.text())
   .then(html => {
     document.getElementById("menu-adm").innerHTML = html;
 
+    // ✅ MARCA O LINK ATIVO (ERA O QUE FALTAVA)
+    document.querySelectorAll(".menu-link").forEach(a=>{
+      if(a.getAttribute("href")?.includes("config.html")){
+        a.classList.add("ativo");
+      }
+    });
+
     const s = document.createElement("script");
     s.src = "../menu/menu-permissoes.js";
     s.onload = () => {
       document.body.style.display = "block";
-      carregar(); // 🔴 ISSO ERA O QUE ESTAVA FALTANDO
+      carregar();
     };
     document.body.appendChild(s);
   });
