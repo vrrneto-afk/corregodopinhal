@@ -19,16 +19,16 @@
 <script>
 if (!firebase.apps.length) {
   firebase.initializeApp({
-    apiKey:"AIzaSyCW-CuFDrOLO-dteckl_GrPTocmyS-IrzY",
-    authDomain:"sitio-corrego-do-pinhal.firebaseapp.com",
-    projectId:"sitio-corrego-do-pinhal"
+    apiKey: "AIzaSyCW-CuFDrOLO-dteckl_GrPTocmyS-IrzY",
+    authDomain: "sitio-corrego-do-pinhal.firebaseapp.com",
+    projectId: "sitio-corrego-do-pinhal"
   });
 }
 </script>
 
 <!-- IDENTIFICAÇÃO DA PÁGINA -->
 <script>
-window.PERMISSAO_PAGINA = { area:"app", chave:"vacas" };
+window.PERMISSAO_PAGINA = { area: "app", chave: "vacas" };
 </script>
 
 <!-- AUTH GUARD -->
@@ -126,10 +126,8 @@ select{
   <div id="lista"></div>
 </div>
 
+<!-- MENU + PERMISSÕES — ORDEM DEFINITIVA -->
 <script>
-const db = firebase.firestore();
-
-/* MENU — PADRÃO DEFINITIVO */
 fetch("../menu/menu.html")
   .then(r => r.text())
   .then(html => {
@@ -138,41 +136,36 @@ fetch("../menu/menu.html")
     const s = document.createElement("script");
     s.src = "../menu/menu-permissoes.js";
     s.onload = () => {
-      requestAnimationFrame(() => {
-        document.body.style.display = "block";
-        load();
-      });
+      document.body.style.display = "block";
+      iniciarPagina();
     };
     document.body.appendChild(s);
   });
+</script>
+
+<script>
+const db = firebase.firestore();
 
 /* UTIL */
-function addMonths(d,m){
-  const x=new Date(d);
-  x.setMonth(x.getMonth()+m);
-  return x;
-}
-function idadeMeses(d){
-  const n=new Date(d+"T00:00:00"),h=new Date();
-  return (h.getFullYear()-n.getFullYear())*12+(h.getMonth()-n.getMonth());
-}
+function addMonths(d,m){const x=new Date(d);x.setMonth(x.getMonth()+m);return x;}
+function idadeMeses(d){const n=new Date(d+"T00:00:00"),h=new Date();return (h.getFullYear()-n.getFullYear())*12+(h.getMonth()-n.getMonth());}
 function idadeTexto(d){
   const n=new Date(d+"T00:00:00"),h=new Date();
-  let a=h.getFullYear()-n.getFullYear(),
-      m=h.getMonth()-n.getMonth(),
-      di=h.getDate()-n.getDate();
-  if(di<0){m--;di+=30}
-  if(m<0){a--;m+=12}
+  let a=h.getFullYear()-n.getFullYear(),m=h.getMonth()-n.getMonth(),di=h.getDate()-n.getDate();
+  if(di<0){m--;di+=30} if(m<0){a--;m+=12}
   return `${a} ano(s), ${m} mês(es) e ${di} dia(s)`;
 }
-function abrirAnimal(id){
-  location.href="../app/animal.html?id="+encodeURIComponent(id);
-}
+function abrirAnimal(id){location.href="../app/animal.html?id="+encodeURIComponent(id);}
 
 /* CONFIG */
 let CFG_VACAS={};
 
-async function loadConfig(){
+async function iniciarPagina(){
+  await carregarConfig();
+  await carregarDados();
+}
+
+async function carregarConfig(){
   const snap = await db.collection("config").doc("vacas").get();
   CFG_VACAS = snap.data();
 }
@@ -184,9 +177,7 @@ function regraPrenhezConfig(dias){
   return regras[0] || {classe:"ok",mensagem:""};
 }
 
-async function load(){
-  await loadConfig();
-
+async function carregarDados(){
   const animaisSnap=await db.collection("animais").get();
   const eventosSnap=await db.collection("eventos").get();
 
@@ -214,11 +205,8 @@ async function load(){
       if(cob && (!par || new Date(cob.data_evento)>new Date(par.data_evento))){
         const prev=addMonths(new Date(cob.data_evento+"T00:00:00"),CFG_VACAS.gestacao_meses);
         prenhas.push({v,prev});
-      }else if(par){
-        paridas.push({v,par});
-      }else{
-        vazias.push(v);
-      }
+      }else if(par){paridas.push({v,par});}
+      else{vazias.push(v);}
     });
 
     prenhas.sort((a,b)=>a.prev-b.prev);
@@ -235,30 +223,6 @@ async function load(){
           ${r.mensagem?`<p class="msg">${r.mensagem}</p>`:""}
           <p>Raça: ${p.v.raca||"-"}</p>
           <p>Idade: ${idadeTexto(p.v.data_nascimento)}</p>
-        </div>`;
-      });
-    }
-
-    if(f==="todas"||f==="paridas"){
-      paridas.forEach(p=>{
-        lista.innerHTML+=`
-        <div class="card parida" onclick="abrirAnimal('${p.v._id}')">
-          <strong>🐄 ${p.v.nome.toUpperCase()} <span class="badge parida">Parida</span></strong>
-          <p>Data do parto: ${new Date(p.par.data_evento).toLocaleDateString("pt-BR")}</p>
-          <p>Raça: ${p.v.raca||"-"}</p>
-          <p>Idade: ${idadeTexto(p.v.data_nascimento)}</p>
-        </div>`;
-      });
-    }
-
-    if(f==="todas"||f==="vazias"){
-      vazias.forEach(v=>{
-        lista.innerHTML+=`
-        <div class="card vazia" onclick="abrirAnimal('${v._id}')">
-          <strong>🐄 ${v.nome.toUpperCase()} <span class="badge vazia">Vazia</span></strong>
-          <p>Sem cobertura ativa</p>
-          <p>Raça: ${v.raca||"-"}</p>
-          <p>Idade: ${idadeTexto(v.data_nascimento)}</p>
         </div>`;
       });
     }
