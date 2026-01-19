@@ -5,16 +5,43 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Configuração – Leite</title>
 
+<!-- MANIFEST -->
+<link rel="manifest" href="../manifest.json">
+<meta name="theme-color" content="#7b3f2a">
+
+<!-- MENU GLOBAL -->
+<link rel="stylesheet" href="../menu/menu.css">
+
+<!-- CONFIG CSS -->
+<link rel="stylesheet" href="./config.css">
+
 <!-- FIREBASE -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
-<link rel="stylesheet" href="menu-adm.css">
-<link rel="stylesheet" href="config.css">
+<script>
+if (!firebase.apps.length) {
+  firebase.initializeApp({
+    apiKey: "AIzaSyCW-CuFDrOLO-dteckl_GrPTocmyS-IrzY",
+    authDomain: "sitio-corrego-do-pinhal.firebaseapp.com",
+    projectId: "sitio-corrego-do-pinhal"
+  });
+}
+</script>
+
+<!-- IDENTIFICAÇÃO DA PÁGINA -->
+<script>
+window.PERMISSAO_PAGINA = {
+  area: "config",
+  chave: "config-leite"
+};
+</script>
+
+<!-- AUTH GUARD -->
+<script src="../login/auth-guard.js"></script>
 
 <style>
-/* PADRÃO DEFINITIVO CHECKBOX */
 .label-check{
   display:flex;
   align-items:center;
@@ -22,15 +49,14 @@
   font-weight:600;
   margin-top:12px;
 }
-.label-check input{ margin:0 }
+.label-check input{margin:0}
 </style>
 </head>
 
-<body>
-
-<div id="app" class="hidden">
+<body style="display:none">
 
 <header>⚙️ Configurações</header>
+
 <div id="menu-adm"></div>
 
 <div class="container">
@@ -52,12 +78,12 @@
 <h3 style="margin-top:18px;color:var(--marrom)">Períodos disponíveis</h3>
 <div class="cards-grid" id="lista-periodos"></div>
 
-<!-- EDITOR PERÍODO -->
+<!-- EDITOR -->
 <div id="editor" class="hidden">
 <fieldset>
 
   <label>Nome do período</label>
-  <input type="text" id="periodo_id" placeholder="Ex: mensal">
+  <input type="text" id="periodo_id">
 
   <label class="label-check">
     <input type="checkbox" id="periodo_ativo">
@@ -68,7 +94,7 @@
 
 <button class="salvar" onclick="salvarPeriodo()">💾 Salvar período</button>
 
-<button class="voltar hidden" id="btn-excluir" onclick="excluirPeriodo()">
+<button class="voltar hidden" id="btnExcluir" onclick="excluirPeriodo()">
 🗑️ Excluir período
 </button>
 
@@ -96,43 +122,32 @@
 </button>
 
 </div>
-</div>
+
+<!-- MENU ADM – PADRÃO DEFINITIVO -->
+<script>
+fetch("../menu/menu-adm.html")
+  .then(r=>r.text())
+  .then(html=>{
+    document.getElementById("menu-adm").innerHTML = html;
+
+    const s = document.createElement("script");
+    s.src = "../menu/menu-permissoes.js";
+    s.onload = ()=>{
+      document.body.style.display="block";
+      carregar();
+    };
+    document.body.appendChild(s);
+  });
+</script>
 
 <script>
-/* MENU */
-fetch("menu-adm.html")
-.then(r=>r.text())
-.then(html=>{
-  document.getElementById("menu-adm").innerHTML = html;
-  document.querySelectorAll(".menu-link").forEach(a=>{
-    if(a.getAttribute("href")==="config.html") a.classList.add("ativo");
-  });
-});
-
-/* FIREBASE */
-firebase.initializeApp({
-  apiKey:"AIzaSyCW-CuFDrOLO-dteckl_GrPTocmyS-IrzY",
-  authDomain:"sitio-corrego-do-pinhal.firebaseapp.com",
-  projectId:"sitio-corrego-do-pinhal"
-});
-
-const auth = firebase.auth();
-const db   = firebase.firestore();
+const db = firebase.firestore();
 
 let periodos = [];
 let editando = null;
 
 const lista_periodos = document.getElementById("lista-periodos");
-const btnExcluir     = document.getElementById("btn-excluir");
-
-/* AUTH */
-auth.onAuthStateChanged(u=>{
-  if(u){
-    document.body.style.display="block";
-    document.getElementById("app").classList.remove("hidden");
-    carregar();
-  }
-});
+const btnExcluir = document.getElementById("btnExcluir");
 
 /* LOAD */
 async function carregar(){
@@ -153,110 +168,90 @@ async function carregar(){
   renderizarPeriodos();
 }
 
-/* RENDER (✅ CORREÇÃO AQUI) */
+/* RENDER */
 function renderizarPeriodos(){
   lista_periodos.innerHTML="";
 
   periodos.forEach((p,i)=>{
-    const b = document.createElement("button");
+    const b=document.createElement("button");
     b.className="config-card";
     b.onclick=()=>editarPeriodo(i);
-
-    b.innerHTML = `
-      <strong>${p.nome}</strong>
-      ${p.ativo === false ? "<span style='font-size:12px;opacity:.6'>(Inativo)</span>" : ""}
-    `;
-
+    b.innerHTML=`<strong>${p.nome}</strong>${p.ativo===false?"<span>(Inativo)</span>":""}`;
     lista_periodos.appendChild(b);
   });
 
-  const novo = document.createElement("button");
+  const novo=document.createElement("button");
   novo.className="config-card";
   novo.innerHTML="➕ Novo período";
   novo.onclick=novoPeriodo;
   lista_periodos.appendChild(novo);
 }
 
-/* EDITAR / NOVO */
 function novoPeriodo(){
-  editando = null;
-  periodo_id.value = "";
-  periodo_ativo.checked = true;
+  editando=null;
+  periodo_id.value="";
+  periodo_ativo.checked=true;
   btnExcluir.classList.add("hidden");
   editor.classList.remove("hidden");
 }
 
 function editarPeriodo(i){
-  editando = i;
-  const p = periodos[i];
-  periodo_id.value = p.nome;
-  periodo_ativo.checked = p.ativo !== false;
+  editando=i;
+  const p=periodos[i];
+  periodo_id.value=p.nome;
+  periodo_ativo.checked=p.ativo!==false;
   btnExcluir.classList.remove("hidden");
   editor.classList.remove("hidden");
 }
 
-/* SALVAR PERÍODO */
 async function salvarPeriodo(){
-  const nome = periodo_id.value.trim();
-  if(!nome){
-    alert("Informe o nome do período.");
-    return;
-  }
+  const nome=periodo_id.value.trim();
+  if(!nome){ alert("Informe o nome do período."); return; }
 
-  const obj = {
-    nome: nome,
-    ativo: periodo_ativo.checked
-  };
+  const obj={ nome, ativo: periodo_ativo.checked };
 
-  if(editando === null) periodos.push(obj);
-  else periodos[editando] = obj;
+  if(editando===null) periodos.push(obj);
+  else periodos[editando]=obj;
 
-  await db.collection("config").doc("leite").update({ periodos });
-
+  await db.collection("config").doc("leite").set({periodos},{merge:true});
   alert("Período salvo com sucesso.");
-  cancelarPeriodo();
-  renderizarPeriodos();
+  location.reload();
 }
 
-/* EXCLUIR */
 async function excluirPeriodo(){
-  if(editando === null) return;
-  if(!confirm("Deseja excluir este período?")) return;
-
+  if(!confirm("Excluir este período?")) return;
   periodos.splice(editando,1);
-
-  await db.collection("config").doc("leite").update({ periodos });
-
+  await db.collection("config").doc("leite").set({periodos},{merge:true});
   alert("Período excluído com sucesso.");
-  cancelarPeriodo();
-  renderizarPeriodos();
+  location.reload();
 }
 
-/* CANCELAR */
 function cancelarPeriodo(){
   editor.classList.add("hidden");
-  editando = null;
+  editando=null;
 }
 
-/* SAVE GERAL */
 async function salvarTudo(){
-  await db.collection("config").doc("leite").update({
+  await db.collection("config").doc("leite").set({
     moeda:{
       codigo: moeda_codigo.value.trim(),
       locale: moeda_locale.value.trim()
     },
-    periodos: periodos,
+    periodos,
     textos:{
       faturamento: texto_faturamento.value.trim(),
       media: texto_media.value.trim(),
       producao: texto_producao.value.trim()
     }
-  });
+  },{merge:true});
 
   alert("Configuração de leite salva com sucesso.");
+  location.reload();
 }
 </script>
 
-<script src="auth-adm.js"></script>
+<!-- LOGOUT GLOBAL -->
+<script src="../login/logout.js"></script>
+
 </body>
 </html>
