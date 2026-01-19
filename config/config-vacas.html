@@ -5,13 +5,41 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Configuração – Vacas</title>
 
+<!-- MANIFEST -->
+<link rel="manifest" href="../manifest.json">
+<meta name="theme-color" content="#7b3f2a">
+
+<!-- MENU GLOBAL -->
+<link rel="stylesheet" href="../menu/menu.css">
+
+<!-- CONFIG CSS -->
+<link rel="stylesheet" href="./config.css">
+
 <!-- FIREBASE -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
-<link rel="stylesheet" href="menu-adm.css">
-<link rel="stylesheet" href="config.css">
+<script>
+if (!firebase.apps.length) {
+  firebase.initializeApp({
+    apiKey: "AIzaSyCW-CuFDrOLO-dteckl_GrPTocmyS-IrzY",
+    authDomain: "sitio-corrego-do-pinhal.firebaseapp.com",
+    projectId: "sitio-corrego-do-pinhal"
+  });
+}
+</script>
+
+<!-- IDENTIFICAÇÃO DA PÁGINA -->
+<script>
+window.PERMISSAO_PAGINA = {
+  area: "config",
+  chave: "config-vacas"
+};
+</script>
+
+<!-- AUTH GUARD GLOBAL -->
+<script src="../login/auth-guard.js"></script>
 
 <style>
 /* ✔️ CHECKBOX ALINHADO – PADRÃO DEFINITIVO */
@@ -22,10 +50,7 @@
   font-weight:600;
   margin-top:12px;
 }
-
-.label-check input{
-  margin:0;
-}
+.label-check input{ margin:0 }
 
 .regra-card span{
   font-size:13px;
@@ -34,9 +59,7 @@
 </style>
 </head>
 
-<body>
-
-<div id="app" class="hidden">
+<body style="display:none">
 
 <header>⚙️ Configurações</header>
 <div id="menu-adm"></div>
@@ -97,43 +120,38 @@
 </button>
 
 </div>
-</div>
+
+<!-- MENU + PERMISSÕES (ORDEM DEFINITIVA) -->
+<script>
+fetch("../menu/menu-adm.html")
+  .then(r => r.text())
+  .then(html => {
+    document.getElementById("menu-adm").innerHTML = html;
+
+    document.querySelectorAll(".menu-link").forEach(a=>{
+      if(a.getAttribute("href")?.includes("config.html")){
+        a.classList.add("ativo");
+      }
+    });
+
+    const s = document.createElement("script");
+    s.src = "../menu/menu-permissoes.js";
+    s.onload = () => {
+      document.body.style.display = "block";
+      carregar();
+    };
+    document.body.appendChild(s);
+  });
+</script>
 
 <script>
-/* MENU */
-fetch("menu-adm.html")
-.then(r=>r.text())
-.then(html=>{
-  document.getElementById("menu-adm").innerHTML = html;
-  document.querySelectorAll(".menu-link").forEach(a=>{
-    if(a.getAttribute("href")==="config.html") a.classList.add("ativo");
-  });
-});
-
-/* FIREBASE */
-firebase.initializeApp({
-  apiKey:"AIzaSyCW-CuFDrOLO-dteckl_GrPTocmyS-IrzY",
-  authDomain:"sitio-corrego-do-pinhal.firebaseapp.com",
-  projectId:"sitio-corrego-do-pinhal"
-});
-
-const auth = firebase.auth();
-const db   = firebase.firestore();
+const db = firebase.firestore();
 
 let regras = [];
 let editando = null;
 
 const lista_regras = document.getElementById("lista-regras");
 const btnExcluir   = document.getElementById("btn-excluir");
-
-/* AUTH */
-auth.onAuthStateChanged(u=>{
-  if(u){
-    document.body.style.display="block";
-    document.getElementById("app").classList.remove("hidden");
-    carregar();
-  }
-});
 
 /* LOAD */
 async function carregar(){
@@ -251,6 +269,8 @@ function limpar(){
 }
 </script>
 
-<script src="auth-adm.js"></script>
+<!-- LOGOUT GLOBAL -->
+<script src="../login/logout.js"></script>
+
 </body>
 </html>
