@@ -17,11 +17,13 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
 <script>
-firebase.initializeApp({
-  apiKey: "AIzaSyCW-CuFDrOLO-dteckl_GrPTocmyS-IrzY",
-  authDomain: "sitio-corrego-do-pinhal.firebaseapp.com",
-  projectId: "sitio-corrego-do-pinhal"
-});
+if (!firebase.apps.length) {
+  firebase.initializeApp({
+    apiKey: "AIzaSyCW-CuFDrOLO-dteckl_GrPTocmyS-IrzY",
+    authDomain: "sitio-corrego-do-pinhal.firebaseapp.com",
+    projectId: "sitio-corrego-do-pinhal"
+  });
+}
 </script>
 
 <!-- IDENTIFICAÇÃO DA PÁGINA -->
@@ -139,28 +141,28 @@ p.intro{
   <div class="blocos">
 
     <div class="bloco"
-         data-permissao="app.relatorios_financeiro"
+         data-permissao="financeiro"
          onclick="location.href='../relatorios/relatorio-financeiro.html'">
       <strong>💰 Financeiro</strong>
       <span>Lucro, despesas e receitas</span>
     </div>
 
     <div class="bloco"
-         data-permissao="app.relatorios_leite"
+         data-permissao="leite"
          onclick="location.href='../relatorios/relatorio-leite.html'">
       <strong>🥛 Produção de Leite</strong>
       <span>Produção, médias e evolução</span>
     </div>
 
     <div class="bloco"
-         data-permissao="app.relatorios_rebanho"
+         data-permissao="rebanho"
          onclick="location.href='../relatorios/relatorio-rebanho.html'">
       <strong>🐄 Rebanho</strong>
       <span>Quantidade, status e gestão</span>
     </div>
 
     <div class="bloco"
-         data-permissao="app.relatorios_sanitario"
+         data-permissao="sanitario"
          onclick="location.href='../relatorios/relatorio-sanitario.html'">
       <strong>💉 Sanitário</strong>
       <span>Vacinas, controle e custos</span>
@@ -185,31 +187,55 @@ fetch("../menu/menu.html")
 
     const s = document.createElement("script");
     s.src = "../menu/menu-permissoes.js";
+    s.onload = () => {
+      filtrarCardsRelatorios();
+    };
     document.body.appendChild(s);
   });
 </script>
 
-<!-- APLICA PERMISSÕES NOS BLOCOS (PADRÃO CONFIG-MÃE) -->
+<!-- 🔒 FILTRO DE PERMISSÕES (MESMO PADRÃO DO CONFIG-MÃE) -->
 <script>
-function aplicarPermissoesRelatorios(){
-  const permissoes = window.PERMISSOES_USUARIO || {};
+async function filtrarCardsRelatorios(){
+  const user = firebase.auth().currentUser;
+  if(!user) return;
 
-  document.querySelectorAll("[data-permissao]").forEach(el => {
-    const [area, perm] = el.dataset.permissao.split(".");
-    if (!permissoes?.[area]?.[perm]) {
-      el.remove();
+  const userSnap = await firebase.firestore()
+    .collection("usuarios")
+    .doc(user.uid)
+    .get();
+
+  if(!userSnap.exists) return;
+
+  const papel = userSnap.data().papel;
+  if(!papel) return;
+
+  const gruposSnap = await firebase.firestore()
+    .collection("config")
+    .doc("grupos")
+    .get();
+
+  if(!gruposSnap.exists) return;
+
+  const grupo = gruposSnap.data().lista.find(g => g.id === papel);
+  if(!grupo) return;
+
+  const permissoesRelatorios = grupo.permissoes?.relatorios || {};
+
+  document.querySelectorAll("[data-permissao]").forEach(card => {
+    const chave = card.dataset.permissao;
+
+    if (
+      !permissoesRelatorios.tudo &&
+      !permissoesRelatorios[chave]
+    ) {
+      card.remove();
     }
   });
 }
-
-/* garante execução mesmo se o menu carregar antes */
-if (window.PERMISSOES_USUARIO) {
-  aplicarPermissoesRelatorios();
-} else {
-  document.addEventListener("permissoes-carregadas", aplicarPermissoesRelatorios);
-}
 </script>
 
+<!-- LOGOUT -->
 <script src="../login/logout.js"></script>
 
 </body>
