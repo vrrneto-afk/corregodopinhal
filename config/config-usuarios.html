@@ -99,6 +99,13 @@ fetch("../menu/menu-adm.html")
 const db = firebase.firestore();
 const auth = firebase.auth();
 
+/* 🔐 AUTH SECUNDÁRIO (ISOLADO) */
+const secondaryApp = firebase.initializeApp(
+  firebase.app().options,
+  "Secondary"
+);
+const secondaryAuth = secondaryApp.auth();
+
 let usuarios=[];
 let grupos=[];
 let editando=null;
@@ -147,7 +154,8 @@ function editar(i){
   edit_email.disabled=true;
   edit_ativo.checked=u.ativo!==false;
 
-  carregarGrupos(u.papel);
+  preencherGrupos(u.papel);
+
   editor.classList.remove("hidden");
 }
 
@@ -158,17 +166,18 @@ function criarNovo(){
   edit_email.disabled=false;
   edit_ativo.checked=true;
 
-  carregarGrupos();
+  preencherGrupos(null);
+
   editor.classList.remove("hidden");
 }
 
-function carregarGrupos(sel){
+function preencherGrupos(selecionado){
   edit_grupo.innerHTML="";
   grupos.forEach(g=>{
     const o=document.createElement("option");
     o.value=g.id;
     o.textContent=g.nome;
-    if(g.id===sel) o.selected=true;
+    if(g.id===selecionado) o.selected=true;
     edit_grupo.appendChild(o);
   });
 }
@@ -177,6 +186,7 @@ function cancelar(){
   editor.classList.add("hidden");
 }
 
+/* 💾 SALVAR (CRIAR OU EDITAR) */
 async function salvar(){
   const nome=edit_nome.value.trim();
   const email=edit_email.value.trim();
@@ -188,32 +198,45 @@ async function salvar(){
     return;
   }
 
+  /* 🆕 CRIAÇÃO */
   if(editando===null){
     if(!email){
       alert("Informe o email.");
       return;
     }
 
-    const senhaTemp = Math.random().toString(36).slice(-8);
-    const cred = await auth.createUserWithEmailAndPassword(email, senhaTemp);
+    const senhaTemp = Math.random().toString(36).slice(-10);
 
-    await db.collection("usuarios").doc(cred.user.uid).set({
-      nome,
-      email,
-      papel:grupo,
-      ativo:true,
-      criado_em: firebase.firestore.FieldValue.serverTimestamp()
-    });
+    try{
+      const cred = await secondaryAuth.createUserWithEmailAndPassword(email, senhaTemp);
 
-    await auth.sendPasswordResetEmail(email);
-    alert("Usuário criado. Email de redefinição enviado.");
-  } else {
-    await db.collection("usuarios").doc(usuarios[editando]._id).update({
-      nome,
-      papel:grupo,
-      ativo
-    });
+      await db.collection("usuarios").doc(cred.user.uid).set({
+        nome,
+        email,
+        papel:grupo,
+        ativo:true,
+        criado_em: firebase.firestore.FieldValue.serverTimestamp()
+      });
+
+      await secondaryAuth.sendPasswordResetEmail(email);
+      await secondaryAuth.signOut();
+
+      alert("Usuário criado. Email de redefinição enviado.");
+      location.reload();
+
+    }catch(e){
+      alert("Erro ao criar usuário: " + e.message);
+    }
+
+    return;
   }
+
+  /* ✏️ EDIÇÃO */
+  await db.collection("usuarios").doc(usuarios[editando]._id).update({
+    nome,
+    papel:grupo,
+    ativo
+  });
 
   location.reload();
 }
@@ -227,6 +250,7 @@ function resetSenha(){
 async function excluir(){
   if(!confirm("Excluir usuário definitivamente?")) return;
   await db.collection("usuarios").doc(usuarios[editando]._id).delete();
+  alert("Usuário removido (auth permanece por segurança).");
   location.reload();
 }
 </script>
