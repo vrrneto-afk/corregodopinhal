@@ -142,22 +142,34 @@ p.intro{
 
   <div class="blocos">
 
-    <div class="bloco" onclick="location.href='relatorio-financeiro.html'">
+    <div class="bloco"
+         data-area="relatorios"
+         data-chave="relatorio-financeiro"
+         onclick="location.href='relatorio-financeiro.html'">
       <strong>💰 Financeiro</strong>
       <span>Lucro, despesas e receitas</span>
     </div>
 
-    <div class="bloco" onclick="location.href='relatorio-leite.html'">
+    <div class="bloco"
+         data-area="relatorios"
+         data-chave="relatorio-leite"
+         onclick="location.href='relatorio-leite.html'">
       <strong>🥛 Produção de Leite</strong>
       <span>Produção, médias e evolução</span>
     </div>
 
-    <div class="bloco" onclick="location.href='relatorio-rebanho.html'">
+    <div class="bloco"
+         data-area="relatorios"
+         data-chave="relatorio-rebanho"
+         onclick="location.href='relatorio-rebanho.html'">
       <strong>🐄 Rebanho</strong>
       <span>Quantidade, status e gestão</span>
     </div>
 
-    <div class="bloco" onclick="location.href='relatorio-sanitario.html'">
+    <div class="bloco"
+         data-area="relatorios"
+         data-chave="relatorio-sanitario"
+         onclick="location.href='relatorio-sanitario.html'">
       <strong>💉 Sanitário</strong>
       <span>Vacinas, controle e custos</span>
     </div>
@@ -186,6 +198,37 @@ fetch("../menu/menu.html")
     s.src = "../menu/menu-permissoes.js";
     document.body.appendChild(s);
   });
+</script>
+
+<!-- FILTRO DE BLOCOS POR PERMISSÃO -->
+<script>
+function filtrarBlocosRelatorios(){
+  if(!window.PERMISSOES_USUARIO) return;
+
+  document.querySelectorAll(".bloco[data-area]").forEach(bloco=>{
+    const area  = bloco.dataset.area;
+    const chave = bloco.dataset.chave;
+
+    const permitido =
+      window.PERMISSOES_USUARIO?.[area]?.tudo === true ||
+      window.PERMISSOES_USUARIO?.[area]?.[chave] === true;
+
+    if(!permitido){
+      bloco.remove();
+    }
+  });
+}
+
+/* Aguarda permissões */
+if(window.PERMISSOES_USUARIO){
+  filtrarBlocosRelatorios();
+}else{
+  document.addEventListener(
+    "permissoes-carregadas",
+    filtrarBlocosRelatorios,
+    { once:true }
+  );
+}
 </script>
 
 <!-- LOGOUT GLOBAL -->
