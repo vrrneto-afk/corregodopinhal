@@ -3,13 +3,16 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Despesas – Sítio Córrego do Pinhal</title>
+<title>Relatórios – Sítio Córrego do Pinhal</title>
 
 <link rel="manifest" href="../manifest.json">
 <meta name="theme-color" content="#7b3f2a">
 
 <!-- MENU GLOBAL -->
 <link rel="stylesheet" href="../menu/menu.css">
+
+<!-- CSS DO CONFIG (apenas para o corpo/cards) -->
+<link rel="stylesheet" href="../config/config.css">
 
 <!-- FIREBASE -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
@@ -18,224 +21,67 @@
 
 <!-- IDENTIFICAÇÃO DA PÁGINA -->
 <script>
-window.PERMISSAO_PAGINA = { area:"app", chave:"despesas" };
+window.PERMISSAO_PAGINA = {
+  area: "app",
+  chave: "relatorios"
+};
 </script>
 
 <!-- AUTH GUARD -->
 <script src="../login/auth-guard.js"></script>
 
 <style>
-:root{
-  --marrom:#7b3f2a;
-  --bege:#f6efe7;
-  --verde:#2f6b2f;
-  --vermelho:#c0392b;
-  --amarelo:#e0a800;
-  --cinza:#666;
-  --logo:#D0B485;
-}
-
-*{
-  box-sizing:border-box;
-  font-family:'Inter',system-ui,Arial;
-}
-
+/* 🎯 GARANTE IDENTIDADE VISUAL DO APP */
 body{
   margin:0;
-  background:var(--bege);
+  background:var(--bege,#f6efe7);
   color:#333;
-}
-
-header{
-  background:var(--logo);
-  padding:15px;
-  text-align:center;
-}
-
-header img{
-  max-width:260px;
-  width:100%;
-}
-
-.container{
-  max-width:900px;
-  margin:18px auto;
-  padding:0 15px;
-}
-
-h2{
-  color:var(--marrom);
-  display:flex;
-  gap:8px;
-  align-items:center;
-  margin-bottom:10px;
-}
-
-.contexto{
-  background:#fff;
-  border-radius:14px;
-  padding:12px 14px;
-  margin-bottom:14px;
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  box-shadow:0 2px 6px rgba(0,0,0,.05);
-}
-
-.contexto span{
-  color:var(--cinza);
-  font-size:14px;
-}
-
-.vencimentos{
-  margin-bottom:18px;
-}
-
-.controles{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:10px;
-  margin-bottom:14px;
-}
-
-select{
-  padding:12px;
-  font-size:15px;
-  border-radius:12px;
-  border:1.5px solid #ddd;
-  background:#f2f2f2;
-}
-
-#periodo{
-  margin-bottom:22px;
-}
-
-.cards{
-  display:grid;
-  grid-template-columns:repeat(auto-fit,minmax(160px,1fr));
-  gap:12px;
-  margin-bottom:18px;
-}
-
-.cards .card{
-  background:#fff;
-  padding:14px;
-  border-left:6px solid var(--verde);
-  border-radius:14px;
-  box-shadow:0 2px 6px rgba(0,0,0,.05);
-}
-
-.cards .card strong{
-  display:block;
-  font-size:18px;
-}
-
-.cards .card span{
-  display:block;
-  margin-top:6px;
-  font-size:14px;
-  color:var(--cinza);
-}
-
-.pos{color:var(--verde)}
-.neg{color:var(--vermelho)}
-
-table{
-  width:100%;
-  border-collapse:collapse;
-  background:#fff;
-  border-radius:14px;
-  overflow:hidden;
-}
-
-th,td{
-  padding:10px;
-  text-align:center;
-  border-bottom:1px solid #eee;
-  font-size:14px;
-}
-
-th{
-  background:#efe3d3;
-}
-
-tfoot td{
-  font-weight:800;
-  background:#efe3d3;
 }
 </style>
 </head>
 
-<body>
+<body style="display:none">
 
+<!-- HEADER PADRÃO DO APP -->
 <header>
-  <img src="../logo.png">
+  <img src="../logo.png" alt="Sítio Córrego do Pinhal">
 </header>
 
+<!-- MENU APP -->
 <div id="menu"></div>
 
+<!-- CONTEÚDO -->
 <div class="container">
 
-<h2>💰 Despesas</h2>
+  <h2>📊 Relatórios</h2>
 
-<div class="contexto">
-  <strong id="ctxMes"></strong>
-  <span id="ctxVisao"></span>
-</div>
+  <div class="cards-grid">
 
-<h3>⏰ Despesas a Vencer</h3>
-<div id="vencimentos" class="vencimentos"></div>
+    <button class="config-card" data-permissao="relatorio-financeiro"
+      onclick="location.href='relatorio-financeiro.html'">
+      💰 <span>Financeiro</span>
+    </button>
 
-<div class="controles">
-  <select id="mes"></select>
-  <select id="ano"></select>
-</div>
+    <button class="config-card" data-permissao="relatorio-leite"
+      onclick="location.href='relatorio-leite.html'">
+      🥛 <span>Leite</span>
+    </button>
 
-<select id="periodo">
-  <option value="mensal">Mensal</option>
-  <option value="bimestral">Bimestral</option>
-  <option value="trimestral">Trimestral</option>
-  <option value="semestral">Semestral</option>
-  <option value="anual">Anual</option>
-</select>
+    <button class="config-card" data-permissao="relatorio-rebanho"
+      onclick="location.href='relatorio-rebanho.html'">
+      🐄 <span>Rebanho</span>
+    </button>
 
-<div class="cards">
-  <div class="card">
-    <strong id="cTotal">R$ 0,00</strong>
-    <span>Total</span>
+    <button class="config-card" data-permissao="relatorio-sanitario"
+      onclick="location.href='relatorio-sanitario.html'">
+      💉 <span>Sanitário</span>
+    </button>
+
   </div>
-  <div class="card">
-    <strong id="cQtd">0</strong>
-    <span>Quantidade</span>
-  </div>
-  <div class="card">
-    <strong id="cMedia">R$ 0,00</strong>
-    <span>Média</span>
-  </div>
-</div>
-
-<table>
-<thead>
-<tr>
-  <th>Vencimento</th>
-  <th>Tipo</th>
-  <th>Fornecedor</th>
-  <th>Valor</th>
-</tr>
-</thead>
-<tbody id="tbody"></tbody>
-<tfoot>
-<tr>
-  <td colspan="3">Total</td>
-  <td id="tValor">R$ 0,00</td>
-</tr>
-</tfoot>
-</table>
-
 </div>
 
 <script>
-/* MENU */
+/* MENU DO APP – PADRÃO DEFINITIVO */
 fetch("../menu/menu.html")
   .then(r => r.text())
   .then(h => {
@@ -243,135 +89,56 @@ fetch("../menu/menu.html")
     menu.innerHTML = h;
 
     document.querySelectorAll("#menu a").forEach(a=>{
-      if(a.getAttribute("href")==="../app/despesas.html"){
+      if(a.getAttribute("href")?.includes("relatorios.html")){
         a.classList.add("ativo");
       }
     });
 
     const s = document.createElement("script");
     s.src = "../menu/menu-permissoes.js";
+    s.onload = filtrarCardsRelatorios;
     document.body.appendChild(s);
   });
 
-firebase.initializeApp({
-  apiKey:"AIzaSyCW-CuFDrOLO-dteckl_GrPTocmyS-IrzY",
-  authDomain:"sitio-corrego-do-pinhal.firebaseapp.com",
-  projectId:"sitio-corrego-do-pinhal"
-});
+async function filtrarCardsRelatorios(){
+  const user = firebase.auth().currentUser;
+  if(!user) return;
 
-const db = firebase.firestore();
+  const snap = await firebase.firestore()
+    .collection("usuarios")
+    .doc(user.uid)
+    .get();
 
-let CONFIG = {
-  vencimentos_max:5,
-  textos:{
-    atrasada_ha:"Atrasada há",
-    vence_em:"Vence em"
-  }
-};
+  if(!snap.exists) return;
 
-const meses = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
-const moeda = v => Number(v||0).toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
+  const papel = snap.data().papel;
+  if(!papel) return;
 
-function parseData(v){
-  if(v?.seconds) return new Date(v.seconds*1000);
-  const [y,m,d] = String(v).split("-");
-  return new Date(y,m-1,d);
-}
+  const grupoSnap = await firebase.firestore()
+    .collection("config")
+    .doc("grupos")
+    .get();
 
-let rows = [];
+  if(!grupoSnap.exists) return;
 
-async function load(){
-  const cfg = await db.collection("config").doc("despesas").get();
-  if(cfg.exists){
-    const d = cfg.data();
-    CONFIG.vencimentos_max = d.vencimentos_max ?? CONFIG.vencimentos_max;
-    CONFIG.textos = {...CONFIG.textos,...(d.textos||{})};
-  }
+  const grupo = grupoSnap.data().lista.find(g => g.id === papel);
+  if(!grupo) return;
 
-  const snap = await db.collection("despesas").get();
-  rows = snap.docs.map(d=>({
-    ...d.data(),
-    vencimento: parseData(d.data().data_vencimento)
-  }));
+  const permissoesApp = grupo.permissoes?.app || {};
 
-  mes.innerHTML = meses.map((m,i)=>`<option value="${i+1}">${m}</option>`).join("");
-  ano.innerHTML = [...new Set(rows.map(r=>r.vencimento.getFullYear()))]
-    .sort()
-    .map(a=>`<option>${a}</option>`).join("");
-
-  ano.value = Math.max(...rows.map(r=>r.vencimento.getFullYear()));
-  mes.value = new Date().getMonth()+1;
-
-  mes.onchange = render;
-  ano.onchange = render;
-  periodo.onchange = render;
-
-  renderVencimentos();
-  render();
-}
-
-function renderVencimentos(){
-  const hoje = new Date();
-  vencimentos.innerHTML = "";
-
-  rows
-    .filter(r=>r.status_pagamento!=="pago")
-    .map(r=>({...r,dias:Math.ceil((r.vencimento-hoje)/86400000)}))
-    .sort((a,b)=>a.dias-b.dias)
-    .slice(0,CONFIG.vencimentos_max)
-    .forEach(r=>{
-      vencimentos.innerHTML += `
-      <div class="card-vencimento ${r.dias<0?'atrasada':''}">
-        <p><strong>Fornecedor:</strong> ${r.fornecedor}</p>
-        <p><strong>Despesa:</strong> ${r.tipo_despesa}</p>
-        <p><strong>Valor:</strong> ${moeda(r.valor_total)}</p>
-        <p><strong>Vencimento:</strong> ${r.vencimento.toLocaleDateString("pt-BR")}</p>
-        <p class="${r.dias>=0?'pos':'neg'}">
-          ${r.dias>=0
-            ? `⏳ ${CONFIG.textos.vence_em} ${r.dias} dias`
-            : `⚠️ ${CONFIG.textos.atrasada_ha} ${Math.abs(r.dias)} dias`}
-        </p>
-      </div>`;
-    });
-}
-
-function render(){
-  const m = +mes.value;
-  const a = +ano.value;
-  const p = periodo.value;
-
-  ctxMes.innerText = `${meses[m-1]} / ${a}`;
-  ctxVisao.innerText = `📊 Visão: ${periodo.options[periodo.selectedIndex].text}`;
-
-  const mesesBack = {mensal:1,bimestral:2,trimestral:3,semestral:6,anual:12}[p];
-
-  const atual = rows.filter(r=>{
-    const diff = (a*12+m)-(r.vencimento.getFullYear()*12+(r.vencimento.getMonth()+1));
-    return diff>=0 && diff<mesesBack;
+  document.querySelectorAll(".config-card").forEach(card=>{
+    const chave = card.dataset.permissao;
+    if(!permissoesApp.tudo && !permissoesApp[chave]){
+      card.remove();
+    }
   });
 
-  const total = atual.reduce((s,r)=>s+Number(r.valor_total||0),0);
-
-  cTotal.innerText = moeda(total);
-  cQtd.innerText = atual.length;
-  cMedia.innerText = moeda(atual.length ? total/atual.length : 0);
-
-  tbody.innerHTML = "";
-  atual.sort((a,b)=>a.vencimento-b.vencimento).forEach(r=>{
-    tbody.innerHTML += `
-    <tr>
-      <td>${r.vencimento.toLocaleDateString("pt-BR")}</td>
-      <td>${r.tipo_despesa}</td>
-      <td>${r.fornecedor}</td>
-      <td>${moeda(r.valor_total)}</td>
-    </tr>`;
-  });
-
-  tValor.innerText = moeda(total);
+  document.body.style.display = "block";
 }
-
-load();
 </script>
+
+<!-- LOGOUT GLOBAL -->
+<script src="../login/logout.js"></script>
 
 </body>
 </html>
