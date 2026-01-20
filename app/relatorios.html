@@ -26,7 +26,7 @@ if (!firebase.apps.length) {
 }
 </script>
 
-<!-- IDENTIFICAÇÃO DA PÁGINA -->
+<!-- IDENTIFICAÇÃO DA PÁGINA (AUTH-GUARD) -->
 <script>
 window.PERMISSAO_PAGINA = {
   area: "app",
@@ -54,6 +54,7 @@ body{
   margin:0;
   background:var(--bege);
   color:#333;
+  display:none; /* 🔒 IGUAL AO CONFIG-MÃE */
 }
 
 header{
@@ -172,7 +173,7 @@ p.intro{
 
 </div>
 
-<!-- MENU -->
+<!-- MENU GLOBAL -->
 <script>
 fetch("../menu/menu.html")
   .then(r => r.text())
@@ -188,25 +189,25 @@ fetch("../menu/menu.html")
     const s = document.createElement("script");
     s.src = "../menu/menu-permissoes.js";
     s.onload = () => {
-      filtrarCardsRelatorios();
+      aplicarPermissoesRelatorios();
     };
     document.body.appendChild(s);
   });
 </script>
 
-<!-- 🔒 FILTRO DE PERMISSÕES (ALINHADO AO FIRESTORE REAL) -->
+<!-- 🔒 FILTRO DE PERMISSÕES (PADRÃO CONFIG-MÃE + FIRESTORE REAL) -->
 <script>
-function filtrarCardsRelatorios(){
+function aplicarPermissoesRelatorios(){
   firebase.auth().onAuthStateChanged(async (user) => {
     if (!user) return;
 
-    const snap = await firebase.firestore()
+    const userSnap = await firebase.firestore()
       .collection("usuarios")
       .doc(user.uid)
       .get();
-    if (!snap.exists) return;
+    if (!userSnap.exists) return;
 
-    const papel = snap.data().papel;
+    const papel = userSnap.data().papel;
     if (!papel) return;
 
     const grupoSnap = await firebase.firestore()
@@ -223,12 +224,15 @@ function filtrarCardsRelatorios(){
     document.querySelectorAll("[data-permissao]").forEach(card => {
       const chave = card.dataset.permissao;
 
-      // 🔑 REGRA DEFINITIVA:
-      // só remove se a permissão existir e for false
+      /* 🔑 REGRA DEFINITIVA:
+         remove APENAS se a permissão existir e for false */
       if (permissoes[chave] === false) {
         card.remove();
       }
     });
+
+    /* 🔓 LIBERA RENDERIZAÇÃO (IGUAL AO CONFIG-MÃE) */
+    document.body.style.display = "block";
   });
 }
 </script>
