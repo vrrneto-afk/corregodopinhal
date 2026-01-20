@@ -3,17 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Relatórios – Sistema</title>
+<title>Relatórios – Sítio Córrego do Pinhal</title>
 
-<!-- MANIFEST -->
 <link rel="manifest" href="../manifest.json">
 <meta name="theme-color" content="#7b3f2a">
 
 <!-- MENU GLOBAL -->
 <link rel="stylesheet" href="../menu/menu.css">
-
-<!-- CSS PADRÃO (mesmo do config para manter visual) -->
-<link rel="stylesheet" href="../config/config.css">
 
 <!-- FIREBASE -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
@@ -21,13 +17,11 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
 <script>
-if (!firebase.apps.length) {
-  firebase.initializeApp({
-    apiKey: "AIzaSyCW-CuFDrOLO-dteckl_GrPTocmyS-IrzY",
-    authDomain: "sitio-corrego-do-pinhal.firebaseapp.com",
-    projectId: "sitio-corrego-do-pinhal"
-  });
-}
+firebase.initializeApp({
+  apiKey:"AIzaSyCW-CuFDrOLO-dteckl_GrPTocmyS-IrzY",
+  authDomain:"sitio-corrego-do-pinhal.firebaseapp.com",
+  projectId:"sitio-corrego-do-pinhal"
+});
 </script>
 
 <!-- IDENTIFICAÇÃO DA PÁGINA -->
@@ -40,10 +34,80 @@ window.PERMISSAO_PAGINA = {
 
 <!-- AUTH GUARD -->
 <script src="../login/auth-guard.js"></script>
+
+<style>
+:root{
+  --marrom:#7b3f2a;
+  --bege:#f6efe7;
+  --cinza:#666;
+  --logo:#D0B485;
+}
+
+*{box-sizing:border-box;font-family:Inter,system-ui,Arial}
+body{margin:0;background:var(--bege);color:#333}
+
+header{
+  background:var(--logo);
+  padding:15px;
+  text-align:center
+}
+header img{max-width:260px;width:100%}
+
+.container{
+  max-width:900px;
+  margin:20px auto;
+  padding:0 15px
+}
+
+h2{
+  color:var(--marrom);
+  display:flex;
+  gap:8px;
+  align-items:center;
+  margin-bottom:16px
+}
+
+p.intro{
+  color:var(--cinza);
+  margin-bottom:20px;
+  font-size:15px
+}
+
+.blocos{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(240px,1fr));
+  gap:14px
+}
+
+.bloco{
+  background:#fff;
+  padding:16px;
+  border-left:6px solid var(--marrom);
+  border-radius:14px;
+  box-shadow:0 2px 6px rgba(0,0,0,.06);
+  cursor:pointer;
+  transition:.2s
+}
+
+.bloco:hover{
+  transform:translateY(-2px);
+  box-shadow:0 4px 10px rgba(0,0,0,.08)
+}
+
+.bloco strong{
+  display:block;
+  font-size:18px;
+  margin-bottom:4px
+}
+
+.bloco span{
+  font-size:14px;
+  color:var(--cinza)
+}
+</style>
 </head>
 
-<body style="display:none">
-
+<body>
 
 <header>
   <img src="../logo.png">
@@ -53,99 +117,58 @@ window.PERMISSAO_PAGINA = {
 
 <div class="container">
 
-  <h2>Relatórios do Sistema</h2>
+<h2>📊 Relatórios</h2>
 
-  <div class="cards-grid">
+<p class="intro">
+Selecione o tipo de relatório que deseja analisar.<br>
+Os filtros de período e detalhes estarão disponíveis dentro de cada relatório.
+</p>
 
-    <button class="config-card" data-permissao="relatorio-financeiro"
-      onclick="location.href='relatorio-financeiro.html'">
-      💰 <span>Financeiro</span>
-    </button>
+<div class="blocos">
 
-    <button class="config-card" data-permissao="relatorio-leite"
-      onclick="location.href='relatorio-leite.html'">
-      🥛 <span>Leite</span>
-    </button>
-
-    <button class="config-card" data-permissao="relatorio-rebanho"
-      onclick="location.href='relatorio-rebanho.html'">
-      🐄 <span>Rebanho</span>
-    </button>
-
-    <button class="config-card" data-permissao="relatorio-sanitario"
-      onclick="location.href='relatorio-sanitario.html'">
-      💉 <span>Sanitário</span>
-    </button>
-
+  <div class="bloco" onclick="location.href='../relatorios/relatorio-financeiro.html'">
+    <strong>💰 Financeiro</strong>
+    <span>Lucro, despesas e receitas</span>
   </div>
+
+  <div class="bloco" onclick="location.href='../relatorios/relatorio-leite.html'">
+    <strong>🥛 Produção de Leite</strong>
+    <span>Produção, médias e evolução</span>
+  </div>
+
+  <div class="bloco" onclick="location.href='../relatorios/relatorio-rebanho.html'">
+    <strong>🐄 Rebanho</strong>
+    <span>Quantidade, status e gestão</span>
+  </div>
+
+  <div class="bloco" onclick="location.href='../relatorios/relatorio-sanitario.html'">
+    <strong>💉 Sanitário</strong>
+    <span>Vacinas, controle e custos</span>
+  </div>
+
 </div>
 
-<!-- MENU ADM – PADRÃO GLOBAL DEFINITIVO -->
-<script>
-fetch("../menu/menu.html")
-  .then(r => r.text())
-  .then(html => {
-    document.getElementById("menu").innerHTML = html;
+</div>
 
-    document.querySelectorAll(".menu-link").forEach(a=>{
-      if(a.getAttribute("href")?.includes("relatorios.html")){
+<script>
+/* MENU */
+fetch("../menu/menu.html")
+  .then(r=>r.text())
+  .then(h=>{
+    menu.innerHTML = h;
+
+    document.querySelectorAll("#menu a").forEach(a=>{
+      if(a.getAttribute("href")==="../app/relatorios.html"){
         a.classList.add("ativo");
       }
     });
 
     const s = document.createElement("script");
     s.src = "../menu/menu-permissoes.js";
-    s.onload = () => {
-
-      /* 🔒 FILTRO DE PERMISSÃO DOS CARDS */
-      async function filtrarCardsRelatorios(){
-        const user = firebase.auth().currentUser;
-        if(!user) return;
-
-        const snap = await firebase.firestore()
-          .collection("usuarios")
-          .doc(user.uid)
-          .get();
-
-        if(!snap.exists) return;
-
-        const papel = snap.data().papel;
-        if(!papel) return;
-
-        const grupoSnap = await firebase.firestore()
-          .collection("config")
-          .doc("grupos")
-          .get();
-
-        if(!grupoSnap.exists) return;
-
-        const grupo = grupoSnap.data().lista
-          .find(g => g.id === papel);
-
-        if(!grupo) return;
-
-        const permissoesApp = grupo.permissoes?.app || {};
-
-        document.querySelectorAll(".config-card").forEach(card=>{
-          const chave = card.dataset.permissao;
-
-          if(
-            !permissoesApp.tudo &&
-            !permissoesApp[chave]
-          ){
-            card.remove();
-          }
-        });
-      }
-
-      filtrarCardsRelatorios();
-      document.body.style.display = "block";
-    };
     document.body.appendChild(s);
   });
 </script>
 
-<!-- LOGOUT GLOBAL -->
 <script src="../login/logout.js"></script>
 
 </body>
