@@ -11,10 +11,16 @@
 <!-- MENU GLOBAL -->
 <link rel="stylesheet" href="../menu/menu.css">
 
-<!-- FIREBASE -->
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<!-- Firebase -->
+<script src="firebase-app.js"></script>
+<script src="firebase-auth.js"></script>
+<script src="firebase-firestore.js"></script>
+
+<!-- Menu permissões (lógica, não visual) -->
+<script src="../menu/menu-permissoes.js"></script>
+
+<!-- Auth guard -->
+<script src="../login/auth-guard.js"></script>
 
 <script>
 if (!firebase.apps.length) {
