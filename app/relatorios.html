@@ -221,20 +221,28 @@ function aplicarPermissoesRelatorios(){
 
     const permissoes = grupo.permissoes || {};
 
-    document.querySelectorAll("[data-permissao]").forEach(card => {
-      const chave = card.dataset.permissao;
+    let algumVisivel = false;
 
-      /* 🔑 REGRA DEFINITIVA:
-         remove APENAS se a permissão existir e for false */
-      if (permissoes[chave] === false) {
-        card.remove();
-      }
-    });
+document.querySelectorAll("[data-permissao]").forEach(card => {
+  const chave = card.dataset.permissao;
 
-    /* 🔓 LIBERA RENDERIZAÇÃO (IGUAL AO CONFIG-MÃE) */
-    document.body.style.display = "block";
-  });
+  // só exibe se a permissão for TRUE
+  if (permissoes[chave] === true) {
+    algumVisivel = true;
+  } else {
+    card.remove();
+  }
+});
+
+/* libera renderização apenas depois da filtragem */
+document.body.style.display = "block";
+
+/* opcional: se nenhum relatório for permitido */
+if (!algumVisivel) {
+  document.querySelector(".blocos").innerHTML =
+    "<p style='color:#666'>Nenhum relatório disponível para seu perfil.</p>";
 }
+
 </script>
 
 <!-- LOGOUT -->
