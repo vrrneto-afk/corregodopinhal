@@ -98,9 +98,10 @@ fetch("../menu/menu.html")
 
     const s = document.createElement("script");
     s.src = "../menu/menu-permissoes.js";
+
     s.onload = () => {
 
-      // 🔹 MARCAR MENU ATIVO
+      // 🔹 MARCAR MENU ATIVO (PADRÃO GLOBAL)
       document.querySelectorAll(".menu-link").forEach(link=>{
         if(link.dataset.area==="app" && link.dataset.chave==="vacinas"){
           link.classList.add("ativo");
@@ -110,6 +111,7 @@ fetch("../menu/menu.html")
       document.body.style.display = "block";
       iniciarPagina();
     };
+
     document.body.appendChild(s);
   });
 </script>
@@ -192,8 +194,9 @@ async function iniciarPagina(){
       });
     });
 
-    cards.sort((a,b)=>a.grupo-b.grupo||a.ordem-b.ordem)
-         .forEach(c=>lista.innerHTML+=c.html);
+    cards
+      .sort((a,b)=>a.grupo-b.grupo || a.ordem-b.ordem)
+      .forEach(c=>lista.innerHTML+=c.html);
 
     if(!cards.length){
       lista.innerHTML=`<div class="vazio">💉 Nenhuma vacina encontrada.</div>`;
