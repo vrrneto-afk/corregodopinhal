@@ -153,12 +153,13 @@ Os filtros de período e detalhes estarão disponíveis dentro de cada relatóri
 <script>
 /* MENU */
 fetch("../menu/menu.html")
-  .then(r=>r.text())
-  .then(h=>{
+  .then(r => r.text())
+  .then(h => {
+    const menu = document.getElementById("menu");
     menu.innerHTML = h;
 
     document.querySelectorAll("#menu a").forEach(a=>{
-      if(a.getAttribute("href")==="../app/relatorios.html"){
+      if(a.getAttribute("href")==="../app/despesas.html"){
         a.classList.add("ativo");
       }
     });
@@ -167,6 +168,7 @@ fetch("../menu/menu.html")
     s.src = "../menu/menu-permissoes.js";
     document.body.appendChild(s);
   });
+
 </script>
 
 <script src="../login/logout.js"></script>
