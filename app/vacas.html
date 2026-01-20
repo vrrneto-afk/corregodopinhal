@@ -19,16 +19,16 @@
 <script>
 if (!firebase.apps.length) {
   firebase.initializeApp({
-    apiKey: "AIzaSyCW-CuFDrOLO-dteckl_GrPTocmyS-IrzY",
-    authDomain: "sitio-corrego-do-pinhal.firebaseapp.com",
-    projectId: "sitio-corrego-do-pinhal"
+    apiKey:"AIzaSyCW-CuFDrOLO-dteckl_GrPTocmyS-IrzY",
+    authDomain:"sitio-corrego-do-pinhal.firebaseapp.com",
+    projectId:"sitio-corrego-do-pinhal"
   });
 }
 </script>
 
 <!-- IDENTIFICAÇÃO DA PÁGINA -->
 <script>
-window.PERMISSAO_PAGINA = { area: "app", chave: "vacas" };
+window.PERMISSAO_PAGINA = { area:"app", chave:"vacas" };
 </script>
 
 <!-- AUTH GUARD -->
@@ -126,21 +126,19 @@ select{
   <div id="lista"></div>
 </div>
 
-<!-- MENU + PERMISSÕES — PADRÃO DEFINITIVO -->
+<!-- MENU + PERMISSÕES -->
 <script>
 fetch("../menu/menu.html")
-  .then(r => r.text())
-  .then(html => {
+  .then(r=>r.text())
+  .then(html=>{
     document.getElementById("menu").innerHTML = html;
 
     const s = document.createElement("script");
     s.src = "../menu/menu-permissoes.js";
 
     s.onload = () => {
-
-      // 🔹 MARCAR MENU ATIVO (PADRÃO APP)
       document.querySelectorAll(".menu-link").forEach(link=>{
-        if(link.dataset.area === "app" && link.dataset.chave === "vacas"){
+        if(link.dataset.area==="app" && link.dataset.chave==="vacas"){
           link.classList.add("ativo");
         }
       });
@@ -156,75 +154,78 @@ fetch("../menu/menu.html")
 <script>
 const db = firebase.firestore();
 
-/* UTIL */
-function addMonths(d,m){const x=new Date(d);x.setMonth(x.getMonth()+m);return x;}
-function idadeMeses(d){const n=new Date(d+"T00:00:00"),h=new Date();return (h.getFullYear()-n.getFullYear())*12+(h.getMonth()-n.getMonth());}
+function addMonths(d,m){
+  const x=new Date(d);
+  x.setMonth(x.getMonth()+m);
+  return x;
+}
+function idadeMeses(d){
+  const n=new Date(d+"T00:00:00"),h=new Date();
+  return (h.getFullYear()-n.getFullYear())*12+(h.getMonth()-n.getMonth());
+}
 function idadeTexto(d){
   const n=new Date(d+"T00:00:00"),h=new Date();
-  let a=h.getFullYear()-n.getFullYear(),m=h.getMonth()-n.getMonth(),di=h.getDate()-n.getDate();
-  if(di<0){m--;di+=30} if(m<0){a--;m+=12}
+  let a=h.getFullYear()-n.getFullYear(),
+      m=h.getMonth()-n.getMonth(),
+      di=h.getDate()-n.getDate();
+  if(di<0){m--;di+=30}
+  if(m<0){a--;m+=12}
   return `${a} ano(s), ${m} mês(es) e ${di} dia(s)`;
 }
-function abrirAnimal(id){location.href="../app/animal.html?id="+encodeURIComponent(id);}
+function abrirAnimal(id){
+  location.href="../app/animal.html?id="+encodeURIComponent(id);
+}
 
-/* CONFIG */
 let CFG_VACAS={};
 
 async function iniciarPagina(){
-  await carregarConfig();
-  await carregarDados();
-}
-
-async function carregarConfig(){
   const snap = await db.collection("config").doc("vacas").get();
   CFG_VACAS = snap.data();
-}
 
-function regraPrenhezConfig(dias){
-  const regras = CFG_VACAS.prenhez_regras
-    .filter(r=>r.ativa!==false && dias>=r.dias_min)
-    .sort((a,b)=>b.dias_min-a.dias_min);
-  return regras[0] || {classe:"ok",mensagem:""};
-}
+  const animaisSnap = await db.collection("animais").get();
+  const eventosSnap = await db.collection("eventos").get();
 
-async function carregarDados(){
-  const animaisSnap=await db.collection("animais").get();
-  const eventosSnap=await db.collection("eventos").get();
+  const ANIMAIS = animaisSnap.docs.map(d=>({_id:d.id,...d.data()}));
+  const EVENTOS = eventosSnap.docs.map(d=>d.data());
 
-  const ANIMAIS=animaisSnap.docs.map(d=>({_id:d.id,...d.data()}));
-  const EVENTOS=eventosSnap.docs.map(d=>d.data());
-
-  const vacas=ANIMAIS.filter(a=>
+  const vacas = ANIMAIS.filter(a =>
     a.status==="Ativo" &&
     a.especie==="Bovino" &&
     a.sexo==="F" &&
     idadeMeses(a.data_nascimento)>=CFG_VACAS.idade_minima_meses
   );
 
-  const lista=document.getElementById("lista");
+  const lista = document.getElementById("lista");
+
+  function regraPrenhez(dias){
+    const r = CFG_VACAS.prenhez_regras
+      .filter(x=>x.ativa!==false && dias>=x.dias_min)
+      .sort((a,b)=>b.dias_min-a.dias_min);
+    return r[0] || {classe:"ok",mensagem:""};
+  }
 
   function render(f){
     lista.innerHTML="";
     let prenhas=[],paridas=[],vazias=[];
 
     vacas.forEach(v=>{
-      const ev=EVENTOS.filter(e=>e.id_animal===v._id);
-      const cob=ev.filter(e=>e.tipo_evento==="cobertura").sort((a,b)=>new Date(b.data_evento)-new Date(a.data_evento))[0];
-      const par=ev.filter(e=>e.tipo_evento==="parto").sort((a,b)=>new Date(b.data_evento)-new Date(a.data_evento))[0];
+      const ev = EVENTOS.filter(e=>e.id_animal===v._id);
+      const cob = ev.filter(e=>e.tipo_evento==="cobertura").sort((a,b)=>new Date(b.data_evento)-new Date(a.data_evento))[0];
+      const par = ev.filter(e=>e.tipo_evento==="parto").sort((a,b)=>new Date(b.data_evento)-new Date(a.data_evento))[0];
 
       if(cob && (!par || new Date(cob.data_evento)>new Date(par.data_evento))){
-        const prev=addMonths(new Date(cob.data_evento+"T00:00:00"),CFG_VACAS.gestacao_meses);
-        prenhas.push({v,prev});
-      }else if(par){paridas.push({v,par});}
-      else{vazias.push(v);}
+        prenhas.push({v,prev:addMonths(new Date(cob.data_evento+"T00:00:00"),CFG_VACAS.gestacao_meses)});
+      }else if(par){
+        paridas.push({v,par});
+      }else{
+        vazias.push(v);
+      }
     });
-
-    prenhas.sort((a,b)=>a.prev-b.prev);
 
     if(f==="todas"||f==="prenhas"){
       prenhas.forEach(p=>{
         const dias=Math.ceil((p.prev-new Date())/86400000);
-        const r=regraPrenhezConfig(dias);
+        const r=regraPrenhez(dias);
         lista.innerHTML+=`
         <div class="card ${r.classe}" onclick="abrirAnimal('${p.v._id}')">
           <strong>🐄 ${p.v.nome.toUpperCase()} <span class="badge prenha">Prenha</span></strong>
@@ -237,8 +238,32 @@ async function carregarDados(){
       });
     }
 
+    if(f==="todas"||f==="paridas"){
+      paridas.forEach(p=>{
+        lista.innerHTML+=`
+        <div class="card parida" onclick="abrirAnimal('${p.v._id}')">
+          <strong>🐄 ${p.v.nome.toUpperCase()} <span class="badge parida">Parida</span></strong>
+          <p>Data do parto: ${new Date(p.par.data_evento).toLocaleDateString("pt-BR")}</p>
+          <p>Raça: ${p.v.raca||"-"}</p>
+          <p>Idade: ${idadeTexto(p.v.data_nascimento)}</p>
+        </div>`;
+      });
+    }
+
+    if(f==="todas"||f==="vazias"){
+      vazias.forEach(v=>{
+        lista.innerHTML+=`
+        <div class="card vazia" onclick="abrirAnimal('${v._id}')">
+          <strong>🐄 ${v.nome.toUpperCase()} <span class="badge vazia">Vazia</span></strong>
+          <p>Sem cobertura ativa</p>
+          <p>Raça: ${v.raca||"-"}</p>
+          <p>Idade: ${idadeTexto(v.data_nascimento)}</p>
+        </div>`;
+      });
+    }
+
     if(!lista.innerHTML){
-      lista.innerHTML=`<div class="vazio">🐄 Nenhuma vaca encontrada.</div>`;
+      lista.innerHTML='<div class="vazio">🐄 Nenhuma vaca encontrada.</div>';
     }
   }
 
