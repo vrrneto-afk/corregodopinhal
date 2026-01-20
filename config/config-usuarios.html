@@ -99,20 +99,21 @@ fetch("../menu/menu-adm.html")
 const db = firebase.firestore();
 const auth = firebase.auth();
 
-/* 🔐 AUTH SECUNDÁRIO (ISOLADO) */
+/* 🔐 AUTH SECUNDÁRIO */
 const secondaryApp = firebase.initializeApp(
   firebase.app().options,
   "Secondary"
 );
 const secondaryAuth = secondaryApp.auth();
 
-let usuarios=[];
-let grupos=[];
-let editando=null;
+let usuarios = [];
+let grupos = [];
+let editando = null;
+let usuarioAtual = null;
 
 async function carregar(){
   const g = await db.collection("config").doc("grupos").get();
-  grupos = g.exists ? g.data().lista||[] : [];
+  grupos = g.exists ? g.data().lista || [] : [];
 
   const s = await db.collection("usuarios").get();
   usuarios = s.docs.map(d=>({_id:d.id,...d.data()}));
@@ -146,6 +147,7 @@ function render(){
 }
 
 function editar(i){
+  editando = i;
   usuarioAtual = usuarios[i];
 
   edit_nome.value = usuarioAtual.nome || "";
@@ -154,19 +156,19 @@ function editar(i){
   edit_ativo.checked = usuarioAtual.ativo !== false;
 
   preencherGrupos(usuarioAtual.papel);
-
   editor.classList.remove("hidden");
 }
 
 function criarNovo(){
-  editando=null;
+  editando = null;
+  usuarioAtual = null;
+
   edit_nome.value="";
   edit_email.value="";
   edit_email.disabled=false;
   edit_ativo.checked=true;
 
   preencherGrupos(null);
-
   editor.classList.remove("hidden");
 }
 
@@ -185,35 +187,34 @@ function cancelar(){
   editor.classList.add("hidden");
 }
 
-/* 💾 SALVAR (CRIAR OU EDITAR) */
+/* 💾 SALVAR */
 async function salvar(){
-  const nome=edit_nome.value.trim();
-  const email=edit_email.value.trim();
-  const grupo=edit_grupo.value;
-  const ativo=edit_ativo.checked;
+  const nome = edit_nome.value.trim();
+  const email = edit_email.value.trim();
+  const grupo = edit_grupo.value;
+  const ativo = edit_ativo.checked;
 
   if(!nome){
     alert("Informe o nome.");
     return;
   }
 
-  /* 🆕 CRIAÇÃO */
-  if(editando===null){
+  /* 🆕 CRIAR */
+  if(editando === null){
     if(!email){
       alert("Informe o email.");
       return;
     }
 
-    const senhaTemp = Math.random().toString(36).slice(-10);
-
     try{
+      const senhaTemp = Math.random().toString(36).slice(-10);
       const cred = await secondaryAuth.createUserWithEmailAndPassword(email, senhaTemp);
 
       await db.collection("usuarios").doc(cred.user.uid).set({
         nome,
         email,
-        papel:grupo,
-        ativo:true,
+        papel: grupo,
+        ativo: true,
         criado_em: firebase.firestore.FieldValue.serverTimestamp()
       });
 
@@ -224,16 +225,22 @@ async function salvar(){
       location.reload();
 
     }catch(e){
-      alert("Erro ao criar usuário: " + e.message);
+      if(e.code === "auth/email-already-in-use"){
+        alert(
+          "Este email já existe no Authentication.\n\n" +
+          "Se este usuário foi excluído anteriormente, a reativação deve ser feita manualmente criando o cadastro novamente no Firestore."
+        );
+      }else{
+        alert("Erro ao criar usuário: " + e.message);
+      }
     }
-
     return;
   }
 
-  /* ✏️ EDIÇÃO */
-  await db.collection("usuarios").doc(usuarios[editando]._id).update({
+  /* ✏️ EDITAR */
+  await db.collection("usuarios").doc(usuarioAtual._id).update({
     nome,
-    papel:grupo,
+    papel: grupo,
     ativo
   });
 
@@ -252,15 +259,17 @@ async function excluir(){
     return;
   }
 
-  if(!confirm(`Excluir o usuário ${usuarioAtual.nome}?`)) return;
+  if(!confirm(`Excluir definitivamente o acesso de ${usuarioAtual.nome}?`)) return;
 
-  try{
-    await db.collection("usuarios").doc(usuarioAtual._id).delete();
-    alert("Usuário removido do sistema.");
-    location.reload();
-  }catch(e){
-    alert("Erro ao excluir usuário: " + e.message);
-  }
+  await db.collection("usuarios").doc(usuarioAtual._id).delete();
+
+  alert(
+    "Usuário removido do sistema.\n\n" +
+    "O acesso foi cortado imediatamente.\n" +
+    "O registro no Authentication é mantido por segurança e auditoria."
+  );
+
+  location.reload();
 }
 </script>
 
