@@ -54,7 +54,7 @@ body{
   margin:0;
   background:var(--bege);
   color:#333;
-  display:none; /* 🔒 IGUAL AO CONFIG-MÃE */
+  display:none;
 }
 
 header{
@@ -195,7 +195,7 @@ fetch("../menu/menu.html")
   });
 </script>
 
-<!-- 🔒 FILTRO DE PERMISSÕES (PADRÃO CONFIG-MÃE + FIRESTORE REAL) -->
+<!-- 🔒 FILTRO DE PERMISSÕES -->
 <script>
 function aplicarPermissoesRelatorios(){
   firebase.auth().onAuthStateChanged(async (user) => {
@@ -223,26 +223,24 @@ function aplicarPermissoesRelatorios(){
 
     let algumVisivel = false;
 
-document.querySelectorAll("[data-permissao]").forEach(card => {
-  const chave = card.dataset.permissao;
+    document.querySelectorAll("[data-permissao]").forEach(card => {
+      const chave = card.dataset.permissao;
 
-  // só exibe se a permissão for TRUE
-  if (permissoes[chave] === true) {
-    algumVisivel = true;
-  } else {
-    card.remove();
-  }
-});
+      if (permissoes[chave] === true) {
+        algumVisivel = true;
+      } else {
+        card.remove();
+      }
+    });
 
-/* libera renderização apenas depois da filtragem */
-document.body.style.display = "block";
+    document.body.style.display = "block";
 
-/* opcional: se nenhum relatório for permitido */
-if (!algumVisivel) {
-  document.querySelector(".blocos").innerHTML =
-    "<p style='color:#666'>Nenhum relatório disponível para seu perfil.</p>";
+    if (!algumVisivel) {
+      document.querySelector(".blocos").innerHTML =
+        "<p style='color:#666'>Nenhum relatório disponível para seu perfil.</p>";
+    }
+  });
 }
-
 </script>
 
 <!-- LOGOUT -->
