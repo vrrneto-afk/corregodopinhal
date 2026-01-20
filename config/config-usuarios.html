@@ -146,15 +146,14 @@ function render(){
 }
 
 function editar(i){
-  editando=i;
-  const u=usuarios[i];
+  usuarioAtual = usuarios[i];
 
-  edit_nome.value=u.nome||"";
-  edit_email.value=u.email;
-  edit_email.disabled=true;
-  edit_ativo.checked=u.ativo!==false;
+  edit_nome.value = usuarioAtual.nome || "";
+  edit_email.value = usuarioAtual.email;
+  edit_email.disabled = true;
+  edit_ativo.checked = usuarioAtual.ativo !== false;
 
-  preencherGrupos(u.papel);
+  preencherGrupos(usuarioAtual.papel);
 
   editor.classList.remove("hidden");
 }
@@ -248,10 +247,20 @@ function resetSenha(){
 }
 
 async function excluir(){
-  if(!confirm("Excluir usuário definitivamente?")) return;
-  await db.collection("usuarios").doc(usuarios[editando]._id).delete();
-  alert("Usuário removido (auth permanece por segurança).");
-  location.reload();
+  if(!usuarioAtual){
+    alert("Nenhum usuário selecionado.");
+    return;
+  }
+
+  if(!confirm(`Excluir o usuário ${usuarioAtual.nome}?`)) return;
+
+  try{
+    await db.collection("usuarios").doc(usuarioAtual._id).delete();
+    alert("Usuário removido do sistema.");
+    location.reload();
+  }catch(e){
+    alert("Erro ao excluir usuário: " + e.message);
+  }
 }
 </script>
 
