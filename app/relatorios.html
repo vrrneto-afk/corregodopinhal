@@ -142,28 +142,28 @@ p.intro{
   <div class="blocos">
 
     <div class="bloco"
-         data-permissao="relatorio_financeiro"
+         data-permissao="app.relatorio-financeiro"
          onclick="location.href='../relatorios/relatorio-financeiro.html'">
       <strong>💰 Financeiro</strong>
       <span>Lucro, despesas e receitas</span>
     </div>
 
     <div class="bloco"
-         data-permissao="relatorio_leite"
+         data-permissao="app.relatorio-leite"
          onclick="location.href='../relatorios/relatorio-leite.html'">
       <strong>🥛 Produção de Leite</strong>
       <span>Produção, médias e evolução</span>
     </div>
 
     <div class="bloco"
-         data-permissao="relatorio_rebanho"
+         data-permissao="app.relatorio-rebanho"
          onclick="location.href='../relatorios/relatorio-rebanho.html'">
       <strong>🐄 Rebanho</strong>
       <span>Quantidade, status e gestão</span>
     </div>
 
     <div class="bloco"
-         data-permissao="relatorio_sanitario"
+         data-permissao="app.relatorio-sanitario"
          onclick="location.href='../relatorios/relatorio-sanitario.html'">
       <strong>💉 Sanitário</strong>
       <span>Vacinas, controle e custos</span>
@@ -188,14 +188,12 @@ fetch("../menu/menu.html")
 
     const s = document.createElement("script");
     s.src = "../menu/menu-permissoes.js";
-    s.onload = () => {
-      aplicarPermissoesRelatorios();
-    };
+    s.onload = aplicarPermissoesRelatorios;
     document.body.appendChild(s);
   });
 </script>
 
-<!-- 🔒 FILTRO DE PERMISSÕES -->
+<!-- 🔒 FILTRO DEFINITIVO DE PERMISSÕES -->
 <script>
 async function aplicarPermissoesRelatorios(){
 
@@ -204,24 +202,16 @@ async function aplicarPermissoesRelatorios(){
 
   const db = firebase.firestore();
 
-  const userSnap = await db
-    .collection("usuarios")
-    .doc(user.uid)
-    .get();
-
+  const userSnap = await db.collection("usuarios").doc(user.uid).get();
   if(!userSnap.exists) return;
 
   const papel = userSnap.data().papel;
   if(!papel) return;
 
-  const grupoSnap = await db
-    .collection("config")
-    .doc("grupos")
-    .get();
-
+  const grupoSnap = await db.collection("config").doc("grupos").get();
   if(!grupoSnap.exists) return;
 
-  const grupo = grupoSnap.data().lista.find(g => g.id === papel);
+  const grupo = (grupoSnap.data().lista || []).find(g => g.id === papel);
   if(!grupo) return;
 
   const permissoes = grupo.permissoes || {};
@@ -229,23 +219,35 @@ async function aplicarPermissoesRelatorios(){
   let algumVisivel = false;
 
   document.querySelectorAll("[data-permissao]").forEach(card => {
-    const chave = card.dataset.permissao;
 
-    if (permissoes[chave] === true) {
+    const caminho = card.dataset.permissao.split(".");
+    let permitido = true;
+    let atual = permissoes;
+
+    for(const p of caminho){
+      atual = atual?.[p];
+      if(atual !== true){
+        permitido = false;
+        break;
+      }
+    }
+
+    if(permitido){
       algumVisivel = true;
     } else {
       card.remove();
     }
   });
 
-  document.body.style.display = "block";
-
-  if (!algumVisivel) {
+  if(!algumVisivel){
     document.querySelector(".blocos").innerHTML =
       "<p style='color:#666'>Nenhum relatório disponível para seu perfil.</p>";
   }
+
+  document.body.style.display = "block";
 }
 </script>
+
 <!-- LOGOUT -->
 <script src="../login/logout.js"></script>
 
