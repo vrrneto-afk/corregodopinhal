@@ -8,11 +8,9 @@
 <link rel="manifest" href="../manifest.json">
 <meta name="theme-color" content="#7b3f2a">
 
-<!-- MENU GLOBAL -->
 <link rel="stylesheet" href="../menu/menu.css">
 <link rel="stylesheet" href="./config.css">
 
-<!-- FIREBASE -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
@@ -27,7 +25,6 @@ if (!firebase.apps.length) {
 }
 </script>
 
-<!-- IDENTIFICAÇÃO DA PÁGINA -->
 <script>
 window.PERMISSAO_PAGINA = {
   area: "config",
@@ -35,7 +32,6 @@ window.PERMISSAO_PAGINA = {
 };
 </script>
 
-<!-- AUTH GUARD -->
 <script src="../login/auth-guard.js"></script>
 
 <style>
@@ -89,18 +85,11 @@ window.PERMISSAO_PAGINA = {
 
 </div>
 
-<!-- MENU -->
 <script>
 fetch("../menu/menu-adm.html")
   .then(r=>r.text())
   .then(html=>{
     document.getElementById("menu-adm").innerHTML = html;
-
-    document.querySelectorAll(".menu-link").forEach(a=>{
-      if(a.getAttribute("href")?.includes("config.html")){
-        a.classList.add("ativo");
-      }
-    });
 
     const s=document.createElement("script");
     s.src="../menu/menu-permissoes.js";
@@ -116,7 +105,7 @@ fetch("../menu/menu-adm.html")
 const db   = firebase.firestore();
 const auth = firebase.auth();
 
-/* AUTH SECUNDÁRIO (criação segura) */
+/* AUTH SECUNDÁRIO */
 const secondaryApp = firebase.initializeApp(
   firebase.app().options,
   "Secondary"
@@ -127,22 +116,18 @@ let usuarios = [];
 let grupos   = [];
 let usuarioAtual = null;
 
-/* ================= LOAD ================= */
+/* LOAD */
 async function carregar(){
   const g = await db.collection("config").doc("grupos").get();
   grupos = g.exists ? g.data().lista || [] : [];
 
-  const snap = await db
-    .collection("config")
-    .doc("usuarios")
-    .collection("lista")
-    .get();
-
+  const snap = await db.collection("usuarios").get();
   usuarios = snap.docs.map(d=>({_id:d.id,...d.data()}));
+
   render();
 }
 
-/* ================= RENDER ================= */
+/* RENDER */
 function render(){
   lista.innerHTML="";
 
@@ -168,27 +153,24 @@ function render(){
   lista.appendChild(novo);
 }
 
-/* ================= EDITAR ================= */
+/* EDITAR */
 function editar(u){
   usuarioAtual = u;
-
   edit_nome.value  = u.nome || "";
   edit_email.value = u.email;
   edit_email.disabled = true;
   edit_ativo.checked = u.ativo !== false;
-
   preencherGrupos(u.papel);
   editor.classList.remove("hidden");
 }
 
-/* ================= NOVO ================= */
+/* NOVO */
 function criarNovo(){
   usuarioAtual = null;
   edit_nome.value="";
   edit_email.value="";
   edit_email.disabled=false;
   edit_ativo.checked=true;
-
   preencherGrupos(null);
   editor.classList.remove("hidden");
 }
@@ -208,92 +190,67 @@ function cancelar(){
   editor.classList.add("hidden");
 }
 
-/* ================= SALVAR ================= */
+/* SALVAR */
 async function salvar(){
   const nome  = edit_nome.value.trim();
   const email = edit_email.value.trim();
-  const grupo = edit_grupo.value;
+  const papel = edit_grupo.value;
   const ativo = edit_ativo.checked;
 
-  if(!nome){
-    alert("Informe o nome.");
-    return;
-  }
+  if(!nome) return alert("Informe o nome.");
 
-  /* ===== CRIAÇÃO ===== */
+  /* CRIAÇÃO */
   if(!usuarioAtual){
-    if(!email){
-      alert("Informe o email.");
-      return;
-    }
+    if(!email) return alert("Informe o email.");
 
     try{
       const senhaTemp = Math.random().toString(36).slice(-10);
       const cred = await secondaryAuth.createUserWithEmailAndPassword(email, senhaTemp);
 
-      await db.collection("config")
-        .doc("usuarios")
-        .collection("lista")
-        .doc(cred.user.uid)
-        .set({
-          nome,
-          email,
-          papel:grupo,
-          ativo:true,
-          criado_em: firebase.firestore.FieldValue.serverTimestamp()
-        });
+      await db.collection("usuarios").doc(cred.user.uid).set({
+        nome,
+        email,
+        papel,
+        ativo:true,
+        criado_em: firebase.firestore.FieldValue.serverTimestamp()
+      });
 
       await secondaryAuth.sendPasswordResetEmail(email);
       await secondaryAuth.signOut();
 
-      alert("Usuário criado com sucesso. Email enviado.");
+      alert("Usuário criado com sucesso.");
       location.reload();
     }catch(e){
-      alert("Erro ao criar usuário: " + e.message);
+      alert(e.message);
     }
     return;
   }
 
-  /* ===== EDIÇÃO ===== */
-  try{
-    await db.collection("config")
-      .doc("usuarios")
-      .collection("lista")
-      .doc(usuarioAtual._id)
-      .update({ nome, papel:grupo, ativo });
+  /* EDIÇÃO */
+  await db.collection("usuarios")
+    .doc(usuarioAtual._id)
+    .update({ nome, papel, ativo });
 
-    alert("Dados atualizados com sucesso.");
-    location.reload();
-  }catch(e){
-    alert("Erro ao salvar: " + e.message);
-  }
+  location.reload();
 }
 
-/* ================= RESET ================= */
+/* RESET */
 function resetSenha(){
-  if(!confirm("Reenviar email de redefinição de senha?")) return;
   auth.sendPasswordResetEmail(edit_email.value);
   alert("Email enviado.");
 }
 
-/* ================= EXCLUIR ================= */
+/* EXCLUIR */
 async function excluir(){
   if(!usuarioAtual) return;
+  if(!confirm(`Excluir ${usuarioAtual.nome}?`)) return;
 
-  if(!confirm(`Excluir o usuário ${usuarioAtual.nome}?`)) return;
+  await db.collection("usuarios")
+    .doc(usuarioAtual._id)
+    .delete();
 
-  try{
-    await db.collection("config")
-      .doc("usuarios")
-      .collection("lista")
-      .doc(usuarioAtual._id)
-      .delete();
-
-    alert("Usuário removido. Acesso revogado imediatamente.");
-    location.reload();
-  }catch(e){
-    alert("Erro ao excluir: " + e.message);
-  }
+  alert("Usuário removido.");
+  location.reload();
 }
 </script>
 
