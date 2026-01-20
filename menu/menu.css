@@ -95,6 +95,46 @@
 }
 
 /* =========================================
+   ALIAS – CARDS ANTIGOS HERDAM O PADRÃO
+   ========================================= */
+
+.card-animal,
+.animal-card,
+.card-vaca,
+.vaca-card,
+.card-vacas,
+.card-animal-lista{
+  background:#fff;
+  padding:12px 14px;
+  margin-bottom:10px;
+  border-left:6px solid var(--cinza);
+  border-radius:14px;
+  box-shadow:0 2px 6px rgba(0,0,0,.05);
+}
+
+.card-animal p,
+.animal-card p,
+.card-vaca p,
+.vaca-card p,
+.card-vacas p{
+  margin:2px 0;
+  font-size:14px;
+  line-height:1.25;
+  color:var(--cinza);
+}
+
+.card-animal strong,
+.animal-card strong,
+.card-vaca strong,
+.vaca-card strong{
+  display:block;
+  font-weight:700;
+  font-size:15px;
+  color:#000;
+  margin-bottom:4px;
+}
+
+/* =========================================
    CARD – DESPESAS / VENCIMENTOS
    ========================================= */
 
