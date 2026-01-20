@@ -5,17 +5,12 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Configuração – Usuários</title>
 
-<!-- MANIFEST -->
 <link rel="manifest" href="../manifest.json">
 <meta name="theme-color" content="#7b3f2a">
 
-<!-- MENU GLOBAL -->
 <link rel="stylesheet" href="../menu/menu.css">
-
-<!-- CONFIG CSS -->
 <link rel="stylesheet" href="./config.css">
 
-<!-- FIREBASE -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
@@ -30,7 +25,6 @@ if (!firebase.apps.length) {
 }
 </script>
 
-<!-- IDENTIFICAÇÃO DA PÁGINA -->
 <script>
 window.PERMISSAO_PAGINA = {
   area: "config",
@@ -38,59 +32,7 @@ window.PERMISSAO_PAGINA = {
 };
 </script>
 
-<!-- AUTH GUARD -->
 <script src="../login/auth-guard.js"></script>
-
-<style>
-.status-badge{
-  display:inline-block;
-  padding:4px 10px;
-  font-size:12px;
-  font-weight:700;
-  border-radius:10px;
-  margin-top:6px;
-}
-.status-ativo{background:#eaf6ec;color:#2f6b2f}
-.status-bloqueado{background:#fdecea;color:#c0392b}
-
-.user-actions{
-  display:flex;
-  flex-wrap:wrap;
-  gap:6px;
-  margin-top:10px;
-}
-
-.user-actions button{
-  font-size:13px;
-}
-
-.edit-box{
-  margin-top:10px;
-  border-top:1px dashed #ccc;
-  padding-top:10px;
-}
-
-.edit-box label{
-  font-size:13px;
-  font-weight:600;
-  margin-top:6px;
-  display:block;
-}
-
-.edit-box input,
-.edit-box select{
-  width:100%;
-  padding:8px;
-  border-radius:8px;
-  border:1px solid #ccc;
-}
-
-.edit-actions{
-  display:flex;
-  gap:8px;
-  margin-top:10px;
-}
-</style>
 </head>
 
 <body style="display:none">
@@ -101,43 +43,53 @@ window.PERMISSAO_PAGINA = {
 <div class="container">
 
 <h2>Usuários do Sistema</h2>
+<div class="cards-grid" id="lista"></div>
 
-<div class="cards-grid" id="lista-usuarios"></div>
-
-<hr>
-
-<h3>➕ Criar novo usuário</h3>
-
+<div id="editor" class="hidden">
 <fieldset>
-  <label>Nome</label>
-  <input id="novo_nome">
 
-  <label>Email</label>
-  <input id="novo_email" type="email">
+<label>Nome</label>
+<input id="edit_nome">
 
-  <label>Grupo</label>
-  <select id="novo_grupo"></select>
+<label>Email</label>
+<input id="edit_email" disabled>
+
+<label>Grupo</label>
+<select id="edit_grupo"></select>
+
+<label style="margin-top:10px">
+<input type="checkbox" id="edit_ativo"> Usuário ativo
+</label>
+
 </fieldset>
 
-<button class="salvar" onclick="criarUsuario()">💾 Criar usuário</button>
+<button class="salvar" onclick="salvar()">💾 Salvar</button>
+<button class="voltar" onclick="resetSenha()">🔑 Reenviar senha</button>
+<button class="voltar" onclick="excluir()" style="background:#c0392b;color:#fff">🗑 Excluir</button>
+<button class="voltar" onclick="cancelar()">❌ Cancelar</button>
+</div>
 
-<button class="voltar" onclick="location.href='config.html'">
-⬅ Voltar
-</button>
+<button class="voltar" onclick="location.href='config.html'">⬅ Voltar</button>
 
 </div>
 
-<!-- MENU + PERMISSÕES -->
 <script>
 fetch("../menu/menu-adm.html")
-  .then(r => r.text())
-  .then(html => {
-    document.getElementById("menu-adm").innerHTML = html;
+  .then(r=>r.text())
+  .then(html=>{
+    menu-adm.innerHTML = html;
 
-    const s = document.createElement("script");
-    s.src = "../menu/menu-permissoes.js";
-    s.onload = () => {
-      document.body.style.display = "block";
+    // ✅ FIX MENU ATIVO
+    document.querySelectorAll(".menu-link").forEach(a=>{
+      if(a.getAttribute("href")?.includes("config.html")){
+        a.classList.add("ativo");
+      }
+    });
+
+    const s=document.createElement("script");
+    s.src="../menu/menu-permissoes.js";
+    s.onload=()=>{
+      document.body.style.display="block";
       carregar();
     };
     document.body.appendChild(s);
@@ -145,25 +97,16 @@ fetch("../menu/menu-adm.html")
 </script>
 
 <script>
+const db = firebase.firestore();
 const auth = firebase.auth();
-const db   = firebase.firestore();
 
-let usuarios = [];
-let grupos   = [];
+let usuarios=[];
+let grupos=[];
+let editando=null;
 
-/* LOAD */
 async function carregar(){
   const g = await db.collection("config").doc("grupos").get();
-  grupos = g.exists ? g.data().lista || [] : [];
-
-  const sel = document.getElementById("novo_grupo");
-  sel.innerHTML = "";
-  grupos.forEach(gr=>{
-    const o = document.createElement("option");
-    o.value = gr.id;
-    o.textContent = gr.nome;
-    sel.appendChild(o);
-  });
+  grupos = g.exists ? g.data().lista||[] : [];
 
   const s = await db.collection("usuarios").get();
   usuarios = s.docs.map(d=>({_id:d.id,...d.data()}));
@@ -171,139 +114,97 @@ async function carregar(){
   render();
 }
 
-/* RENDER */
 function render(){
-  const area = document.getElementById("lista-usuarios");
-  area.innerHTML = "";
+  lista.innerHTML="";
 
-  usuarios.forEach(u=>{
-    const div = document.createElement("div");
-    div.className = "config-card";
-
-    div.innerHTML = `
-      <strong>${u.nome || "-"}</strong>
-      <div>${u.email}</div>
-      <div>Grupo: <b>${u.papel}</b></div>
-
-      <span class="status-badge ${u.ativo!==false ? "status-ativo":"status-bloqueado"}">
-        ${u.ativo!==false ? "Ativo":"Bloqueado"}
+  usuarios.forEach((u,i)=>{
+    const b=document.createElement("button");
+    b.className="config-card";
+    b.innerHTML=`
+      <strong>${u.nome||"-"}</strong>
+      <span>${u.email}</span>
+      <span>Grupo: ${u.papel}</span>
+      <span style="color:${u.ativo!==false?"#2f6b2f":"#c0392b"}">
+        ${u.ativo!==false?"Ativo":"Inativo"}
       </span>
-
-      <div class="user-actions">
-        <button onclick="abrirEdicao('${u._id}')">✏️ Editar</button>
-        <button onclick="resetarSenha('${u.email}')">🔑 Reset senha</button>
-        <button onclick="toggleAtivo('${u._id}', ${u.ativo!==false})">
-          ${u.ativo!==false ? "🚫 Bloquear":"✅ Ativar"}
-        </button>
-        <button onclick="excluirUsuario('${u._id}','${u.email}')" style="background:#c0392b;color:#fff">
-          🗑 Excluir
-        </button>
-      </div>
-
-      <div class="edit-box" id="edit-${u._id}" style="display:none">
-        <label>Nome</label>
-        <input id="edit-nome-${u._id}" value="${u.nome||""}">
-
-        <label>Grupo</label>
-        <select id="edit-grupo-${u._id}">
-          ${grupos.map(g=>`
-            <option value="${g.id}" ${g.id===u.papel?"selected":""}>
-              ${g.nome}
-            </option>
-          `).join("")}
-        </select>
-
-        <div class="edit-actions">
-          <button onclick="salvarEdicao('${u._id}')">💾 Salvar</button>
-          <button onclick="fecharEdicao('${u._id}')">Cancelar</button>
-        </div>
-      </div>
     `;
-
-    area.appendChild(div);
+    b.onclick=()=>editar(i);
+    lista.appendChild(b);
   });
+
+  const novo=document.createElement("button");
+  novo.className="config-card";
+  novo.innerHTML="➕ Criar novo usuário";
+  novo.onclick=criarNovo;
+  lista.appendChild(novo);
 }
 
-/* EDITAR */
-function abrirEdicao(id){
-  document.getElementById(`edit-${id}`).style.display="block";
+function editar(i){
+  editando=i;
+  const u=usuarios[i];
+
+  edit_nome.value=u.nome||"";
+  edit_email.value=u.email;
+  edit_ativo.checked=u.ativo!==false;
+
+  edit_grupo.innerHTML="";
+  grupos.forEach(g=>{
+    const o=document.createElement("option");
+    o.value=g.id;
+    o.textContent=g.nome;
+    if(g.id===u.papel) o.selected=true;
+    edit_grupo.appendChild(o);
+  });
+
+  editor.classList.remove("hidden");
 }
-function fecharEdicao(id){
-  document.getElementById(`edit-${id}`).style.display="none";
+
+function criarNovo(){
+  editando=null;
+  edit_nome.value="";
+  edit_email.value="";
+  edit_ativo.checked=true;
+  editor.classList.remove("hidden");
 }
-async function salvarEdicao(id){
-  const nome = document.getElementById(`edit-nome-${id}`).value.trim();
-  const grupo = document.getElementById(`edit-grupo-${id}`).value;
+
+function cancelar(){
+  editor.classList.add("hidden");
+}
+
+async function salvar(){
+  const nome=edit_nome.value.trim();
+  const grupo=edit_grupo.value;
+  const ativo=edit_ativo.checked;
 
   if(!nome){
     alert("Informe o nome.");
     return;
   }
 
-  await db.collection("usuarios").doc(id).update({
-    nome,
-    papel: grupo
-  });
-
-  carregar();
-}
-
-/* CRIAR USUÁRIO */
-async function criarUsuario(){
-  const nome  = novo_nome.value.trim();
-  const email = novo_email.value.trim();
-  const papel = novo_grupo.value;
-
-  if(!nome || !email){
-    alert("Informe nome e email.");
+  if(editando===null){
+    alert("Criação de usuário permanece pelo formulário antigo.");
     return;
   }
 
-  const tempSenha = Math.random().toString(36).slice(-8);
-
-  const cred = await auth.createUserWithEmailAndPassword(email, tempSenha);
-
-  await db.collection("usuarios").doc(cred.user.uid).set({
+  await db.collection("usuarios").doc(usuarios[editando]._id).update({
     nome,
-    email,
-    papel,
-    ativo:true,
-    criado_em: firebase.firestore.FieldValue.serverTimestamp()
+    papel:grupo,
+    ativo
   });
 
-  await auth.sendPasswordResetEmail(email);
-
-  alert("Usuário criado. Email de redefinição enviado.");
-
-  novo_nome.value="";
-  novo_email.value="";
-
-  carregar();
+  location.reload();
 }
 
-/* RESETAR SENHA */
-function resetarSenha(email){
-  if(!confirm("Enviar email de redefinição de senha?")) return;
-  auth.sendPasswordResetEmail(email);
+function resetSenha(){
+  if(!confirm("Reenviar email de redefinição de senha?")) return;
+  auth.sendPasswordResetEmail(edit_email.value);
   alert("Email enviado.");
 }
 
-/* BLOQUEAR / ATIVAR */
-async function toggleAtivo(id, ativoAtual){
-  await db.collection("usuarios").doc(id).update({
-    ativo: !ativoAtual
-  });
-  carregar();
-}
-
-/* EXCLUIR */
-async function excluirUsuario(id,email){
+async function excluir(){
   if(!confirm("Excluir usuário definitivamente?")) return;
-
-  await db.collection("usuarios").doc(id).delete();
-  alert("Usuário removido do sistema (auth deve ser removido manualmente).");
-
-  carregar();
+  await db.collection("usuarios").doc(usuarios[editando]._id).delete();
+  location.reload();
 }
 </script>
 
