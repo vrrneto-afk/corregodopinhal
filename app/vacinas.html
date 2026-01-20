@@ -16,7 +16,7 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
-<!-- 🔹 FIREBASE INIT (OBRIGATÓRIO) -->
+<!-- FIREBASE INIT -->
 <script>
 if (!firebase.apps.length) {
   firebase.initializeApp({
@@ -45,37 +45,55 @@ window.PERMISSAO_PAGINA = { area:"app", chave:"vacinas" };
   --cinza:#666;
   --logo:#D0B485;
 }
-*{box-sizing:border-box;font-family:'Inter',system-ui,Arial}
-body{margin:0;background:var(--bege);color:#333;display:none}
-header{background:var(--logo);padding:15px;text-align:center}
-header img{max-width:260px;width:100%}
-.container{max-width:900px;margin:20px auto;padding:0 15px}
-h2{margin:25px 0;color:var(--marrom)}
-select{width:100%;padding:12px;margin-bottom:20px;border-radius:10px;border:1.5px solid #ddd}
-.card{
-  background:#fff;
-  padding:16px;
-  margin-bottom:14px;
-  border-left:6px solid var(--cinza);
-  border-radius:12px;
-  box-shadow:0 2px 6px rgba(0,0,0,.06);
+
+*{
+  box-sizing:border-box;
+  font-family:'Inter',system-ui,Arial;
 }
-.card.atrasada{border-color:var(--vermelho)}
-.card.pendente{border-color:var(--amarelo)}
-.card.finalizada{border-color:var(--verde)}
-.badge{
-  display:inline-block;
-  margin:6px 0;
-  padding:4px 10px;
-  font-size:12px;
-  font-weight:700;
-  color:#fff;
-  border-radius:8px;
+
+body{
+  margin:0;
+  background:var(--bege);
+  color:#333;
+  display:none;
 }
-.atrasada-b{background:var(--vermelho)}
-.pendente-b{background:var(--amarelo)}
-.finalizada-b{background:var(--verde)}
-.vazio{text-align:center;color:#777;font-style:italic;margin-top:30px}
+
+header{
+  background:var(--logo);
+  padding:15px;
+  text-align:center;
+}
+
+header img{
+  max-width:260px;
+  width:100%;
+}
+
+.container{
+  max-width:900px;
+  margin:20px auto;
+  padding:0 15px;
+}
+
+h2{
+  margin:25px 0;
+  color:var(--marrom);
+}
+
+select{
+  width:100%;
+  padding:12px;
+  margin-bottom:20px;
+  border-radius:10px;
+  border:1.5px solid #ddd;
+}
+
+.vazio{
+  text-align:center;
+  color:#777;
+  font-style:italic;
+  margin-top:30px;
+}
 </style>
 </head>
 
@@ -111,8 +129,6 @@ fetch("../menu/menu.html")
     s.src = "../menu/menu-permissoes.js";
 
     s.onload = () => {
-
-      // 🔹 MARCAR MENU ATIVO
       document.querySelectorAll(".menu-link").forEach(link=>{
         if(link.dataset.area==="app" && link.dataset.chave==="vacinas"){
           link.classList.add("ativo");
@@ -141,7 +157,10 @@ function parseDate(v){
   if(typeof v==="string") return new Date(v+"T00:00:00");
   return new Date(v);
 }
-function diffDias(a,b){return Math.ceil((b-a)/86400000);}
+
+function diffDias(a,b){
+  return Math.ceil((b-a)/86400000);
+}
 
 async function iniciarPagina(){
   const cfg = await db.collection("config").doc("vacinas").get();
@@ -150,17 +169,18 @@ async function iniciarPagina(){
   const snap = await db.collection("vacinas").get();
   const VACINAS = snap.docs.map(d=>d.data());
 
-  const hoje = new Date(); hoje.setHours(0,0,0,0);
+  const hoje = new Date();
+  hoje.setHours(0,0,0,0);
 
   function render(filtro){
     lista.innerHTML="";
     let cards=[];
 
     VACINAS.forEach(v=>{
-      const aplicada=parseDate(v.data_aplicacao);
-      const repeticao=Number(v.repeticao_dias||0);
+      const aplicada = parseDate(v.data_aplicacao);
+      const repeticao = Number(v.repeticao_dias || 0);
 
-      let status,classe,badge,texto,grupo,ordem;
+      let status, classe, badge, texto, grupo, ordem;
 
       if(v.status==="Finalizada"){
         status="finalizada";
@@ -169,11 +189,11 @@ async function iniciarPagina(){
         grupo=CONFIG.prioridades.finalizada;
         ordem=aplicada;
       }else{
-        const reaplicar=new Date(aplicada);
+        const reaplicar = new Date(aplicada);
         reaplicar.setDate(reaplicar.getDate()+repeticao);
-        const dias=diffDias(hoje,reaplicar);
+        const dias = diffDias(hoje, reaplicar);
 
-        if(dias<0){
+        if(dias < 0){
           status="atrasada";
           classe="atrasada";
           badge=`<span class="badge atrasada-b">${CONFIG.status.atrasada}</span>`;
@@ -193,13 +213,13 @@ async function iniciarPagina(){
       if(filtro!=="todas" && filtro!==status) return;
 
       cards.push({
-        grupo,ordem,
+        grupo, ordem,
         html:`
-        <div class="card ${classe}">
-          <strong>💉 ${v.nome_vacina||"Vacina"}</strong>
-          <p>🐄 ${(v.nome_animal||"-").toUpperCase()}</p>
+        <div class="card-vacina ${classe}">
+          <strong>💉 ${v.nome_vacina || "Vacina"}</strong>
+          <p>🐄 ${(v.nome_animal || "-").toUpperCase()}</p>
           ${badge}
-          ${texto?`<p>${texto}</p>`:""}
+          ${texto ? `<p>${texto}</p>` : ""}
           <p>Aplicada em: ${aplicada.toLocaleDateString("pt-BR")}</p>
         </div>`
       });
@@ -214,7 +234,7 @@ async function iniciarPagina(){
     }
   }
 
-  filtro.onchange=e=>render(e.target.value);
+  filtro.onchange = e => render(e.target.value);
   render("todas");
 }
 </script>
