@@ -197,54 +197,53 @@ fetch("../menu/menu.html")
 
 <!-- 🔒 FILTRO DE PERMISSÕES -->
 <script>
-function aplicarPermissoesRelatorios(){
-  firebase.auth().onAuthStateChanged(async (user) => {
-    if (!user) return;
+async function aplicarPermissoesRelatorios(){
 
-    const userSnap = await firebase.firestore()
-      .collection("usuarios")
-      .doc(user.uid)
-      .get();
-    if (!userSnap.exists) return;
+  const user = firebase.auth().currentUser;
+  if(!user) return;
 
-    const papel = userSnap.data().papel;
-    if (!papel) return;
+  const db = firebase.firestore();
 
-    const grupoSnap = await firebase.firestore()
-      .collection("config")
-      .doc("grupos")
-      .get();
-    if (!grupoSnap.exists) return;
+  const userSnap = await db
+    .collection("usuarios")
+    .doc(user.uid)
+    .get();
 
-    const grupo = grupoSnap.data().lista.find(g => g.id === papel);
-    if (!grupo) return;
+  if(!userSnap.exists) return;
 
-    const permissoes = grupo.permissoes || {};
+  const papel = userSnap.data().papel;
+  if(!papel) return;
 
-    let algumVisivel = false;
+  const grupoSnap = await db
+    .collection("config")
+    .doc("grupos")
+    .get();
 
-    document.querySelectorAll("[data-permissao]").forEach(card => {
-      const chave = card.dataset.permissao;
+  if(!grupoSnap.exists) return;
 
-      const permitido =
-        permissoes[chave] === true ||
-        permissoes.app?.[chave] === true ||
-        permissoes.relatorios === true;
+  const grupo = grupoSnap.data().lista.find(g => g.id === papel);
+  if(!grupo) return;
 
-      if (permitido) {
-        algumVisivel = true;
-      } else {
-        card.remove();
-      }
-    });
+  const permissoes = grupo.permissoes || {};
 
-    document.body.style.display = "block";
+  let algumVisivel = false;
 
-    if (!algumVisivel) {
-      document.querySelector(".blocos").innerHTML =
-        "<p style='color:#666'>Nenhum relatório disponível para seu perfil.</p>";
+  document.querySelectorAll("[data-permissao]").forEach(card => {
+    const chave = card.dataset.permissao;
+
+    if (permissoes[chave] === true) {
+      algumVisivel = true;
+    } else {
+      card.remove();
     }
   });
+
+  document.body.style.display = "block";
+
+  if (!algumVisivel) {
+    document.querySelector(".blocos").innerHTML =
+      "<p style='color:#666'>Nenhum relatório disponível para seu perfil.</p>";
+  }
 }
 </script>
 
