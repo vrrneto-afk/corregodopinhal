@@ -77,9 +77,9 @@ window.PERMISSAO_PAGINA = {
 fetch("../menu/menu-adm.html")
   .then(r=>r.text())
   .then(html=>{
-    menu-adm.innerHTML = html;
+    document.getElementById("menu-adm").innerHTML = html;
 
-    // ✅ FIX MENU ATIVO
+    // MARCAR CONFIG ATIVO
     document.querySelectorAll(".menu-link").forEach(a=>{
       if(a.getAttribute("href")?.includes("config.html")){
         a.classList.add("ativo");
