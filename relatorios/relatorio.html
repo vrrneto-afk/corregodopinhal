@@ -32,7 +32,7 @@ if (!firebase.apps.length) {
 <script>
 window.PERMISSAO_PAGINA = {
   area: "relatorios",
-  chave: "relatorios"
+  chave: "relatorio"
 };
 </script>
 
@@ -176,7 +176,7 @@ fetch("../menu/menu.html")
 
     /* MARCA ITEM ATIVO */
     document.querySelectorAll("#menu a").forEach(a=>{
-      if(a.getAttribute("href")==="../relatorios/relatorios.html"){
+      if(a.getAttribute("href")==="../relatorios/relatorio.html"){
         a.classList.add("ativo");
       }
     });
