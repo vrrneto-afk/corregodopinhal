@@ -194,43 +194,38 @@ fetch("../menu/menu.html")
   });
 </script>
 
-<!-- 🔒 FILTRO DE PERMISSÕES (MESMO PADRÃO DO CONFIG-MÃE) -->
+<!-- 🔒 FILTRO DE PERMISSÕES (ALINHADO AO FIRESTORE REAL) -->
 <script>
-async function filtrarCardsRelatorios(){
-  const user = firebase.auth().currentUser;
-  if(!user) return;
+function filtrarCardsRelatorios(){
+  firebase.auth().onAuthStateChanged(async (user) => {
+    if (!user) return;
 
-  const userSnap = await firebase.firestore()
-    .collection("usuarios")
-    .doc(user.uid)
-    .get();
+    const userSnap = await firebase.firestore()
+      .collection("usuarios")
+      .doc(user.uid)
+      .get();
+    if (!userSnap.exists) return;
 
-  if(!userSnap.exists) return;
+    const papel = userSnap.data().papel;
+    if (!papel) return;
 
-  const papel = userSnap.data().papel;
-  if(!papel) return;
+    const gruposSnap = await firebase.firestore()
+      .collection("config")
+      .doc("grupos")
+      .get();
+    if (!gruposSnap.exists) return;
 
-  const gruposSnap = await firebase.firestore()
-    .collection("config")
-    .doc("grupos")
-    .get();
+    const grupo = gruposSnap.data().lista.find(g => g.id === papel);
+    if (!grupo) return;
 
-  if(!gruposSnap.exists) return;
+    const permissoes = grupo.permissoes || {};
 
-  const grupo = gruposSnap.data().lista.find(g => g.id === papel);
-  if(!grupo) return;
-
-  const permissoesRelatorios = grupo.permissoes?.relatorios || {};
-
-  document.querySelectorAll("[data-permissao]").forEach(card => {
-    const chave = card.dataset.permissao;
-
-    if (
-      !permissoesRelatorios.tudo &&
-      !permissoesRelatorios[chave]
-    ) {
-      card.remove();
-    }
+    document.querySelectorAll("[data-permissao]").forEach(card => {
+      const chave = card.dataset.permissao;
+      if (!permissoes[chave]) {
+        card.remove();
+      }
+    });
   });
 }
 </script>
