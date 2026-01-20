@@ -31,42 +31,20 @@
 
       try {
 
-        let snapUser = null;
-        let dadosUser = null;
-
-        /* ========= MODELO NOVO ========= */
-        const novo = await db
-          .collection("config")
-          .doc("usuarios")
-          .collection("lista")
+        /* ================= USUÁRIO (ÚNICO MODELO VÁLIDO) ================= */
+        const snapUser = await db
+          .collection("usuarios")
           .doc(user.uid)
           .get();
 
-        if (novo.exists) {
-          snapUser = novo;
-          dadosUser = novo.data();
-        }
-
-        /* ========= MODELO ANTIGO (FALLBACK) ========= */
-        if (!snapUser) {
-          const antigo = await db
-            .collection("usuarios")
-            .doc(user.uid)
-            .get();
-
-          if (antigo.exists) {
-            snapUser = antigo;
-            dadosUser = antigo.data();
-          }
-        }
-
-        /* ========= NÃO EXISTE EM NENHUM ========= */
-        if (!dadosUser) {
+        if (!snapUser.exists) {
           alert("Usuário não autorizado no sistema.");
           await auth.signOut();
           location.replace("../login/login.html");
           return;
         }
+
+        const dadosUser = snapUser.data();
 
         if (dadosUser.ativo !== true) {
           alert("Usuário inativo. Acesso bloqueado.");
