@@ -1,60 +1,57 @@
-(async function(){
+// 🔐 MENU PERMISSÕES – VERSÃO DEFINITIVA
+(async function () {
 
   const auth = firebase.auth();
   const db   = firebase.firestore();
 
-  auth.onAuthStateChanged(async user=>{
-    if(!user) return;
+  auth.onAuthStateChanged(async user => {
+    if (!user) return;
 
-    const snapUser = await db.collection("usuarios").doc(user.uid).get();
-    if(!snapUser.exists) return;
+    try {
 
-    const grupoId = snapUser.data().papel;
-    if(!grupoId) return;
+      /* ================= USUÁRIO ================= */
+      const snapUser = await db.collection("usuarios").doc(user.uid).get();
+      if (!snapUser.exists) return;
 
-    const snapCfg = await db.collection("config").doc("grupos").get();
-    if(!snapCfg.exists) return;
+      const grupoId = snapUser.data().papel;
+      if (!grupoId) return;
 
-    const grupo = snapCfg.data().lista.find(g => g.id === grupoId);
-    if(!grupo) return;
+      /* ================= GRUPO ================= */
+      const snapCfg = await db.collection("config").doc("grupos").get();
+      if (!snapCfg.exists) return;
 
-    const permissoes = grupo.permissoes || {};
+      const grupo = snapCfg.data().lista.find(g => g.id === grupoId);
+      if (!grupo) return;
 
-    document.querySelectorAll(".menu-link[data-area]").forEach(link=>{
-      const area  = link.dataset.area;
-      const chave = link.dataset.chave;
+      const permissoes = grupo.permissoes || {};
 
-      let permitido = false;
+      /* ================= FILTRA LINKS ================= */
+      document.querySelectorAll(".menu-link[data-area][data-chave]").forEach(link => {
 
-      /* 🔑 REGRA 1 — permissão direta (relatórios, app, etc) */
-      if (permissoes[chave] === true) {
-        permitido = true;
+        const area  = link.dataset.area;
+        const chave = link.dataset.chave;
+
+        const permitido =
+          permissoes[area]?.tudo === true ||
+          permissoes[area]?.[chave] === true;
+
+        if (!permitido) {
+          link.remove();
+        }
+      });
+
+      /* ================= LIBERA MENU ================= */
+      const wrapper = document.querySelector(".menu-wrapper");
+      if (wrapper) {
+        wrapper.style.visibility = "visible";
       }
 
-      /* 🔑 REGRA 2 — estrutura por área (legado / config) */
-      else if (
-        permissoes[area]?.[chave] === true
-      ) {
-        permitido = true;
-      }
+      /* ================= EVENTO GLOBAL ================= */
+      window.PERMISSOES_USUARIO = permissoes;
+      document.dispatchEvent(new Event("permissoes-carregadas"));
 
-      /* 🔑 REGRA 3 — config tudo */
-      else if (
-        area === "config" &&
-        permissoes.config?.tudo === true
-      ) {
-        permitido = true;
-      }
-
-      if(!permitido){
-        link.remove();
-      }
-    });
-
-    /* 🔓 LIBERA MENU */
-    const wrapper = document.querySelector(".menu-wrapper");
-    if(wrapper){
-      wrapper.style.visibility = "visible";
+    } catch (err) {
+      console.error("Erro em menu-permissoes.js:", err);
     }
   });
 
