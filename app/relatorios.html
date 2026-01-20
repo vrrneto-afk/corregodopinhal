@@ -13,10 +13,13 @@
 <!-- MENU GLOBAL -->
 <link rel="stylesheet" href="../menu/menu.css">
 
-<!-- FIREBASE -->
+<!-- FIREBASE SDKs -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+<!-- FIREBASE INIT GLOBAL (OBRIGATORIAMENTE ANTES DO AUTH) -->
+<script src="../firebase-init.js"></script>
 
 <!-- IDENTIFICAÇÃO DA PÁGINA -->
 <script>
@@ -154,14 +157,11 @@ p.intro{
   </div>
 </div>
 
-<!-- FIREBASE INIT GLOBAL -->
-<script src="../firebase-init.js"></script>
-
-<!-- MENU -->
+<!-- MENU LOAD -->
 <script>
 fetch("../menu/menu.html")
-  .then(r=>r.text())
-  .then(h=>{
+  .then(r => r.text())
+  .then(h => {
     document.getElementById("menu-container").innerHTML = h;
 
     const s = document.createElement("script");
