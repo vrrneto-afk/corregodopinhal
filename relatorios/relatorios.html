@@ -33,7 +33,7 @@ if (!firebase.apps.length) {
 <!-- IDENTIFICAÇÃO DA PÁGINA -->
 <script>
 window.PERMISSAO_PAGINA = {
-  area: "app",
+  area: "relatorios",
   chave: "relatorios"
 };
 </script>
@@ -46,7 +46,7 @@ window.PERMISSAO_PAGINA = {
 
 <header>📊 Relatórios</header>
 
-<div id="menu-adm"></div>
+<div id="menu"></div>
 
 <div class="container">
 
@@ -79,10 +79,10 @@ window.PERMISSAO_PAGINA = {
 
 <!-- MENU ADM – PADRÃO GLOBAL DEFINITIVO -->
 <script>
-fetch("../menu/menu-adm.html")
+fetch("../menu/menu.html")
   .then(r => r.text())
   .then(html => {
-    document.getElementById("menu-adm").innerHTML = html;
+    document.getElementById("menu").innerHTML = html;
 
     document.querySelectorAll(".menu-link").forEach(a=>{
       if(a.getAttribute("href")?.includes("relatorios.html")){
