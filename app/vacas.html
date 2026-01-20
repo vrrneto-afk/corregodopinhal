@@ -221,6 +221,18 @@ async function iniciarPagina(){
         vazias.push(v);
       }
     });
+// 🔹 ORDENAR PRENHAS – parto mais próximo primeiro
+prenhas.sort((a, b) => a.prev - b.prev);
+
+// 🔹 ORDENAR PARIDAS – parto mais recente primeiro
+paridas.sort((a, b) =>
+  new Date(b.par.data_evento) - new Date(a.par.data_evento)
+);
+
+// 🔹 ORDENAR VAZIAS – mais nova primeiro
+vazias.sort((a, b) =>
+  new Date(b.data_nascimento) - new Date(a.data_nascimento)
+);
 
     if(f==="todas"||f==="prenhas"){
       prenhas.forEach(p=>{
