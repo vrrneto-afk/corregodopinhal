@@ -27,7 +27,7 @@ firebase.initializeApp({
 <!-- IDENTIFICAÇÃO DA PÁGINA -->
 <script>
 window.PERMISSAO_PAGINA = {
-  area: "app",
+  area: "relatorios",
   chave: "relatorio-sanitario"
 };
 </script>
@@ -175,7 +175,7 @@ fetch("../menu/menu.html")
     menu.innerHTML=h;
 
     document.querySelectorAll("#menu a").forEach(a=>{
-      if(a.getAttribute("href")==="../app/relatorios.html"){
+      if(a.getAttribute("href")==="../relatorios/relatorio.html"){
         a.classList.add("ativo");
       }
     });
