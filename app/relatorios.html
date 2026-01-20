@@ -3,41 +3,60 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Relatórios</title>
 
-<meta name="theme-color" content="#7b3f2a">
+<title>Relatórios – Sítio Córrego do Pinhal</title>
+
+<!-- PWA -->
 <link rel="manifest" href="../manifest.json">
+<meta name="theme-color" content="#7b3f2a">
+
+<!-- MENU GLOBAL -->
 <link rel="stylesheet" href="../menu/menu.css">
 
-<!-- FIREBASE (CDN OFICIAL) -->
+<!-- FIREBASE -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
+<!-- IDENTIFICAÇÃO DA PÁGINA -->
 <script>
-firebase.initializeApp({
-  apiKey: "AIzaSyCW-CuFDrOLO-dteckl_GrPTocmyS-IrzY",
-  authDomain: "sitio-corrego-do-pinhal.firebaseapp.com",
-  projectId: "sitio-corrego-do-pinhal"
-});
+window.PERMISSAO_PAGINA = {
+  area: "app",
+  chave: "relatorios"
+};
 </script>
 
+<!-- AUTH GUARD -->
+<script src="../login/auth-guard.js"></script>
+
 <style>
+:root{
+  --marrom:#7b3f2a;
+  --bege:#f6efe7;
+  --cinza:#666;
+  --logo:#D0B485;
+}
+
+*{
+  box-sizing:border-box;
+  font-family:Inter,system-ui,Arial;
+}
+
 body{
   margin:0;
-  background:#f6efe7;
-  font-family:system-ui,Arial;
+  background:var(--bege);
   color:#333;
 }
 
 header{
-  background:#D0B485;
+  background:var(--logo);
   padding:15px;
   text-align:center;
 }
 
 header img{
-  max-width:240px;
+  max-width:260px;
+  width:100%;
 }
 
 .container{
@@ -46,24 +65,50 @@ header img{
   padding:0 15px;
 }
 
-.cards{
+h2{
+  color:var(--marrom);
+  display:flex;
+  gap:8px;
+  align-items:center;
+  margin-bottom:16px;
+}
+
+p.intro{
+  color:var(--cinza);
+  margin-bottom:20px;
+  font-size:15px;
+}
+
+.blocos{
   display:grid;
-  grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+  grid-template-columns:repeat(auto-fit,minmax(240px,1fr));
   gap:14px;
 }
 
-.card{
+.bloco{
   background:#fff;
-  border-left:6px solid #7b3f2a;
   padding:16px;
+  border-left:6px solid var(--marrom);
   border-radius:14px;
-  box-shadow:0 2px 6px rgba(0,0,0,.08);
+  box-shadow:0 2px 6px rgba(0,0,0,.06);
   cursor:pointer;
   transition:.2s;
 }
 
-.card:hover{
+.bloco:hover{
   transform:translateY(-2px);
+  box-shadow:0 4px 10px rgba(0,0,0,.08);
+}
+
+.bloco strong{
+  display:block;
+  font-size:18px;
+  margin-bottom:4px;
+}
+
+.bloco span{
+  font-size:14px;
+  color:var(--cinza);
 }
 </style>
 </head>
@@ -71,89 +116,61 @@ header img{
 <body>
 
 <header>
-  <img src="../logo.png" alt="Sítio Córrego do Pinhal">
+  <img src="../logo.png">
 </header>
 
-<div id="menu"></div>
+<!-- MENU -->
+<div id="menu-container"></div>
 
+<!-- CONTEÚDO -->
 <div class="container">
   <h2>📊 Relatórios</h2>
-  <p>Selecione o relatório que deseja acessar.</p>
 
-  <div class="cards" id="cards"></div>
+  <p class="intro">
+    Selecione o tipo de relatório que deseja analisar.<br>
+    Os filtros de período e detalhes estarão disponíveis dentro de cada relatório.
+  </p>
+
+  <div class="blocos">
+    <div class="bloco" onclick="location.href='../relatorios/relatorio-financeiro.html'">
+      <strong>💰 Financeiro</strong>
+      <span>Lucro, despesas e receitas</span>
+    </div>
+
+    <div class="bloco" onclick="location.href='../relatorios/relatorio-leite.html'">
+      <strong>🥛 Produção de Leite</strong>
+      <span>Produção, médias e evolução</span>
+    </div>
+
+    <div class="bloco" onclick="location.href='../relatorios/relatorio-rebanho.html'">
+      <strong>🐄 Rebanho</strong>
+      <span>Quantidade, status e gestão</span>
+    </div>
+
+    <div class="bloco" onclick="location.href='../relatorios/relatorio-sanitario.html'">
+      <strong>💉 Sanitário</strong>
+      <span>Vacinas, controle e custos</span>
+    </div>
+  </div>
 </div>
 
-<script>
-const RELATORIOS = [
-  {
-    id: "relatorio_financeiro",
-    titulo: "💰 Financeiro",
-    url: "../relatorios/relatorio-financeiro.html"
-  },
-  {
-    id: "relatorio_leite",
-    titulo: "🥛 Produção de Leite",
-    url: "../relatorios/relatorio-leite.html"
-  },
-  {
-    id: "relatorio_rebanho",
-    titulo: "🐄 Rebanho",
-    url: "../relatorios/relatorio-rebanho.html"
-  },
-  {
-    id: "relatorio_sanitario",
-    titulo: "💉 Sanitário",
-    url: "../relatorios/relatorio-sanitario.html"
-  }
-];
+<!-- FIREBASE INIT GLOBAL -->
+<script src="../firebase-init.js"></script>
 
-firebase.auth().onAuthStateChanged(async user=>{
-  if(!user){
-    location.href="../login/login.html";
-    return;
-  }
-
-  const db = firebase.firestore();
-
-  const snapUser = await db.collection("usuarios").doc(user.uid).get();
-  if(!snapUser.exists){
-    alert("Usuário não autorizado.");
-    return;
-  }
-
-  const papel = snapUser.data().papel;
-
-  const snapGrupo = await db.collection("config").doc("grupos").get();
-  const grupo = snapGrupo.data().lista.find(g=>g.id===papel);
-  const perms = grupo.permissoes?.app || {};
-
-  const container = document.getElementById("cards");
-
-  let algum = false;
-
-  RELATORIOS.forEach(r=>{
-    if(perms[r.id] === true){
-      algum = true;
-      const div = document.createElement("div");
-      div.className="card";
-      div.textContent = r.titulo;
-      div.onclick = ()=>location.href=r.url;
-      container.appendChild(div);
-    }
-  });
-
-  if(!algum){
-    container.innerHTML = "<p>Nenhum relatório disponível para seu perfil.</p>";
-  }
-});
-</script>
-
+<!-- MENU -->
 <script>
 fetch("../menu/menu.html")
   .then(r=>r.text())
-  .then(h=>document.getElementById("menu").innerHTML=h);
+  .then(h=>{
+    document.getElementById("menu-container").innerHTML = h;
+
+    const s = document.createElement("script");
+    s.src = "../menu/menu-permissoes.js";
+    document.body.appendChild(s);
+  });
 </script>
 
+<!-- LOGOUT -->
 <script src="../login/logout.js"></script>
 
 </body>
