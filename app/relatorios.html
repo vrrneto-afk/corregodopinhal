@@ -222,7 +222,10 @@ function filtrarCardsRelatorios(){
 
     document.querySelectorAll("[data-permissao]").forEach(card => {
       const chave = card.dataset.permissao;
-      if (!permissoes[chave]) {
+
+      // 🔒 REGRA CORRETA:
+      // só remove se a permissão existir E for false
+      if (permissoes[chave] === false) {
         card.remove();
       }
     });
