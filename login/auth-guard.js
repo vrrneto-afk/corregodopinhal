@@ -33,11 +33,11 @@
 
         /* ================= USUÁRIO (MODELO NOVO) ================= */
         const snapUser = await db
-          .collection("config")
-          .doc("usuarios")
-          .collection("lista")
-          .doc(user.uid)
-          .get();
+  .collection("config")
+  .doc("usuarios")
+  .collection("lista")
+  .doc(user.uid)
+  .get();
 
         if (!snapUser.exists) {
           alert("Usuário não autorizado no sistema.");
