@@ -1,3 +1,7 @@
+/* =========================================
+   MENU GLOBAL – PADRÃO DEFINITIVO
+   ========================================= */
+
 .menu-wrapper{
   position:relative;
   z-index:100;
@@ -62,7 +66,7 @@
 }
 
 /* =========================================
-   CARD – DESPESAS / VENCIMENTOS (PADRÃO)
+   CARD – DESPESAS / VENCIMENTOS
    ========================================= */
 
 .card-vencimento{
@@ -99,4 +103,70 @@
 .card-vencimento .neg{
   color:var(--vermelho);
   font-weight:700;
+}
+
+/* =========================================
+   CARD – VACINAS (PADRÃO PRÓPRIO)
+   ========================================= */
+
+.card-vacina{
+  background:#fff;
+  padding:12px 14px;
+  margin-bottom:10px;
+  border-left:6px solid var(--cinza);
+  border-radius:14px;
+  box-shadow:0 2px 6px rgba(0,0,0,.05);
+}
+
+/* Estados */
+.card-vacina.atrasada{
+  border-left-color:var(--vermelho);
+}
+
+.card-vacina.pendente{
+  border-left-color:var(--amarelo);
+}
+
+.card-vacina.finalizada{
+  border-left-color:var(--verde);
+}
+
+/* Texto interno */
+.card-vacina p{
+  margin:2px 0;
+  padding:0;
+  font-size:14px;
+  line-height:1.25;
+  color:var(--cinza);
+}
+
+.card-vacina strong{
+  display:block;
+  font-weight:700;
+  font-size:15px;
+  color:#000;
+  margin-bottom:4px;
+}
+
+/* Badge */
+.card-vacina .badge{
+  display:inline-block;
+  margin:2px 0 4px 0;
+  padding:4px 10px;
+  font-size:12px;
+  font-weight:700;
+  color:#fff;
+  border-radius:8px;
+}
+
+.card-vacina .atrasada-b{
+  background:var(--vermelho);
+}
+
+.card-vacina .pendente-b{
+  background:var(--amarelo);
+}
+
+.card-vacina .finalizada-b{
+  background:var(--verde);
 }
