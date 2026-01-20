@@ -5,173 +5,234 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Configuração – Usuários</title>
 
+<!-- MANIFEST -->
+<link rel="manifest" href="../manifest.json">
+<meta name="theme-color" content="#7b3f2a">
+
+<!-- MENU GLOBAL -->
+<link rel="stylesheet" href="../menu/menu.css">
+
+<!-- CONFIG CSS -->
+<link rel="stylesheet" href="./config.css">
+
+<!-- FIREBASE -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
-<link rel="stylesheet" href="menu-adm.css">
-<link rel="stylesheet" href="config.css">
+<script>
+if (!firebase.apps.length) {
+  firebase.initializeApp({
+    apiKey: "AIzaSyCW-CuFDrOLO-dteckl_GrPTocmyS-IrzY",
+    authDomain: "sitio-corrego-do-pinhal.firebaseapp.com",
+    projectId: "sitio-corrego-do-pinhal"
+  });
+}
+</script>
+
+<!-- IDENTIFICAÇÃO DA PÁGINA -->
+<script>
+window.PERMISSAO_PAGINA = {
+  area: "config",
+  chave: "config-usuarios"
+};
+</script>
+
+<!-- AUTH GUARD -->
+<script src="../login/auth-guard.js"></script>
 
 <style>
-.check-row{display:flex;gap:10px;margin-top:12px;font-weight:600;}
-.actions{display:flex;gap:10px;margin-top:14px;}
-.actions button{flex:1;}
-.danger{background:#b03a2e!important;}
+.status{
+  font-weight:700;
+  font-size:13px;
+}
+.status.ativo{color:#2f6b2f}
+.status.bloqueado{color:#c0392b}
+.actions{
+  display:flex;
+  flex-wrap:wrap;
+  gap:6px;
+  margin-top:8px;
+}
+.actions button{
+  font-size:13px;
+}
 </style>
 </head>
 
 <body style="display:none">
 
-<script>
-window.PERMISSAO_MINIMA="admin";
-</script>
-<script src="auth-guard.js"></script>
-
-<div id="app" class="hidden">
-
 <header>⚙️ Configurações</header>
 <div id="menu-adm"></div>
 
 <div class="container">
-<h2>Configuração – Usuários</h2>
+
+<h2>Usuários do Sistema</h2>
 
 <div class="cards-grid" id="lista-usuarios"></div>
-<button class="config-card" onclick="novoUsuario()">➕ Criar usuário</button>
 
-<div id="editor" class="hidden">
+<hr>
+
+<h3>➕ Criar novo usuário</h3>
+
 <fieldset>
+  <label>Nome</label>
+  <input id="novo_nome">
 
-<label>Nome</label>
-<input type="text" id="user_nome">
+  <label>Email</label>
+  <input id="novo_email" type="email">
 
-<label>Email</label>
-<input type="email" id="user_email">
-
-<label>Papel</label>
-<select id="user_papel">
-  <option value="admin">Administrador</option>
-  <option value="operador">Operador</option>
-  <option value="leitura">Somente leitura</option>
-</select>
-
-<div class="check-row">
-  <input type="checkbox" id="user_ativo">
-  <label>Usuário ativo</label>
-</div>
-
+  <label>Grupo</label>
+  <select id="novo_grupo">
+    <!-- carregado dinamicamente -->
+  </select>
 </fieldset>
 
-<div class="actions">
-  <button onclick="salvarUsuario()">💾 Salvar</button>
-  <button onclick="enviarEmail()">📧 Enviar acesso</button>
+<button class="salvar" onclick="criarUsuario()">💾 Criar usuário</button>
+
+<button class="voltar" onclick="location.href='config.html'">
+⬅ Voltar
+</button>
+
 </div>
 
-<button class="voltar danger" onclick="desativarUsuario()">🚫 Desativar usuário</button>
-<button class="voltar" onclick="cancelar()">❌ Cancelar</button>
-</div>
+<!-- MENU + PERMISSÕES -->
+<script>
+fetch("../menu/menu-adm.html")
+  .then(r => r.text())
+  .then(html => {
+    document.getElementById("menu-adm").innerHTML = html;
 
-<button class="voltar" onclick="location.href='config.html'">⬅ Voltar</button>
-</div>
-</div>
+    const s = document.createElement("script");
+    s.src = "../menu/menu-permissoes.js";
+    s.onload = () => {
+      document.body.style.display = "block";
+      carregar();
+    };
+    document.body.appendChild(s);
+  });
+</script>
 
 <script>
-firebase.initializeApp({
-  apiKey:"AIzaSyCW-CuFDrOLO-dteckl_GrPTocmyS-IrzY",
-  authDomain:"sitio-corrego-do-pinhal.firebaseapp.com",
-  projectId:"sitio-corrego-do-pinhal"
-});
-
 const auth = firebase.auth();
-const db = firebase.firestore();
+const db   = firebase.firestore();
 
-let usuarios=[], editando=null;
+let usuarios = [];
+let grupos   = [];
 
-fetch("menu-adm.html").then(r=>r.text()).then(h=>menu-adm.innerHTML=h);
-
-auth.onAuthStateChanged(u=>{
-  if(u){
-    document.body.style.display="block";
-    app.classList.remove("hidden");
-    carregar();
-  }
-});
-
+/* LOAD */
 async function carregar(){
-  const snap = await db.collection("usuarios").orderBy("nome").get();
-  usuarios = snap.docs.map(d=>({id:d.id,...d.data()}));
+  const g = await db.collection("config").doc("grupos").get();
+  grupos = g.exists ? g.data().lista || [] : [];
+
+  const sel = document.getElementById("novo_grupo");
+  sel.innerHTML = "";
+  grupos.forEach(gr=>{
+    const o = document.createElement("option");
+    o.value = gr.id;
+    o.textContent = gr.nome;
+    sel.appendChild(o);
+  });
+
+  const s = await db.collection("usuarios").get();
+  usuarios = s.docs.map(d=>({_id:d.id,...d.data()}));
+
   render();
 }
 
+/* RENDER */
 function render(){
-  lista-usuarios.innerHTML="";
+  const area = document.getElementById("lista-usuarios");
+  area.innerHTML = "";
+
   usuarios.forEach(u=>{
-    const b=document.createElement("button");
-    b.className="config-card";
-    if(!u.ativo) b.style.opacity=.5;
-    b.innerHTML=`<strong>${u.nome}</strong><span>${u.email} • ${u.papel}</span>`;
-    b.onclick=()=>editar(u.id);
-    lista-usuarios.appendChild(b);
+    const div = document.createElement("div");
+    div.className = "config-card";
+
+    div.innerHTML = `
+      <strong>${u.nome || "-"}</strong>
+      <span>${u.email}</span>
+      <span>Grupo: ${u.papel}</span>
+      <span class="status ${u.ativo!==false?"ativo":"bloqueado"}">
+        ${u.ativo!==false?"Ativo":"Bloqueado"}
+      </span>
+
+      <div class="actions">
+        <button onclick="resetarSenha('${u.email}')">🔑 Reset senha</button>
+        <button onclick="toggleAtivo('${u._id}', ${u.ativo!==false})">
+          ${u.ativo!==false?"🚫 Bloquear":"✅ Ativar"}
+        </button>
+        <button onclick="excluirUsuario('${u._id}','${u.email}')" style="background:#c0392b;color:#fff">
+          🗑 Excluir
+        </button>
+      </div>
+    `;
+
+    area.appendChild(div);
   });
 }
 
-function editar(id){
-  const u=usuarios.find(x=>x.id===id);
-  editando=id;
-  user_nome.value=u.nome;
-  user_email.value=u.email;
-  user_papel.value=u.papel;
-  user_ativo.checked=u.ativo;
-  editor.classList.remove("hidden");
+/* CRIAR USUÁRIO */
+async function criarUsuario(){
+  const nome  = novo_nome.value.trim();
+  const email = novo_email.value.trim();
+  const papel = novo_grupo.value;
+
+  if(!nome || !email){
+    alert("Informe nome e email.");
+    return;
+  }
+
+  // cria auth
+  const tempSenha = Math.random().toString(36).slice(-8);
+
+  const cred = await auth.createUserWithEmailAndPassword(email, tempSenha);
+
+  await db.collection("usuarios").doc(cred.user.uid).set({
+    nome,
+    email,
+    papel,
+    ativo:true,
+    criado_em: firebase.firestore.FieldValue.serverTimestamp()
+  });
+
+  await auth.sendPasswordResetEmail(email);
+
+  alert("Usuário criado. Email de redefinição enviado.");
+
+  novo_nome.value="";
+  novo_email.value="";
+
+  carregar();
 }
 
-window.novoUsuario=()=>{
-  editando=null;
-  user_nome.value="";
-  user_email.value="";
-  user_papel.value="operador";
-  user_ativo.checked=true;
-  editor.classList.remove("hidden");
-};
+/* RESETAR SENHA */
+function resetarSenha(email){
+  if(!confirm("Enviar email de redefinição de senha?")) return;
+  auth.sendPasswordResetEmail(email);
+  alert("Email enviado.");
+}
 
-window.salvarUsuario=async()=>{
-  const nome=user_nome.value.trim();
-  const email=user_email.value.trim().toLowerCase();
-  const papel=user_papel.value;
-  const ativo=user_ativo.checked;
-
-  if(!nome||!email) return alert("Preencha os campos.");
-
-  if(editando===null){
-    await db.collection("usuarios").add({
-      nome,email,papel,ativo,pendente:true,
-      criado_em:firebase.firestore.FieldValue.serverTimestamp(),
-      ultimo_login:null
-    });
-  }else{
-    await db.collection("usuarios").doc(editando).update({nome,papel,ativo});
-  }
-
-  cancelar();
+/* BLOQUEAR / ATIVAR */
+async function toggleAtivo(id, ativoAtual){
+  await db.collection("usuarios").doc(id).update({
+    ativo: !ativoAtual
+  });
   carregar();
-};
+}
 
-window.enviarEmail=async()=>{
-  const email=user_email.value.trim();
-  if(email) await auth.sendPasswordResetEmail(email);
-};
+/* EXCLUIR */
+async function excluirUsuario(id,email){
+  if(!confirm("Excluir usuário definitivamente?")) return;
 
-window.desativarUsuario=async()=>{
-  if(editando){
-    await db.collection("usuarios").doc(editando).update({ativo:false});
-    cancelar();carregar();
-  }
-};
+  await db.collection("usuarios").doc(id).delete();
+  alert("Usuário removido do sistema (auth deve ser removido manualmente).");
 
-window.cancelar=()=>{
-  editor.classList.add("hidden");
-  editando=null;
-};
+  carregar();
+}
 </script>
+
+<script src="../login/logout.js"></script>
 
 </body>
 </html>
