@@ -200,22 +200,22 @@ function filtrarCardsRelatorios(){
   firebase.auth().onAuthStateChanged(async (user) => {
     if (!user) return;
 
-    const userSnap = await firebase.firestore()
+    const snap = await firebase.firestore()
       .collection("usuarios")
       .doc(user.uid)
       .get();
-    if (!userSnap.exists) return;
+    if (!snap.exists) return;
 
-    const papel = userSnap.data().papel;
+    const papel = snap.data().papel;
     if (!papel) return;
 
-    const gruposSnap = await firebase.firestore()
+    const grupoSnap = await firebase.firestore()
       .collection("config")
       .doc("grupos")
       .get();
-    if (!gruposSnap.exists) return;
+    if (!grupoSnap.exists) return;
 
-    const grupo = gruposSnap.data().lista.find(g => g.id === papel);
+    const grupo = grupoSnap.data().lista.find(g => g.id === papel);
     if (!grupo) return;
 
     const permissoes = grupo.permissoes || {};
@@ -223,8 +223,8 @@ function filtrarCardsRelatorios(){
     document.querySelectorAll("[data-permissao]").forEach(card => {
       const chave = card.dataset.permissao;
 
-      // 🔒 REGRA CORRETA:
-      // só remove se a permissão existir E for false
+      // 🔑 REGRA DEFINITIVA:
+      // só remove se a permissão existir e for false
       if (permissoes[chave] === false) {
         card.remove();
       }
