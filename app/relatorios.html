@@ -3,15 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Relatórios – Sítio Córrego do Pinhal</title>
+<title>Relatórios</title>
 
-<link rel="manifest" href="../manifest.json">
 <meta name="theme-color" content="#7b3f2a">
-
-<!-- MENU GLOBAL -->
+<link rel="manifest" href="../manifest.json">
 <link rel="stylesheet" href="../menu/menu.css">
 
-<!-- 🔥 FIREBASE (OFICIAL – OBRIGATÓRIO) -->
+<!-- FIREBASE (CDN OFICIAL) -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
@@ -24,35 +22,49 @@ firebase.initializeApp({
 });
 </script>
 
-<!-- 🔐 PERMISSÕES (LÓGICA GLOBAL) -->
-<script src="../menu/menu-permissoes.js"></script>
-
-<!-- IDENTIFICAÇÃO DA PÁGINA -->
-<script>
-window.PERMISSAO_PAGINA = {
-  area: "app",
-  chave: "relatorios"
-};
-</script>
-
-<!-- 🔒 AUTH GUARD (CARREGAR UMA ÚNICA VEZ) -->
-<script src="../login/auth-guard.js"></script>
-
 <style>
-:root{
-  --marrom:#7b3f2a;
-  --bege:#f6efe7;
-  --cinza:#666;
-  --logo:#D0B485;
+body{
+  margin:0;
+  background:#f6efe7;
+  font-family:system-ui,Arial;
+  color:#333;
 }
-*{ box-sizing:border-box; font-family:Inter,system-ui,Arial; }
-body{ margin:0; background:var(--bege); color:#333; display:none; }
-header{ background:var(--logo); padding:15px; text-align:center; }
-header img{ max-width:260px; width:100%; }
-.container{ max-width:900px; margin:20px auto; padding:0 15px; }
-h2{ color:var(--marrom); display:flex; gap:8px; align-items:center; }
-.blocos{ display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:14px; }
-.bloco{ background:#fff; padding:16px; border-left:6px solid var(--marrom); border-radius:14px; cursor:pointer; }
+
+header{
+  background:#D0B485;
+  padding:15px;
+  text-align:center;
+}
+
+header img{
+  max-width:240px;
+}
+
+.container{
+  max-width:900px;
+  margin:20px auto;
+  padding:0 15px;
+}
+
+.cards{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+  gap:14px;
+}
+
+.card{
+  background:#fff;
+  border-left:6px solid #7b3f2a;
+  padding:16px;
+  border-radius:14px;
+  box-shadow:0 2px 6px rgba(0,0,0,.08);
+  cursor:pointer;
+  transition:.2s;
+}
+
+.card:hover{
+  transform:translateY(-2px);
+}
 </style>
 </head>
 
@@ -65,62 +77,81 @@ h2{ color:var(--marrom); display:flex; gap:8px; align-items:center; }
 <div id="menu"></div>
 
 <div class="container">
-
   <h2>📊 Relatórios</h2>
+  <p>Selecione o relatório que deseja acessar.</p>
 
-  <div class="blocos">
-
-    <div class="bloco" data-permissao="app.relatorio-financeiro"
-         onclick="location.href='../relatorios/relatorio-financeiro.html'">
-      💰 Financeiro
-    </div>
-
-    <div class="bloco" data-permissao="app.relatorio-leite"
-         onclick="location.href='../relatorios/relatorio-leite.html'">
-      🥛 Produção de Leite
-    </div>
-
-    <div class="bloco" data-permissao="app.relatorio-rebanho"
-         onclick="location.href='../relatorios/relatorio-rebanho.html'">
-      🐄 Rebanho
-    </div>
-
-    <div class="bloco" data-permissao="app.relatorio-sanitario"
-         onclick="location.href='../relatorios/relatorio-sanitario.html'">
-      💉 Sanitário
-    </div>
-
-  </div>
+  <div class="cards" id="cards"></div>
 </div>
 
-<!-- MENU VISUAL -->
 <script>
-fetch("../menu/menu.html")
-  .then(r => r.text())
-  .then(h => document.getElementById("menu").innerHTML = h);
-</script>
+const RELATORIOS = [
+  {
+    id: "relatorio_financeiro",
+    titulo: "💰 Financeiro",
+    url: "../relatorios/relatorio-financeiro.html"
+  },
+  {
+    id: "relatorio_leite",
+    titulo: "🥛 Produção de Leite",
+    url: "../relatorios/relatorio-leite.html"
+  },
+  {
+    id: "relatorio_rebanho",
+    titulo: "🐄 Rebanho",
+    url: "../relatorios/relatorio-rebanho.html"
+  },
+  {
+    id: "relatorio_sanitario",
+    titulo: "💉 Sanitário",
+    url: "../relatorios/relatorio-sanitario.html"
+  }
+];
 
-<!-- FILTRO DOS RELATÓRIOS -->
-<script>
-function filtrarRelatorios(){
-  let visivel = false;
-  document.querySelectorAll("[data-permissao]").forEach(el=>{
-    if (window.temPermissao(el.dataset.permissao)) {
-      visivel = true;
-    } else {
-      el.remove();
+firebase.auth().onAuthStateChanged(async user=>{
+  if(!user){
+    location.href="../login/login.html";
+    return;
+  }
+
+  const db = firebase.firestore();
+
+  const snapUser = await db.collection("usuarios").doc(user.uid).get();
+  if(!snapUser.exists){
+    alert("Usuário não autorizado.");
+    return;
+  }
+
+  const papel = snapUser.data().papel;
+
+  const snapGrupo = await db.collection("config").doc("grupos").get();
+  const grupo = snapGrupo.data().lista.find(g=>g.id===papel);
+  const perms = grupo.permissoes?.app || {};
+
+  const container = document.getElementById("cards");
+
+  let algum = false;
+
+  RELATORIOS.forEach(r=>{
+    if(perms[r.id] === true){
+      algum = true;
+      const div = document.createElement("div");
+      div.className="card";
+      div.textContent = r.titulo;
+      div.onclick = ()=>location.href=r.url;
+      container.appendChild(div);
     }
   });
-  if(!visivel){
-    document.querySelector(".blocos").innerHTML =
-      "<p style='color:#666'>Nenhum relatório disponível.</p>";
+
+  if(!algum){
+    container.innerHTML = "<p>Nenhum relatório disponível para seu perfil.</p>";
   }
-}
-if(window.PERMISSOES_USUARIO){
-  filtrarRelatorios();
-}else{
-  document.addEventListener("permissoes-carregadas", filtrarRelatorios, {once:true});
-}
+});
+</script>
+
+<script>
+fetch("../menu/menu.html")
+  .then(r=>r.text())
+  .then(h=>document.getElementById("menu").innerHTML=h);
 </script>
 
 <script src="../login/logout.js"></script>
