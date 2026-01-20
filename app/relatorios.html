@@ -188,63 +188,37 @@ fetch("../menu/menu.html")
 
     const s = document.createElement("script");
     s.src = "../menu/menu-permissoes.js";
-    s.onload = aplicarPermissoesRelatorios;
     document.body.appendChild(s);
   });
 </script>
 
-<!-- 🔒 FILTRO DEFINITIVO DE PERMISSÕES -->
+<!-- 🔒 FILTRO FINAL DE RELATÓRIOS -->
 <script>
-async function aplicarPermissoesRelatorios(){
-
-  const user = firebase.auth().currentUser;
-  if(!user) return;
-
-  const db = firebase.firestore();
-
-  const userSnap = await db.collection("usuarios").doc(user.uid).get();
-  if(!userSnap.exists) return;
-
-  const papel = userSnap.data().papel;
-  if(!papel) return;
-
-  const grupoSnap = await db.collection("config").doc("grupos").get();
-  if(!grupoSnap.exists) return;
-
-  const grupo = (grupoSnap.data().lista || []).find(g => g.id === papel);
-  if(!grupo) return;
-
-  const permissoes = grupo.permissoes || {};
+function filtrarRelatorios(){
 
   let algumVisivel = false;
 
   document.querySelectorAll("[data-permissao]").forEach(card => {
+    const perm = card.dataset.permissao;
 
-    const caminho = card.dataset.permissao.split(".");
-    let permitido = true;
-    let atual = permissoes;
-
-    for(const p of caminho){
-      atual = atual?.[p];
-      if(atual !== true){
-        permitido = false;
-        break;
-      }
-    }
-
-    if(permitido){
+    if (window.temPermissao(perm)) {
       algumVisivel = true;
     } else {
       card.remove();
     }
   });
 
-  if(!algumVisivel){
+  if (!algumVisivel) {
     document.querySelector(".blocos").innerHTML =
       "<p style='color:#666'>Nenhum relatório disponível para seu perfil.</p>";
   }
+}
 
-  document.body.style.display = "block";
+/* Aguarda permissões carregarem */
+if (window.PERMISSOES_USUARIO) {
+  filtrarRelatorios();
+} else {
+  document.addEventListener("permissoes-carregadas", filtrarRelatorios, { once:true });
 }
 </script>
 
