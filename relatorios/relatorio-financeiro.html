@@ -288,7 +288,7 @@ th, tfoot td{
 </table>
 
 <div class="voltar">
-  <button onclick="location.href='../app/relatorios.html'">⬅ Voltar para Relatórios</button>
+  <button onclick="location.href='../relatorios/relatorio.html'">⬅ Voltar para Relatórios</button>
 </div>
 
 </div>
@@ -300,7 +300,7 @@ fetch("../menu/menu.html")
     menu.innerHTML = html;
 
     document.querySelectorAll("#menu a").forEach(a=>{
-      if(a.getAttribute("href")==="../relatorios/relatorios.html"){
+      if(a.getAttribute("href")==="../relatorios/relatorio.html"){
         a.classList.add("ativo");
       }
     });
