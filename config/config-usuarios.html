@@ -42,20 +42,53 @@ window.PERMISSAO_PAGINA = {
 <script src="../login/auth-guard.js"></script>
 
 <style>
-.status{
+.status-badge{
+  display:inline-block;
+  padding:4px 10px;
+  font-size:12px;
   font-weight:700;
-  font-size:13px;
+  border-radius:10px;
+  margin-top:6px;
 }
-.status.ativo{color:#2f6b2f}
-.status.bloqueado{color:#c0392b}
-.actions{
+.status-ativo{background:#eaf6ec;color:#2f6b2f}
+.status-bloqueado{background:#fdecea;color:#c0392b}
+
+.user-actions{
   display:flex;
   flex-wrap:wrap;
   gap:6px;
-  margin-top:8px;
+  margin-top:10px;
 }
-.actions button{
+
+.user-actions button{
   font-size:13px;
+}
+
+.edit-box{
+  margin-top:10px;
+  border-top:1px dashed #ccc;
+  padding-top:10px;
+}
+
+.edit-box label{
+  font-size:13px;
+  font-weight:600;
+  margin-top:6px;
+  display:block;
+}
+
+.edit-box input,
+.edit-box select{
+  width:100%;
+  padding:8px;
+  border-radius:8px;
+  border:1px solid #ccc;
+}
+
+.edit-actions{
+  display:flex;
+  gap:8px;
+  margin-top:10px;
 }
 </style>
 </head>
@@ -83,9 +116,7 @@ window.PERMISSAO_PAGINA = {
   <input id="novo_email" type="email">
 
   <label>Grupo</label>
-  <select id="novo_grupo">
-    <!-- carregado dinamicamente -->
-  </select>
+  <select id="novo_grupo"></select>
 </fieldset>
 
 <button class="salvar" onclick="criarUsuario()">💾 Criar usuário</button>
@@ -151,25 +182,70 @@ function render(){
 
     div.innerHTML = `
       <strong>${u.nome || "-"}</strong>
-      <span>${u.email}</span>
-      <span>Grupo: ${u.papel}</span>
-      <span class="status ${u.ativo!==false?"ativo":"bloqueado"}">
-        ${u.ativo!==false?"Ativo":"Bloqueado"}
+      <div>${u.email}</div>
+      <div>Grupo: <b>${u.papel}</b></div>
+
+      <span class="status-badge ${u.ativo!==false ? "status-ativo":"status-bloqueado"}">
+        ${u.ativo!==false ? "Ativo":"Bloqueado"}
       </span>
 
-      <div class="actions">
+      <div class="user-actions">
+        <button onclick="abrirEdicao('${u._id}')">✏️ Editar</button>
         <button onclick="resetarSenha('${u.email}')">🔑 Reset senha</button>
         <button onclick="toggleAtivo('${u._id}', ${u.ativo!==false})">
-          ${u.ativo!==false?"🚫 Bloquear":"✅ Ativar"}
+          ${u.ativo!==false ? "🚫 Bloquear":"✅ Ativar"}
         </button>
         <button onclick="excluirUsuario('${u._id}','${u.email}')" style="background:#c0392b;color:#fff">
           🗑 Excluir
         </button>
       </div>
+
+      <div class="edit-box" id="edit-${u._id}" style="display:none">
+        <label>Nome</label>
+        <input id="edit-nome-${u._id}" value="${u.nome||""}">
+
+        <label>Grupo</label>
+        <select id="edit-grupo-${u._id}">
+          ${grupos.map(g=>`
+            <option value="${g.id}" ${g.id===u.papel?"selected":""}>
+              ${g.nome}
+            </option>
+          `).join("")}
+        </select>
+
+        <div class="edit-actions">
+          <button onclick="salvarEdicao('${u._id}')">💾 Salvar</button>
+          <button onclick="fecharEdicao('${u._id}')">Cancelar</button>
+        </div>
+      </div>
     `;
 
     area.appendChild(div);
   });
+}
+
+/* EDITAR */
+function abrirEdicao(id){
+  document.getElementById(`edit-${id}`).style.display="block";
+}
+function fecharEdicao(id){
+  document.getElementById(`edit-${id}`).style.display="none";
+}
+async function salvarEdicao(id){
+  const nome = document.getElementById(`edit-nome-${id}`).value.trim();
+  const grupo = document.getElementById(`edit-grupo-${id}`).value;
+
+  if(!nome){
+    alert("Informe o nome.");
+    return;
+  }
+
+  await db.collection("usuarios").doc(id).update({
+    nome,
+    papel: grupo
+  });
+
+  carregar();
 }
 
 /* CRIAR USUÁRIO */
@@ -183,7 +259,6 @@ async function criarUsuario(){
     return;
   }
 
-  // cria auth
   const tempSenha = Math.random().toString(36).slice(-8);
 
   const cred = await auth.createUserWithEmailAndPassword(email, tempSenha);
