@@ -226,7 +226,12 @@ function aplicarPermissoesRelatorios(){
     document.querySelectorAll("[data-permissao]").forEach(card => {
       const chave = card.dataset.permissao;
 
-      if (permissoes[chave] === true) {
+      const permitido =
+        permissoes[chave] === true ||
+        permissoes.app?.[chave] === true ||
+        permissoes.relatorios === true;
+
+      if (permitido) {
         algumVisivel = true;
       } else {
         card.remove();
