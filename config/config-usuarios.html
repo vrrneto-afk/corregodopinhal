@@ -52,7 +52,7 @@ window.PERMISSAO_PAGINA = {
 <input id="edit_nome">
 
 <label>Email</label>
-<input id="edit_email" disabled>
+<input id="edit_email">
 
 <label>Grupo</label>
 <select id="edit_grupo"></select>
@@ -79,7 +79,6 @@ fetch("../menu/menu-adm.html")
   .then(html=>{
     document.getElementById("menu-adm").innerHTML = html;
 
-    // MARCAR CONFIG ATIVO
     document.querySelectorAll(".menu-link").forEach(a=>{
       if(a.getAttribute("href")?.includes("config.html")){
         a.classList.add("ativo");
@@ -145,17 +144,10 @@ function editar(i){
 
   edit_nome.value=u.nome||"";
   edit_email.value=u.email;
+  edit_email.disabled=true;
   edit_ativo.checked=u.ativo!==false;
 
-  edit_grupo.innerHTML="";
-  grupos.forEach(g=>{
-    const o=document.createElement("option");
-    o.value=g.id;
-    o.textContent=g.nome;
-    if(g.id===u.papel) o.selected=true;
-    edit_grupo.appendChild(o);
-  });
-
+  carregarGrupos(u.papel);
   editor.classList.remove("hidden");
 }
 
@@ -163,8 +155,22 @@ function criarNovo(){
   editando=null;
   edit_nome.value="";
   edit_email.value="";
+  edit_email.disabled=false;
   edit_ativo.checked=true;
+
+  carregarGrupos();
   editor.classList.remove("hidden");
+}
+
+function carregarGrupos(sel){
+  edit_grupo.innerHTML="";
+  grupos.forEach(g=>{
+    const o=document.createElement("option");
+    o.value=g.id;
+    o.textContent=g.nome;
+    if(g.id===sel) o.selected=true;
+    edit_grupo.appendChild(o);
+  });
 }
 
 function cancelar(){
@@ -173,6 +179,7 @@ function cancelar(){
 
 async function salvar(){
   const nome=edit_nome.value.trim();
+  const email=edit_email.value.trim();
   const grupo=edit_grupo.value;
   const ativo=edit_ativo.checked;
 
@@ -182,15 +189,31 @@ async function salvar(){
   }
 
   if(editando===null){
-    alert("Criação de usuário permanece pelo formulário antigo.");
-    return;
-  }
+    if(!email){
+      alert("Informe o email.");
+      return;
+    }
 
-  await db.collection("usuarios").doc(usuarios[editando]._id).update({
-    nome,
-    papel:grupo,
-    ativo
-  });
+    const senhaTemp = Math.random().toString(36).slice(-8);
+    const cred = await auth.createUserWithEmailAndPassword(email, senhaTemp);
+
+    await db.collection("usuarios").doc(cred.user.uid).set({
+      nome,
+      email,
+      papel:grupo,
+      ativo:true,
+      criado_em: firebase.firestore.FieldValue.serverTimestamp()
+    });
+
+    await auth.sendPasswordResetEmail(email);
+    alert("Usuário criado. Email de redefinição enviado.");
+  } else {
+    await db.collection("usuarios").doc(usuarios[editando]._id).update({
+      nome,
+      papel:grupo,
+      ativo
+    });
+  }
 
   location.reload();
 }
