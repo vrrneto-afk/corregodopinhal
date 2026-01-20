@@ -191,18 +191,23 @@ fetch("../menu/menu.html")
 
 <!-- APLICA PERMISSÕES NOS BLOCOS (PADRÃO CONFIG-MÃE) -->
 <script>
-document.addEventListener("permissoes-carregadas", () => {
+function aplicarPermissoesRelatorios(){
   const permissoes = window.PERMISSOES_USUARIO || {};
 
   document.querySelectorAll("[data-permissao]").forEach(el => {
-    const chave = el.dataset.permissao;
-    const [area, perm] = chave.split(".");
-
+    const [area, perm] = el.dataset.permissao.split(".");
     if (!permissoes?.[area]?.[perm]) {
       el.remove();
     }
   });
-});
+}
+
+/* garante execução mesmo se o menu carregar antes */
+if (window.PERMISSOES_USUARIO) {
+  aplicarPermissoesRelatorios();
+} else {
+  document.addEventListener("permissoes-carregadas", aplicarPermissoesRelatorios);
+}
 </script>
 
 <script src="../login/logout.js"></script>
