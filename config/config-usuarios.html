@@ -8,9 +8,11 @@
 <link rel="manifest" href="../manifest.json">
 <meta name="theme-color" content="#7b3f2a">
 
+<!-- MENU GLOBAL -->
 <link rel="stylesheet" href="../menu/menu.css">
 <link rel="stylesheet" href="./config.css">
 
+<!-- FIREBASE -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
@@ -25,6 +27,7 @@ if (!firebase.apps.length) {
 }
 </script>
 
+<!-- IDENTIFICAÇÃO DA PÁGINA -->
 <script>
 window.PERMISSAO_PAGINA = {
   area: "config",
@@ -32,7 +35,19 @@ window.PERMISSAO_PAGINA = {
 };
 </script>
 
+<!-- AUTH GUARD -->
 <script src="../login/auth-guard.js"></script>
+
+<style>
+.check-row{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  margin-top:12px;
+  font-weight:600;
+}
+.check-row input{margin:0;}
+</style>
 </head>
 
 <body style="display:none">
@@ -57,9 +72,10 @@ window.PERMISSAO_PAGINA = {
 <label>Grupo</label>
 <select id="edit_grupo"></select>
 
-<label style="margin-top:10px">
-<input type="checkbox" id="edit_ativo"> Usuário ativo
-</label>
+<div class="check-row">
+  <input type="checkbox" id="edit_ativo">
+  <label for="edit_ativo">Usuário ativo</label>
+</div>
 
 </fieldset>
 
@@ -73,6 +89,7 @@ window.PERMISSAO_PAGINA = {
 
 </div>
 
+<!-- MENU -->
 <script>
 fetch("../menu/menu-adm.html")
   .then(r=>r.text())
@@ -96,10 +113,10 @@ fetch("../menu/menu-adm.html")
 </script>
 
 <script>
-const db = firebase.firestore();
+const db   = firebase.firestore();
 const auth = firebase.auth();
 
-/* 🔐 AUTH SECUNDÁRIO */
+/* AUTH SECUNDÁRIO (criação segura) */
 const secondaryApp = firebase.initializeApp(
   firebase.app().options,
   "Secondary"
@@ -107,24 +124,29 @@ const secondaryApp = firebase.initializeApp(
 const secondaryAuth = secondaryApp.auth();
 
 let usuarios = [];
-let grupos = [];
-let editando = null;
+let grupos   = [];
 let usuarioAtual = null;
 
+/* ================= LOAD ================= */
 async function carregar(){
   const g = await db.collection("config").doc("grupos").get();
   grupos = g.exists ? g.data().lista || [] : [];
 
-  const s = await db.collection("usuarios").get();
-  usuarios = s.docs.map(d=>({_id:d.id,...d.data()}));
+  const snap = await db
+    .collection("config")
+    .doc("usuarios")
+    .collection("lista")
+    .get();
 
+  usuarios = snap.docs.map(d=>({_id:d.id,...d.data()}));
   render();
 }
 
+/* ================= RENDER ================= */
 function render(){
   lista.innerHTML="";
 
-  usuarios.forEach((u,i)=>{
+  usuarios.forEach(u=>{
     const b=document.createElement("button");
     b.className="config-card";
     b.innerHTML=`
@@ -135,7 +157,7 @@ function render(){
         ${u.ativo!==false?"Ativo":"Inativo"}
       </span>
     `;
-    b.onclick=()=>editar(i);
+    b.onclick=()=>editar(u);
     lista.appendChild(b);
   });
 
@@ -146,23 +168,22 @@ function render(){
   lista.appendChild(novo);
 }
 
-function editar(i){
-  editando = i;
-  usuarioAtual = usuarios[i];
+/* ================= EDITAR ================= */
+function editar(u){
+  usuarioAtual = u;
 
-  edit_nome.value = usuarioAtual.nome || "";
-  edit_email.value = usuarioAtual.email;
+  edit_nome.value  = u.nome || "";
+  edit_email.value = u.email;
   edit_email.disabled = true;
-  edit_ativo.checked = usuarioAtual.ativo !== false;
+  edit_ativo.checked = u.ativo !== false;
 
-  preencherGrupos(usuarioAtual.papel);
+  preencherGrupos(u.papel);
   editor.classList.remove("hidden");
 }
 
+/* ================= NOVO ================= */
 function criarNovo(){
-  editando = null;
   usuarioAtual = null;
-
   edit_nome.value="";
   edit_email.value="";
   edit_email.disabled=false;
@@ -172,13 +193,13 @@ function criarNovo(){
   editor.classList.remove("hidden");
 }
 
-function preencherGrupos(selecionado){
+function preencherGrupos(sel){
   edit_grupo.innerHTML="";
   grupos.forEach(g=>{
     const o=document.createElement("option");
     o.value=g.id;
     o.textContent=g.nome;
-    if(g.id===selecionado) o.selected=true;
+    if(g.id===sel) o.selected=true;
     edit_grupo.appendChild(o);
   });
 }
@@ -187,9 +208,9 @@ function cancelar(){
   editor.classList.add("hidden");
 }
 
-/* 💾 SALVAR */
+/* ================= SALVAR ================= */
 async function salvar(){
-  const nome = edit_nome.value.trim();
+  const nome  = edit_nome.value.trim();
   const email = edit_email.value.trim();
   const grupo = edit_grupo.value;
   const ativo = edit_ativo.checked;
@@ -199,8 +220,8 @@ async function salvar(){
     return;
   }
 
-  /* 🆕 CRIAR */
-  if(editando === null){
+  /* ===== CRIAÇÃO ===== */
+  if(!usuarioAtual){
     if(!email){
       alert("Informe o email.");
       return;
@@ -210,66 +231,69 @@ async function salvar(){
       const senhaTemp = Math.random().toString(36).slice(-10);
       const cred = await secondaryAuth.createUserWithEmailAndPassword(email, senhaTemp);
 
-      await db.collection("usuarios").doc(cred.user.uid).set({
-        nome,
-        email,
-        papel: grupo,
-        ativo: true,
-        criado_em: firebase.firestore.FieldValue.serverTimestamp()
-      });
+      await db.collection("config")
+        .doc("usuarios")
+        .collection("lista")
+        .doc(cred.user.uid)
+        .set({
+          nome,
+          email,
+          papel:grupo,
+          ativo:true,
+          criado_em: firebase.firestore.FieldValue.serverTimestamp()
+        });
 
       await secondaryAuth.sendPasswordResetEmail(email);
       await secondaryAuth.signOut();
 
-      alert("Usuário criado. Email de redefinição enviado.");
+      alert("Usuário criado com sucesso. Email enviado.");
       location.reload();
-
     }catch(e){
-      if(e.code === "auth/email-already-in-use"){
-        alert(
-          "Este email já existe no Authentication.\n\n" +
-          "Se este usuário foi excluído anteriormente, a reativação deve ser feita manualmente criando o cadastro novamente no Firestore."
-        );
-      }else{
-        alert("Erro ao criar usuário: " + e.message);
-      }
+      alert("Erro ao criar usuário: " + e.message);
     }
     return;
   }
 
-  /* ✏️ EDITAR */
-  await db.collection("usuarios").doc(usuarioAtual._id).update({
-    nome,
-    papel: grupo,
-    ativo
-  });
+  /* ===== EDIÇÃO ===== */
+  try{
+    await db.collection("config")
+      .doc("usuarios")
+      .collection("lista")
+      .doc(usuarioAtual._id)
+      .update({ nome, papel:grupo, ativo });
 
-  location.reload();
+    alert("Dados atualizados com sucesso.");
+    location.reload();
+  }catch(e){
+    alert("Erro ao salvar: " + e.message);
+  }
 }
 
+/* ================= RESET ================= */
 function resetSenha(){
   if(!confirm("Reenviar email de redefinição de senha?")) return;
   auth.sendPasswordResetEmail(edit_email.value);
   alert("Email enviado.");
 }
 
+/* ================= EXCLUIR ================= */
 async function excluir(){
-  if(!usuarioAtual){
-    alert("Nenhum usuário selecionado.");
-    return;
+  if(!usuarioAtual) return;
+
+  if(!confirm(`Excluir o usuário ${usuarioAtual.nome}?`)) return;
+
+  try{
+    await db.collection("config")
+      .doc("usuarios")
+      .collection("lista")
+      .doc(usuarioAtual._id)
+      .delete();
+
+    alert("Usuário removido. Acesso revogado imediatamente.");
+    location.reload();
+  }catch(e){
+    alert("Erro ao excluir: " + e.message);
   }
-
-  if(!confirm(`Excluir definitivamente o acesso de ${usuarioAtual.nome}?`)) return;
-
-  await db.collection("usuarios").doc(usuarioAtual._id).delete();
-
-  alert(
-    "Usuário removido do sistema.\n\n" +
-    "O acesso foi cortado imediatamente.\n" +
-    "O registro no Authentication é mantido por segurança e auditoria."
-  );
-
-  location.reload();
 }
 </script>
 
