@@ -11,10 +11,21 @@
 <!-- MENU GLOBAL -->
 <link rel="stylesheet" href="../menu/menu.css">
 
-<!-- FIREBASE (PADRÃO GLOBAL) -->
+<!-- FIREBASE LIBS -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+<!-- 🔹 FIREBASE INIT (OBRIGATÓRIO) -->
+<script>
+if (!firebase.apps.length) {
+  firebase.initializeApp({
+    apiKey: "AIzaSyCW-CuFDrOLO-dteckl_GrPTocmyS-IrzY",
+    authDomain: "sitio-corrego-do-pinhal.firebaseapp.com",
+    projectId: "sitio-corrego-do-pinhal"
+  });
+}
+</script>
 
 <!-- IDENTIFICAÇÃO DA PÁGINA -->
 <script>
@@ -89,7 +100,7 @@ select{width:100%;padding:12px;margin-bottom:20px;border-radius:10px;border:1.5p
   <div id="lista"></div>
 </div>
 
-<!-- MENU + PERMISSÕES — PADRÃO DEFINITIVO -->
+<!-- MENU + PERMISSÕES (PADRÃO DEFINITIVO) -->
 <script>
 fetch("../menu/menu.html")
   .then(r => r.text())
@@ -101,7 +112,7 @@ fetch("../menu/menu.html")
 
     s.onload = () => {
 
-      // 🔹 MARCAR MENU ATIVO (PADRÃO GLOBAL)
+      // 🔹 MARCAR MENU ATIVO
       document.querySelectorAll(".menu-link").forEach(link=>{
         if(link.dataset.area==="app" && link.dataset.chave==="vacinas"){
           link.classList.add("ativo");
