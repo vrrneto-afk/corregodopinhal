@@ -1,11 +1,5 @@
 // auth-guard.js
 // GUARD GLOBAL – APP / ADM / CONFIG
-
-// ⛔ NÃO EXECUTA NA TELA DE LOGIN
-if (location.pathname.includes("/login/")) {
-  console.log("Auth-guard ignorado na tela de login");
-} else {
-
 (function () {
 
   const wait = setInterval(() => {
@@ -27,30 +21,52 @@ if (location.pathname.includes("/login/")) {
         return;
       }
 
-      /* ================= PÁGINA SEM CONTROLE (EX: INDEX) ================= */
+      /* ================= IDENTIFICAÇÃO DA PÁGINA ================= */
       if (!window.PERMISSAO_PAGINA) {
-        document.body.style.display = "block";
+        console.error("PERMISSAO_PAGINA não definida.");
+        await auth.signOut();
+        location.replace("../login/login.html");
         return;
       }
 
       try {
 
-        /* ================= USUÁRIO (MODELO NOVO) ================= */
-        const snapUser = await db
+        let snapUser = null;
+        let dadosUser = null;
+
+        /* ========= MODELO NOVO ========= */
+        const novo = await db
           .collection("config")
           .doc("usuarios")
           .collection("lista")
           .doc(user.uid)
           .get();
 
-        if (!snapUser.exists) {
+        if (novo.exists) {
+          snapUser = novo;
+          dadosUser = novo.data();
+        }
+
+        /* ========= MODELO ANTIGO (FALLBACK) ========= */
+        if (!snapUser) {
+          const antigo = await db
+            .collection("usuarios")
+            .doc(user.uid)
+            .get();
+
+          if (antigo.exists) {
+            snapUser = antigo;
+            dadosUser = antigo.data();
+          }
+        }
+
+        /* ========= NÃO EXISTE EM NENHUM ========= */
+        if (!dadosUser) {
           alert("Usuário não autorizado no sistema.");
           await auth.signOut();
           location.replace("../login/login.html");
           return;
         }
-
-        const dadosUser = snapUser.data();
 
         if (dadosUser.ativo !== true) {
           alert("Usuário inativo. Acesso bloqueado.");
@@ -68,10 +84,7 @@ if (location.pathname.includes("/login/")) {
           throw new Error("Configuração de grupos não encontrada.");
         }
 
-        const grupoCfg = snapGrupos
-          .data()
-          .lista
-          .find(g => g.id === papel);
+        const grupoCfg = snapGrupos.data().lista.find(g => g.id === papel);
 
         if (!grupoCfg) {
           throw new Error("Grupo do usuário não existe.");
@@ -86,7 +99,8 @@ if (location.pathname.includes("/login/")) {
 
         if (!permitido) {
           alert("Você não tem permissão para acessar esta área.");
-          location.replace("../app/index.html");
+          await auth.signOut();
+          location.replace("../login/login.html");
           return;
         }
 
@@ -111,4 +125,3 @@ if (location.pathname.includes("/login/")) {
   }
 
 })();
-}
