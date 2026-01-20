@@ -1,13 +1,9 @@
 // auth-guard.js
 // GUARD GLOBAL – APP / ADM / CONFIG
-
 (function () {
 
   const wait = setInterval(() => {
-    if (
-      window.firebase &&
-      firebase.auth
-    ) {
+    if (window.firebase && firebase.auth && firebase.firestore) {
       clearInterval(wait);
       iniciar();
     }
@@ -15,6 +11,7 @@
 
   async function iniciar() {
     const auth = firebase.auth();
+    const db   = firebase.firestore();
 
     auth.onAuthStateChanged(async (user) => {
 
@@ -32,40 +29,45 @@
         return;
       }
 
-      /* ================= FIRESTORE OBRIGATÓRIO ================= */
-      if (!firebase.firestore) {
-        console.error("Firestore não carregado.");
-        await auth.signOut();
-        location.replace("../login/login.html");
-        return;
-      }
-
-      const db = firebase.firestore();
-
       try {
 
-        /* ================= USUÁRIO ================= */
-        const snapUser = await db.collection("usuarios").doc(user.uid).get();
+        /* ================= USUÁRIO (MODELO NOVO) ================= */
+        const snapUser = await db
+          .collection("config")
+          .doc("usuarios")
+          .collection("lista")
+          .doc(user.uid)
+          .get();
 
-        if (!snapUser.exists || snapUser.data().ativo !== true) {
+        if (!snapUser.exists) {
+          alert("Usuário não autorizado no sistema.");
           await auth.signOut();
           location.replace("../login/login.html");
           return;
         }
 
-        const papel = snapUser.data().papel;
+        const dadosUser = snapUser.data();
+
+        if (dadosUser.ativo !== true) {
+          alert("Usuário inativo. Acesso bloqueado.");
+          await auth.signOut();
+          location.replace("../login/login.html");
+          return;
+        }
+
+        const papel = dadosUser.papel;
 
         /* ================= GRUPOS ================= */
         const snapGrupos = await db.collection("config").doc("grupos").get();
 
         if (!snapGrupos.exists) {
-          throw new Error("Config grupos não encontrada");
+          throw new Error("Configuração de grupos não encontrada.");
         }
 
         const grupoCfg = snapGrupos.data().lista.find(g => g.id === papel);
 
         if (!grupoCfg) {
-          throw new Error("Grupo do usuário não existe");
+          throw new Error("Grupo do usuário não existe.");
         }
 
         /* ================= PERMISSÃO ================= */
@@ -85,6 +87,8 @@
         /* ================= OK ================= */
         window.USUARIO_ATUAL = {
           uid: user.uid,
+          nome: dadosUser.nome,
+          email: dadosUser.email,
           papel,
           area,
           chave
