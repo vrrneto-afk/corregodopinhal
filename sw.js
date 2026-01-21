@@ -1,47 +1,41 @@
-const CACHE_NAME = "sitio-corrego-v8";
+const CACHE_NAME = "corregodopinhal-v1";
 
 const URLS = [
-  "/sitio-corrego-do-pinhal/",
-  "/sitio-corrego-do-pinhal/index.html",
-  "/sitio-corrego-do-pinhal/manifest.json",
-  "/sitio-corrego-do-pinhal/logo-v2.png"
+  "/corregodopinhal/",
+  "/corregodopinhal/login/login.html",
+  "/corregodopinhal/manifest.json",
+
+  // Ícones
+  "/corregodopinhal/icon/icon-72.png",
+  "/corregodopinhal/icon/icon-192.png",
+  "/corregodopinhal/icon/icon-256.png",
+  "/corregodopinhal/icon/icon-512.png"
 ];
 
 /* 🔧 INSTALA */
 self.addEventListener("install", event => {
-  self.skipWaiting(); // força instalação imediata
-
+  self.skipWaiting();
   event.waitUntil(
-    caches.open(CACHE_NAME).then(cache => {
-      return cache.addAll(URLS);
-    })
+    caches.open(CACHE_NAME).then(cache => cache.addAll(URLS))
   );
 });
 
 /* 🚀 ATIVA */
 self.addEventListener("activate", event => {
   event.waitUntil(
-    caches.keys().then(keys => {
-      return Promise.all(
-        keys
-          .filter(k => k !== CACHE_NAME)
-          .map(k => caches.delete(k))
-      );
-    }).then(() => self.clients.claim()) // assume controle imediato
+    caches.keys().then(keys =>
+      Promise.all(
+        keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k))
+      )
+    ).then(() => self.clients.claim())
   );
 });
 
-/* 🌐 FETCH */
+/* 🌐 FETCH — NETWORK FIRST (SEGURO PARA LOGIN) */
 self.addEventListener("fetch", event => {
+  if (event.request.method !== "GET") return;
+
   event.respondWith(
-    fetch(event.request)
-      .then(response => {
-        const clone = response.clone();
-        caches.open(CACHE_NAME).then(cache => {
-          cache.put(event.request, clone);
-        });
-        return response;
-      })
-      .catch(() => caches.match(event.request))
+    fetch(event.request).catch(() => caches.match(event.request))
   );
 });
