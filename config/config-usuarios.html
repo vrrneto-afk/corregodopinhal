@@ -136,6 +136,7 @@ function render(){
     b.className="config-card";
     b.innerHTML=`
       <strong>${u.nome||"-"}</strong>
+      <strong>${u.usuario||"-"}</strong>
       <span>${u.email}</span>
       <span>Grupo: ${u.papel}</span>
       <span style="color:${u.ativo!==false?"#2f6b2f":"#c0392b"}">
@@ -157,6 +158,7 @@ function render(){
 function editar(u){
   usuarioAtual = u;
   edit_nome.value  = u.nome || "";
+  edit_usuario.value  = u.usuario || "";
   edit_email.value = u.email;
   edit_email.disabled = true;
   edit_ativo.checked = u.ativo !== false;
@@ -168,6 +170,7 @@ function editar(u){
 function criarNovo(){
   usuarioAtual = null;
   edit_nome.value="";
+  edit_usuario.value  = u.usuario || "";
   edit_email.value="";
   edit_email.disabled=false;
   edit_ativo.checked=true;
@@ -193,6 +196,7 @@ function cancelar(){
 /* SALVAR */
 async function salvar(){
   const nome  = edit_nome.value.trim();
+  const usuario = edit_usuario.value.trim();
   const email = edit_email.value.trim();
   const papel = edit_grupo.value;
   const ativo = edit_ativo.checked;
@@ -209,6 +213,7 @@ async function salvar(){
 
       await db.collection("usuarios").doc(cred.user.uid).set({
         nome,
+        usuario,
         email,
         papel,
         ativo:true,
@@ -229,7 +234,7 @@ async function salvar(){
   /* EDIÇÃO */
   await db.collection("usuarios")
     .doc(usuarioAtual._id)
-    .update({ nome, papel, ativo });
+    .update({ nome, usuario, papel, ativo });
 
   location.reload();
 }
