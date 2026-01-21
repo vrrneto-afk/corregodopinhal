@@ -275,3 +275,8 @@
 .footer-app a:hover{
   opacity:1;
 }
+
+/* Evita que o footer cubra o conteúdo */
+body{
+  padding-bottom:60px;
+}
