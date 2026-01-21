@@ -49,6 +49,11 @@ window.PERMISSAO_PAGINA = { area:"config", chave:"config-vacas" };
 .label-check input{margin:0}
 .regra-card span{font-size:13px;font-weight:500}
 .range{display:flex;align-items:center;gap:8px}
+.info{
+  font-size:13px;
+  opacity:.75;
+  margin:10px 0 14px;
+}
 </style>
 </head>
 
@@ -73,29 +78,35 @@ window.PERMISSAO_PAGINA = { area:"config", chave:"config-vacas" };
 <button class="salvar" onclick="salvarParametros()">💾 Salvar parâmetros gerais</button>
 
 <!-- TEXTOS -->
-<h3 style="margin-top:20px;color:var(--marrom)">Textos – Prenhez</h3>
+<h3 style="margin-top:20px;color:var(--marrom)">Textos – Prenhez (referência)</h3>
 <fieldset>
   <label>Antes do parto</label>
-  <input type="text" id="txt_antes_parto" placeholder="Faltam {{dias}} dias">
+  <input type="text" id="txt_antes_parto" placeholder="⏳ Faltam {{dias}} dias">
 
-  <label>Parto hoje</label>
-  <input type="text" id="txt_parto_hoje" placeholder="Parto previsto para HOJE">
+  <label>Dia previsto do parto</label>
+  <input type="text" id="txt_parto_hoje" placeholder="📅 Parto previsto para HOJE">
 
-  <label>Parto atrasado</label>
-  <input type="text" id="txt_parto_atrasado" placeholder="Parto atrasado em {{dias}} dias">
+  <label>Após a data prevista</label>
+  <input type="text" id="txt_parto_atrasado" placeholder="🚨 Parto atrasado em {{dias}} dias">
 </fieldset>
 
 <button class="salvar" onclick="salvarTextos()">💾 Salvar textos</button>
 
 <!-- REGRAS -->
-<h3 style="margin-top:22px;color:var(--marrom)">Regras de Prenhez</h3>
+<h3 style="margin-top:22px;color:var(--marrom)">Régua de atenção (antes do parto)</h3>
+
+<p class="info">
+As regras abaixo servem apenas como referência visual para <strong>dias antes do parto (≥ 1)</strong>.
+Datas iguais ou posteriores ao dia previsto são tratadas apenas pelos textos acima.
+</p>
+
 <div class="cards-grid" id="lista-regras"></div>
 
 <!-- EDITOR -->
 <div id="editor" class="hidden">
 <fieldset>
 
-  <label>Classe</label>
+  <label>Classe visual</label>
   <select id="classe">
     <option value="ok">OK</option>
     <option value="atencao">Atenção</option>
@@ -110,7 +121,7 @@ window.PERMISSAO_PAGINA = { area:"config", chave:"config-vacas" };
     <input type="number" id="dias_ate" min="1" placeholder="Até">
   </div>
 
-  <label>Mensagem</label>
+  <label>Mensagem auxiliar</label>
   <input type="text" id="mensagem">
 
   <label class="label-check">
@@ -133,8 +144,7 @@ window.PERMISSAO_PAGINA = { area:"config", chave:"config-vacas" };
 fetch("../menu/menu-adm.html")
   .then(r=>r.text())
   .then(html=>{
-    const elMenuAdm = document.getElementById("menu-adm");
-    elMenuAdm.innerHTML = html;
+    document.getElementById("menu-adm").innerHTML = html;
 
     const s = document.createElement("script");
     s.src = "../menu/menu-permissoes.js";
@@ -232,8 +242,13 @@ async function salvarRegra(){
     ativa: ativa.checked
   };
 
-  if(isNaN(obj.dias_de) || isNaN(obj.dias_ate) || obj.dias_de > obj.dias_ate){
-    alert("Intervalo de dias inválido.");
+  if(
+    isNaN(obj.dias_de) ||
+    isNaN(obj.dias_ate) ||
+    obj.dias_de < 1 ||
+    obj.dias_de > obj.dias_ate
+  ){
+    alert("Informe um intervalo válido (dias ≥ 1).");
     return;
   }
 
