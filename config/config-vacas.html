@@ -5,17 +5,12 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Configuração – Vacas</title>
 
-<!-- MANIFEST -->
 <link rel="manifest" href="../manifest.json">
 <meta name="theme-color" content="#7b3f2a">
 
-<!-- MENU GLOBAL -->
 <link rel="stylesheet" href="../menu/menu.css">
-
-<!-- CONFIG CSS -->
 <link rel="stylesheet" href="./config.css">
 
-<!-- FIREBASE -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
@@ -30,32 +25,17 @@ if (!firebase.apps.length) {
 }
 </script>
 
-<!-- IDENTIFICAÇÃO DA PÁGINA -->
 <script>
-window.PERMISSAO_PAGINA = {
-  area: "config",
-  chave: "config-vacas"
-};
+window.PERMISSAO_PAGINA = { area:"config", chave:"config-vacas" };
 </script>
 
-<!-- AUTH GUARD GLOBAL -->
 <script src="../login/auth-guard.js"></script>
 
 <style>
-/* ✔️ CHECKBOX ALINHADO – PADRÃO DEFINITIVO */
-.label-check{
-  display:flex;
-  align-items:center;
-  gap:8px;
-  font-weight:600;
-  margin-top:12px;
-}
-.label-check input{ margin:0 }
-
-.regra-card span{
-  font-size:13px;
-  font-weight:500;
-}
+.label-check{display:flex;align-items:center;gap:8px;font-weight:600;margin-top:12px}
+.label-check input{margin:0}
+.regra-card span{font-size:13px;font-weight:500}
+.range{display:flex;gap:8px;align-items:center}
 </style>
 </head>
 
@@ -68,7 +48,7 @@ window.PERMISSAO_PAGINA = {
 
 <h2>Configuração – Vacas</h2>
 
-<!-- PARÂMETROS GERAIS -->
+<!-- PARÂMETROS -->
 <fieldset>
   <label>Gestação (meses)</label>
   <input type="number" id="gestacao_meses" min="0">
@@ -77,19 +57,32 @@ window.PERMISSAO_PAGINA = {
   <input type="number" id="idade_minima_meses" min="0">
 </fieldset>
 
-<button class="salvar" onclick="salvarParametros()">
-💾 Salvar parâmetros gerais
-</button>
+<button class="salvar" onclick="salvarParametros()">💾 Salvar parâmetros gerais</button>
+
+<!-- TEXTOS -->
+<h3 style="margin-top:20px;color:var(--marrom)">Textos – Prenhez</h3>
+<fieldset>
+  <label>Antes do parto</label>
+  <input type="text" id="txt_antes_parto" placeholder="Faltam {{dias}} dias">
+
+  <label>Parto hoje</label>
+  <input type="text" id="txt_parto_hoje">
+
+  <label>Parto atrasado</label>
+  <input type="text" id="txt_parto_atrasado" placeholder="Parto atrasado em {{dias}} dias">
+</fieldset>
+
+<button class="salvar" onclick="salvarTextos()">💾 Salvar textos</button>
 
 <!-- REGRAS -->
-<h3 style="margin-top:18px;color:var(--marrom)">Regras de Prenhez</h3>
+<h3 style="margin-top:22px;color:var(--marrom)">Regras de Prenhez</h3>
 <div class="cards-grid" id="lista-regras"></div>
 
 <!-- EDITOR -->
 <div id="editor" class="hidden">
 <fieldset>
 
-  <label>Classe da regra</label>
+  <label>Classe</label>
   <select id="classe">
     <option value="ok">OK</option>
     <option value="atencao">Atenção</option>
@@ -97,192 +90,158 @@ window.PERMISSAO_PAGINA = {
     <option value="urgente">Urgente</option>
   </select>
 
-  <label>Dias mínimos antes do parto</label>
-  <input type="number" id="dias_min" min="0">
+  <label>Dias antes do parto</label>
+  <div class="range">
+    <input type="number" id="dias_de" min="1" placeholder="De">
+    <span>até</span>
+    <input type="number" id="dias_ate" min="1" placeholder="Até">
+  </div>
 
-  <label>Mensagem (pode usar emoji)</label>
+  <label>Mensagem</label>
   <input type="text" id="mensagem">
 
   <label class="label-check">
-    <input type="checkbox" id="ativa">
-    Regra ativa
+    <input type="checkbox" id="ativa"> Regra ativa
   </label>
 
 </fieldset>
 
 <button class="salvar" onclick="salvarRegra()">💾 Salvar regra</button>
-
-<button class="voltar hidden" id="btn-excluir" onclick="excluirRegra()">
-🗑️ Excluir regra
-</button>
-
+<button class="voltar hidden" id="btn-excluir" onclick="excluirRegra()">🗑️ Excluir</button>
 <button class="voltar" onclick="cancelar()">❌ Cancelar</button>
 </div>
 
-<button class="voltar" onclick="location.href='config.html'">
-⬅ Voltar para Configurações
-</button>
+<button class="voltar" onclick="location.href='config.html'">⬅ Voltar</button>
 
 </div>
 
-<!-- MENU + PERMISSÕES (ORDEM DEFINITIVA) -->
+<!-- MENU -->
 <script>
 fetch("../menu/menu-adm.html")
-  .then(r => r.text())
-  .then(html => {
-    document.getElementById("menu-adm").innerHTML = html;
-
-    document.querySelectorAll(".menu-link").forEach(a=>{
-      if(a.getAttribute("href")?.includes("config.html")){
-        a.classList.add("ativo");
-      }
-    });
-
-    const s = document.createElement("script");
-    s.src = "../menu/menu-permissoes.js";
-    s.onload = () => {
-      document.body.style.display = "block";
-      carregar();
-    };
-    document.body.appendChild(s);
-  });
+.then(r=>r.text())
+.then(html=>{
+  menu-adm.innerHTML=html;
+  const s=document.createElement("script");
+  s.src="../menu/menu-permissoes.js";
+  s.onload=()=>{document.body.style.display="block";carregar();}
+  document.body.appendChild(s);
+});
 </script>
 
 <script>
-const db = firebase.firestore();
+const db=firebase.firestore();
+let intervalos=[],editando=null;
 
-let regras = [];
-let editando = null;
-
-const lista_regras = document.getElementById("lista-regras");
-const btnExcluir   = document.getElementById("btn-excluir");
-
-/* LOAD */
 async function carregar(){
-  const snap = await db.collection("config").doc("vacas").get();
+  const snap=await db.collection("config").doc("vacas").get();
   if(!snap.exists) return;
+  const d=snap.data();
 
-  const d = snap.data();
-  gestacao_meses.value     = d.gestacao_meses ?? "";
-  idade_minima_meses.value = d.idade_minima_meses ?? "";
-  regras = d.prenhez_regras || [];
+  gestacao_meses.value=d.gestacao_meses||"";
+  idade_minima_meses.value=d.idade_minima_meses||"";
+
+  intervalos=d.prenhez_intervalos||[];
+
+  txt_antes_parto.value=d.prenhez_textos?.antes_parto||"";
+  txt_parto_hoje.value=d.prenhez_textos?.parto_hoje||"";
+  txt_parto_atrasado.value=d.prenhez_textos?.parto_atrasado||"";
+
   renderizar();
 }
 
-/* RENDER */
 function renderizar(){
-  lista_regras.innerHTML="";
-
-  regras.forEach((r,i)=>{
-    if(r.ativa === false) return;
-
-    const b = document.createElement("button");
+  lista-regras.innerHTML="";
+  intervalos.forEach((r,i)=>{
+    if(r.ativa===false) return;
+    const b=document.createElement("button");
     b.className="config-card regra-card";
     b.onclick=()=>editar(i);
-
     b.innerHTML=`
       <strong>${r.classe.toUpperCase()}</strong>
-      <span>≥ ${r.dias_min} dias</span>
-      <span>${r.mensagem || ""}</span>
-    `;
-    lista_regras.appendChild(b);
+      <span>${r.dias_de} até ${r.dias_ate} dias</span>
+      <span>${r.mensagem||""}</span>`;
+    lista-regras.appendChild(b);
   });
 
-  const novo = document.createElement("button");
-  novo.className="config-card";
-  novo.innerHTML="➕ Nova regra";
-  novo.onclick=nova;
-  lista_regras.appendChild(novo);
+  const n=document.createElement("button");
+  n.className="config-card";
+  n.innerHTML="➕ Nova regra";
+  n.onclick=nova;
+  lista-regras.appendChild(n);
 }
 
-/* EDITAR / NOVA */
-function nova(){
-  editando = null;
-  limpar();
-  btnExcluir.classList.add("hidden");
-  editor.classList.remove("hidden");
-}
-
+function nova(){editando=null;limpar();btn-excluir.classList.add("hidden");editor.classList.remove("hidden")}
 function editar(i){
-  editando = i;
-  const r = regras[i];
-
-  classe.value   = r.classe;
-  dias_min.value = r.dias_min;
-  mensagem.value = r.mensagem;
-  ativa.checked  = r.ativa !== false;
-
-  btnExcluir.classList.remove("hidden");
+  editando=i;
+  const r=intervalos[i];
+  classe.value=r.classe;
+  dias_de.value=r.dias_de;
+  dias_ate.value=r.dias_ate;
+  mensagem.value=r.mensagem;
+  ativa.checked=r.ativa!==false;
+  btn-excluir.classList.remove("hidden");
   editor.classList.remove("hidden");
 }
 
-/* SALVAR */
 async function salvarRegra(){
-  const obj = {
-    classe: classe.value,
-    dias_min: Number(dias_min.value),
-    mensagem: mensagem.value.trim(),
-    ativa: ativa.checked
+  const obj={
+    classe:classe.value,
+    dias_de:Number(dias_de.value),
+    dias_ate:Number(dias_ate.value),
+    mensagem:mensagem.value.trim(),
+    ativa:ativa.checked
   };
-
-  if(isNaN(obj.dias_min)){
-    alert("Informe dias válidos.");
-    return;
-  }
-
-  if(editando === null) regras.push(obj);
-  else regras[editando] = obj;
-
+  if(obj.dias_de>obj.dias_ate){alert("Intervalo inválido");return;}
+  if(editando===null) intervalos.push(obj);
+  else intervalos[editando]=obj;
   await salvarFirestore();
-  alert("Regra salva com sucesso.");
-  cancelar();
-  renderizar();
+  cancelar();renderizar();
 }
 
 async function salvarParametros(){
   await db.collection("config").doc("vacas").update({
-    gestacao_meses: Number(gestacao_meses.value),
-    idade_minima_meses: Number(idade_minima_meses.value)
+    gestacao_meses:Number(gestacao_meses.value),
+    idade_minima_meses:Number(idade_minima_meses.value)
   });
-
-  alert("Parâmetros gerais salvos com sucesso.");
+  alert("Parâmetros salvos.");
 }
 
-/* EXCLUIR */
-async function excluirRegra(){
-  if(editando === null) return;
-  if(!confirm("Deseja excluir esta regra?")) return;
+async function salvarTextos(){
+  await db.collection("config").doc("vacas").update({
+    prenhez_textos:{
+      antes_parto:txt_antes_parto.value,
+      parto_hoje:txt_parto_hoje.value,
+      parto_atrasado:txt_parto_atrasado.value
+    }
+  });
+  alert("Textos salvos.");
+}
 
-  regras.splice(editando,1);
+async function excluirRegra(){
+  if(editando===null) return;
+  intervalos.splice(editando,1);
   await salvarFirestore();
-  alert("Regra excluída com sucesso.");
-  cancelar();
-  renderizar();
+  cancelar();renderizar();
 }
 
 async function salvarFirestore(){
   await db.collection("config").doc("vacas").update({
-    gestacao_meses: Number(gestacao_meses.value),
-    idade_minima_meses: Number(idade_minima_meses.value),
-    prenhez_regras: regras
+    gestacao_meses:Number(gestacao_meses.value),
+    idade_minima_meses:Number(idade_minima_meses.value),
+    prenhez_intervalos:intervalos
   });
 }
 
-/* CANCELAR */
-function cancelar(){
-  editor.classList.add("hidden");
-  limpar();
-}
-
+function cancelar(){editor.classList.add("hidden");limpar()}
 function limpar(){
   classe.value="ok";
-  dias_min.value="";
+  dias_de.value="";
+  dias_ate.value="";
   mensagem.value="";
   ativa.checked=true;
 }
 </script>
 
-<!-- LOGOUT GLOBAL -->
 <script src="../login/logout.js"></script>
 
 </body>
