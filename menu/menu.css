@@ -3,9 +3,12 @@
    ========================================= */
 
 .menu-wrapper{
-  position:relative;
-  z-index:100;
-  visibility:hidden;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  z-index: 1000;
+  visibility: hidden; /* controlado pelo menu-permissoes.js */
 }
 
 .menu-adm{
@@ -250,7 +253,7 @@
   left: 0;
   width: 100%;
   background: #7b3f2a;
-  padding: 10px 14px;
+  padding: 6px 12px; /* reduzido levemente para ficar mais discreto */
   z-index: 1000;
 }
 
@@ -276,7 +279,11 @@
   opacity:1;
 }
 
-/* Evita que o footer cubra o conteúdo */
+/* =========================================
+   COMPENSAÇÃO PARA MENU E FOOTER FIXOS
+   ========================================= */
+
 body{
-  padding-bottom:60px;
+  padding-top:110px;    /* evita que o menu cubra o conteúdo */
+  padding-bottom:60px; /* evita que o footer cubra o conteúdo */
 }
