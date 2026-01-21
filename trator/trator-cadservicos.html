@@ -283,6 +283,10 @@ fetch("../menu/menu.html")
     s.src = "../menu/menu-permissoes.js";
     document.body.appendChild(s);
   })
+
+  document.body.style.display = "block";
+  })
+
   .catch(err => {
     console.error("Erro ao carregar menu:", err);
   });
@@ -356,44 +360,55 @@ document.querySelectorAll("input[name='cobranca']").forEach(r=>{
 salvar.onclick = async ()=>{
   msg.textContent = "";
 
-  const user = auth.currentUser;
-  if(!data.value || !tipo.value || !cliente.value){
-    msg.textContent = "Preencha todos os campos.";
+  try {
+    const user = auth.currentUser;
+
+    if(!user){
+      throw new Error("Usuário não autenticado");
+    }
+
+    if(!data.value || !tipo.value || !cliente.value){
+      throw new Error("Preencha todos os campos");
+    }
+
+    const porHoraSel =
+      document.querySelector("input[name='cobranca']:checked").value === "hora";
+
+    const valor = porHoraSel
+      ? limparMoeda(valorTotal.value)
+      : limparMoeda(valorFechadoInput.value);
+
+    if(valor <= 0){
+      throw new Error("Valor inválido");
+    }
+
+    const dados = {
+      data: firebase.firestore.Timestamp.fromDate(new Date(data.value)),
+      tipo: tipo.value,
+      cliente: cliente.value,
+      valor_total: valor,
+      criado_em: firebase.firestore.FieldValue.serverTimestamp(),
+      criado_por: user.uid
+    };
+
+    if(editId){
+      await db.collection("trator_servicos").doc(editId).update(dados);
+    }else{
+      await db.collection("trator_servicos").add(dados);
+    }
+
+    msg.textContent = "Serviço salvo com sucesso.";
+    msg.className = "msg ok";
+
+    editId = null;
+    salvar.textContent = "💾 Salvar Serviço";
+    carregarTabela();
+
+  } catch (err) {
+    console.error(err);
+    msg.textContent = err.message || "Erro ao salvar serviço";
     msg.className = "msg erro";
-    return;
   }
-
-  const porHoraSel = document.querySelector("input[name='cobranca']:checked").value === "hora";
-  const valor = porHoraSel
-    ? limparMoeda(valorTotal.value)
-    : limparMoeda(valorFechadoInput.value);
-
-  if(valor <= 0){
-    msg.textContent = "Valor inválido.";
-    msg.className = "msg erro";
-    return;
-  }
-
-  const dados = {
-    data: firebase.firestore.Timestamp.fromDate(new Date(data.value)),
-    tipo: tipo.value,
-    cliente: cliente.value,
-    valor_total: valor,
-    criado_em: firebase.firestore.FieldValue.serverTimestamp(),
-    criado_por: user.uid
-  };
-
-  if(editId){
-    await db.collection("trator_servicos").doc(editId).update(dados);
-  }else{
-    await db.collection("trator_servicos").add(dados);
-  }
-
-  msg.textContent = "Serviço salvo com sucesso.";
-  msg.className = "msg ok";
-  editId = null;
-  salvar.textContent = "💾 Salvar Serviço";
-  carregarTabela();
 };
 
 /* ======= TABELA ======= */
