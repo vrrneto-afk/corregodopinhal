@@ -51,7 +51,7 @@
       document.dispatchEvent(new Event("permissoes-carregadas"));
 
       /* =================================================
-         FOOTER GLOBAL – USUÁRIO LOGADO / SAIR
+         FOOTER GLOBAL – USUÁRIO / SAIR / VERSÃO
          ================================================= */
 
       // evita duplicar footer
@@ -66,7 +66,7 @@
           const html = await r.text();
           footerContainer.innerHTML = html;
 
-          /* --- preenche usuário --- */
+          /* --- usuário logado --- */
           const elUsuario = document.getElementById("footerUsuario");
           if (elUsuario && snapUser.data().usuario) {
             elUsuario.querySelector("span").textContent =
@@ -79,6 +79,31 @@
             btnLogout.addEventListener("click", (e) => {
               e.preventDefault();
               auth.signOut();
+            });
+          }
+
+          /* --- versão do app (Service Worker) --- */
+          if ("serviceWorker" in navigator) {
+
+            // recebe resposta do SW
+            navigator.serviceWorker.addEventListener("message", event => {
+              if (event.data && event.data.version) {
+
+                const versao = event.data.version
+                  .replace("corregodopinhal-", "");
+
+                const elVersao = document.getElementById("appVersao");
+                if (elVersao) {
+                  elVersao.textContent = versao;
+                }
+              }
+            });
+
+            // solicita versão
+            navigator.serviceWorker.ready.then(reg => {
+              if (reg.active) {
+                reg.active.postMessage("GET_VERSION");
+              }
             });
           }
 
