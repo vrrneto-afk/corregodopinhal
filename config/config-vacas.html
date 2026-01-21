@@ -1,140 +1,152 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Vacas – Sítio Córrego do Pinhal</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Configuração – Vacas</title>
 
-<link rel="manifest" href="../manifest.json">
-<meta name="theme-color" content="#7b3f2a">
+  <link rel="manifest" href="../manifest.json">
+  <meta name="theme-color" content="#7b3f2a">
 
-<!-- MENU GLOBAL -->
-<link rel="stylesheet" href="../menu/menu.css">
+  <link rel="stylesheet" href="../menu/menu.css">
+  <link rel="stylesheet" href="./config.css">
 
-<!-- FIREBASE -->
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
-<script>
-if (!firebase.apps.length) {
-  firebase.initializeApp({
-    apiKey:"AIzaSyCW-CuFDrOLO-dteckl_GrPTocmyS-IrzY",
-    authDomain:"sitio-corrego-do-pinhal.firebaseapp.com",
-    projectId:"sitio-corrego-do-pinhal"
-  });
-}
-</script>
+  <script>
+    if (!firebase.apps.length) {
+      firebase.initializeApp({
+        apiKey: "AIzaSyCW-CuFDrOLO-dteckl_GrPTocmyS-IrzY",
+        authDomain: "sitio-corrego-do-pinhal.firebaseapp.com",
+        projectId: "sitio-corrego-do-pinhal"
+      });
+    }
+  </script>
 
-<!-- IDENTIFICAÇÃO DA PÁGINA -->
-<script>
-window.PERMISSAO_PAGINA = { area:"app", chave:"vacas" };
-</script>
+  <script>
+    window.PERMISSAO_PAGINA = { area: "config", chave: "config-vacas" };
+  </script>
 
-<!-- AUTH GUARD -->
-<script src="../login/auth-guard.js"></script>
+  <script src="../login/auth-guard.js"></script>
 
-<style>
-:root{
-  --marrom:#7b3f2a;
-  --bege:#f6efe7;
-  --verde:#2f6b2f;
-  --amarelo:#e0a800;
-  --laranja:#e67e22;
-  --vermelho:#c0392b;
-  --azul:#0d6efd;
-  --cinza:#666;
-  --cinza-escuro:#555;
-  --logo:#D0B485;
-}
-*{box-sizing:border-box;font-family:'Inter',system-ui,-apple-system,Arial}
-body{margin:0;background:var(--bege);color:#333;display:none}
-header{background:var(--logo);padding:15px;text-align:center}
-header img{max-width:260px;width:100%}
-.container{max-width:900px;margin:20px auto;padding:0 15px}
-h2{color:var(--marrom);margin-bottom:12px;display:flex;gap:8px}
-select{
-  width:100%;
-  padding:12px;
-  font-size:15px;
-  border-radius:12px;
-  border:1.5px solid #ddd;
-  margin-bottom:20px;
-}
-.card{
-  background:#fff;
-  padding:15px;
-  margin-bottom:14px;
-  border-left:6px solid #ddd;
-  border-radius:12px;
-  box-shadow:0 2px 6px rgba(0,0,0,.06);
-  cursor:pointer;
-}
-.card.ok{border-color:var(--verde)}
-.card.atencao{border-color:var(--amarelo)}
-.card.alerta{border-color:var(--laranja)}
-.card.urgente{border-color:var(--vermelho)}
-.card.parida{border-color:var(--azul)}
-.card.vazia{border-color:var(--cinza-escuro)}
-.card strong{font-size:17px;font-weight:800;display:block;margin-bottom:6px}
-.card p{margin:4px 0;font-size:14px;color:var(--cinza)}
-.card .dias{font-size:16px;font-weight:800}
-.card .msg{font-weight:800;margin-top:4px}
-.badge{
-  display:inline-block;
-  padding:4px 10px;
-  border-radius:12px;
-  font-size:13px;
-  font-weight:800;
-  color:#fff;
-  margin-left:6px;
-}
-.badge.prenha{background:var(--amarelo)}
-.badge.parida{background:var(--azul)}
-.badge.vazia{background:var(--cinza-escuro)}
-.vazio{text-align:center;color:#777;margin-top:30px;font-style:italic}
-</style>
+  <style>
+    .label-check{
+      display:flex;
+      align-items:center;
+      justify-content:flex-start;
+      gap:6px;
+      font-weight:600;
+      margin-top:12px;
+      width:100%;
+    }
+    .label-check input{margin:0}
+    .regra-card span{font-size:13px;font-weight:500}
+    .range{display:flex;align-items:center;gap:8px}
+    .info{font-size:13px;opacity:.75;margin:10px 0 14px}
+    .small{font-size:12px;opacity:.6}
+  </style>
 </head>
 
-<body>
+<body style="display:none">
 
-<header>
-  <img src="../logo.png">
-</header>
-
-<div id="menu"></div>
+<header>⚙️ Configurações</header>
+<div id="menu-adm"></div>
 
 <div class="container">
-  <h2>🐄 Vacas</h2>
 
-  <select id="filtro">
-    <option value="todas">Todas</option>
-    <option value="prenhas">Prenhas</option>
-    <option value="paridas">Paridas</option>
-    <option value="vazias">Vazias</option>
-  </select>
+<h2>Configuração – Vacas</h2>
 
-  <div id="lista"></div>
+<!-- PARÂMETROS -->
+<fieldset>
+  <label>Gestação (meses)</label>
+  <input type="number" id="gestacao_meses" min="0">
+
+  <label>Idade mínima para prenhez (meses)</label>
+  <input type="number" id="idade_minima_meses" min="0">
+</fieldset>
+
+<button class="salvar" onclick="salvarParametros()">💾 Salvar parâmetros gerais</button>
+
+<!-- TEXTOS -->
+<h3 style="margin-top:20px;color:var(--marrom)">Textos – Prenhez (referência)</h3>
+
+<fieldset>
+  <label>Antes do parto</label>
+  <input type="text" id="txt_antes_parto" placeholder="⏳ Faltam {{dias}} dias">
+
+  <label>Dia previsto do parto</label>
+  <input type="text" id="txt_parto_hoje" placeholder="📅 Parto previsto para HOJE">
+
+  <label>Após a data prevista</label>
+  <input type="text" id="txt_parto_atrasado" placeholder="🚨 Parto atrasado em {{dias}} dias">
+</fieldset>
+
+<button class="salvar" onclick="salvarTextos()">💾 Salvar textos</button>
+
+<!-- REGRAS -->
+<h3 style="margin-top:22px;color:var(--marrom)">Régua de atenção (antes do parto)</h3>
+
+<p class="info">
+  As regras abaixo servem apenas como referência visual para
+  <strong>dias antes do parto (≥ 1)</strong>.
+  Datas iguais ou posteriores ao dia previsto são tratadas apenas pelos textos acima.
+</p>
+
+<div class="cards-grid" id="lista-regras"></div>
+
+<!-- EDITOR -->
+<div id="editor" class="hidden">
+  <fieldset>
+
+    <label>Classe visual</label>
+    <select id="classe">
+      <option value="ok">OK</option>
+      <option value="atencao">Atenção</option>
+      <option value="alerta">Alerta</option>
+      <option value="urgente">Urgente</option>
+    </select>
+
+    <label>Dias antes do parto</label>
+    <div class="range">
+      <input type="number" id="dias_de" min="1" placeholder="De">
+      <span>até</span>
+      <input type="number" id="dias_ate" min="1" placeholder="Até">
+    </div>
+
+    <label>Mensagem auxiliar</label>
+    <input type="text" id="mensagem">
+
+    <label class="label-check">
+      <input type="checkbox" id="ativa">
+      <span>Regra ativa</span>
+    </label>
+
+  </fieldset>
+
+  <button class="salvar" onclick="salvarRegra()">💾 Salvar regra</button>
+  <button class="voltar hidden" id="btn-excluir" onclick="excluirRegra()">🗑️ Excluir regra</button>
+  <button class="voltar" onclick="cancelar()">❌ Cancelar</button>
 </div>
 
-<!-- MENU + PERMISSÕES -->
+<button class="voltar" onclick="location.href='config.html'">⬅ Voltar</button>
+
+</div>
+
+<!-- MENU -->
 <script>
-fetch("../menu/menu.html")
-  .then(r=>r.text())
-  .then(html=>{
-    document.getElementById("menu").innerHTML = html;
+fetch("../menu/menu-adm.html")
+  .then(r => r.text())
+  .then(html => {
+    document.getElementById("menu-adm").innerHTML = html;
 
     const s = document.createElement("script");
     s.src = "../menu/menu-permissoes.js";
 
     s.onload = () => {
-      document.querySelectorAll(".menu-link").forEach(link=>{
-        if(link.dataset.area==="app" && link.dataset.chave==="vacas"){
-          link.classList.add("ativo");
-        }
-      });
       document.body.style.display = "block";
-      iniciarPagina();
+      carregar();
     };
 
     document.body.appendChild(s);
@@ -144,140 +156,166 @@ fetch("../menu/menu.html")
 <script>
 const db = firebase.firestore();
 
-function addMonths(d,m){
-  const x=new Date(d);
-  x.setMonth(x.getMonth()+m);
-  return x;
-}
-function idadeMeses(d){
-  const n=new Date(d+"T00:00:00"),h=new Date();
-  return (h.getFullYear()-n.getFullYear())*12+(h.getMonth()-n.getMonth());
-}
-function idadeTexto(d){
-  const n=new Date(d+"T00:00:00"),h=new Date();
-  let a=h.getFullYear()-n.getFullYear(),
-      m=h.getMonth()-n.getMonth(),
-      di=h.getDate()-n.getDate();
-  if(di<0){m--;di+=30}
-  if(m<0){a--;m+=12}
-  return `${a} ano(s), ${m} mês(es) e ${di} dia(s)`;
-}
-function abrirAnimal(id){
-  location.href="../app/animal.html?id="+encodeURIComponent(id);
+const elListaRegras = document.getElementById("lista-regras");
+const editor = document.getElementById("editor");
+const btnExcluir = document.getElementById("btn-excluir");
+
+let intervalos = [];
+let editando = null;
+
+function gerarId(classe, de, ate){
+  return `${classe}_${de}_${ate}`;
 }
 
-let CFG_VACAS = {};
-
-async function iniciarPagina(){
+/* LOAD */
+async function carregar(){
   const snap = await db.collection("config").doc("vacas").get();
-  CFG_VACAS = snap.data() || {};
+  if(!snap.exists) return;
 
-  const animaisSnap = await db.collection("animais").get();
-  const eventosSnap = await db.collection("eventos").get();
+  const d = snap.data();
 
-  const ANIMAIS = animaisSnap.docs.map(d=>({_id:d.id,...d.data()}));
-  const EVENTOS = eventosSnap.docs.map(d=>d.data());
+  gestacao_meses.value = d.gestacao_meses ?? "";
+  idade_minima_meses.value = d.idade_minima_meses ?? "";
 
-  const vacas = ANIMAIS.filter(a =>
-    a.status==="Ativo" &&
-    a.especie==="Bovino" &&
-    a.sexo==="F" &&
-    idadeMeses(a.data_nascimento)>=Number(CFG_VACAS.idade_minima_meses || 0)
-  );
+  intervalos = d.prenhez_intervalos || [];
 
-  const lista = document.getElementById("lista");
+  txt_antes_parto.value = d.prenhez_textos?.antes_parto || "";
+  txt_parto_hoje.value = d.prenhez_textos?.parto_hoje || "";
+  txt_parto_atrasado.value = d.prenhez_textos?.parto_atrasado || "";
 
-  function regraPrenhez(dias){
-    if(dias <= 0) return null;
+  renderizar();
+}
 
-    return (CFG_VACAS.prenhez_intervalos || [])
-      .filter(r =>
-        r.ativa !== false &&
-        dias >= r.dias_de &&
-        dias <= r.dias_ate
-      )
-      .sort((a,b)=>a.dias_de - b.dias_de)[0] || null;
+/* RENDER */
+function renderizar(){
+  elListaRegras.innerHTML = "";
+
+  intervalos.forEach((r,i)=>{
+    if(r.ativa === false) return;
+
+    const b = document.createElement("button");
+    b.className = "config-card regra-card";
+    b.onclick = () => editar(i);
+
+    b.innerHTML = `
+      <strong>${r.classe.toUpperCase()}</strong>
+      <span>${r.dias_de} até ${r.dias_ate} dias</span>
+      <span>${r.mensagem || ""}</span>
+      <span class="small">ID: ${r.id}</span>
+    `;
+
+    elListaRegras.appendChild(b);
+  });
+
+  const novo = document.createElement("button");
+  novo.className = "config-card";
+  novo.innerHTML = "➕ Nova regra";
+  novo.onclick = nova;
+
+  elListaRegras.appendChild(novo);
+}
+
+/* EDITOR */
+function nova(){
+  editando = null;
+  limpar();
+  btnExcluir.classList.add("hidden");
+  editor.classList.remove("hidden");
+}
+
+function editar(i){
+  editando = i;
+  const r = intervalos[i];
+
+  classe.value = r.classe;
+  dias_de.value = r.dias_de;
+  dias_ate.value = r.dias_ate;
+  mensagem.value = r.mensagem || "";
+  ativa.checked = r.ativa !== false;
+
+  btnExcluir.classList.remove("hidden");
+  editor.classList.remove("hidden");
+}
+
+/* SALVAR */
+async function salvarRegra(){
+  const de = Number(dias_de.value);
+  const ate = Number(dias_ate.value);
+
+  if(isNaN(de) || isNaN(ate) || de < 1 || de > ate){
+    alert("Informe um intervalo válido (dias ≥ 1).");
+    return;
   }
 
-  function mensagemPrenhez(dias){
-    const t = CFG_VACAS.prenhez_textos || {};
-    if(dias === 0 && t.parto_hoje) return t.parto_hoje;
-    if(dias < 0 && t.parto_atrasado) return t.parto_atrasado.replace("{{dias}}", Math.abs(dias));
-    if(dias > 0 && t.antes_parto) return t.antes_parto.replace("{{dias}}", dias);
-    return "";
-  }
+  const obj = {
+    id: gerarId(classe.value, de, ate),
+    classe: classe.value,
+    dias_de: de,
+    dias_ate: ate,
+    mensagem: mensagem.value.trim(),
+    ativa: ativa.checked
+  };
 
-  function render(f){
-    lista.innerHTML="";
-    let prenhas=[],paridas=[],vazias=[];
+  if(editando === null) intervalos.push(obj);
+  else intervalos[editando] = obj;
 
-    vacas.forEach(v=>{
-      const ev = EVENTOS.filter(e=>e.id_animal===v._id);
-      const cob = ev.filter(e=>e.tipo_evento==="cobertura").sort((a,b)=>new Date(b.data_evento)-new Date(a.data_evento))[0];
-      const par = ev.filter(e=>e.tipo_evento==="parto").sort((a,b)=>new Date(b.data_evento)-new Date(a.data_evento))[0];
+  await salvarFirestore();
+  cancelar();
+  renderizar();
+}
 
-      if(cob && (!par || new Date(cob.data_evento)>new Date(par.data_evento))){
-        prenhas.push({v,prev:addMonths(new Date(cob.data_evento+"T00:00:00"),Number(CFG_VACAS.gestacao_meses || 0))});
-      }else if(par){
-        paridas.push({v,par});
-      }else{
-        vazias.push(v);
-      }
-    });
+/* PARAMETROS */
+async function salvarParametros(){
+  await db.collection("config").doc("vacas").update({
+    gestacao_meses: Number(gestacao_meses.value),
+    idade_minima_meses: Number(idade_minima_meses.value)
+  });
+  alert("Parâmetros gerais salvos.");
+}
 
-    prenhas.sort((a,b)=>a.prev-b.prev);
-    paridas.sort((a,b)=>new Date(b.par.data_evento)-new Date(a.par.data_evento));
-    vazias.sort((a,b)=>new Date(b.data_nascimento)-new Date(a.data_nascimento));
-
-    if(f==="todas"||f==="prenhas"){
-      prenhas.forEach(p=>{
-        const dias=Math.ceil((p.prev-new Date())/86400000);
-        const regra=regraPrenhez(dias);
-        const msg=mensagemPrenhez(dias);
-
-        lista.innerHTML+=`
-        <div class="card ${regra?.classe || "ok"}" onclick="abrirAnimal('${p.v._id}')">
-          <strong>🐄 ${p.v.nome.toUpperCase()} <span class="badge prenha">Prenha</span></strong>
-          <p>Previsão do parto: ${p.prev.toLocaleDateString("pt-BR")}</p>
-          <p class="dias">⏳ ${dias>=0?`Faltam ${dias} dias`:`Atrasado ${Math.abs(dias)} dias`}</p>
-          ${msg?`<p class="msg">${msg}</p>`:""}
-          <p>Raça: ${p.v.raca||"-"}</p>
-          <p>Idade: ${idadeTexto(p.v.data_nascimento)}</p>
-        </div>`;
-      });
+/* TEXTOS */
+async function salvarTextos(){
+  await db.collection("config").doc("vacas").update({
+    prenhez_textos:{
+      antes_parto: txt_antes_parto.value,
+      parto_hoje: txt_parto_hoje.value,
+      parto_atrasado: txt_parto_atrasado.value
     }
+  });
+  alert("Textos salvos.");
+}
 
-    if(f==="todas"||f==="paridas"){
-      paridas.forEach(p=>{
-        lista.innerHTML+=`
-        <div class="card parida" onclick="abrirAnimal('${p.v._id}')">
-          <strong>🐄 ${p.v.nome.toUpperCase()} <span class="badge parida">Parida</span></strong>
-          <p>Data do parto: ${new Date(p.par.data_evento).toLocaleDateString("pt-BR")}</p>
-          <p>Raça: ${p.v.raca||"-"}</p>
-          <p>Idade: ${idadeTexto(p.v.data_nascimento)}</p>
-        </div>`;
-      });
-    }
+/* EXCLUIR */
+async function excluirRegra(){
+  if(editando === null) return;
+  if(!confirm("Deseja excluir esta regra?")) return;
 
-    if(f==="todas"||f==="vazias"){
-      vazias.forEach(v=>{
-        lista.innerHTML+=`
-        <div class="card vazia" onclick="abrirAnimal('${v._id}')">
-          <strong>🐄 ${v.nome.toUpperCase()} <span class="badge vazia">Vazia</span></strong>
-          <p>Sem cobertura ativa</p>
-          <p>Raça: ${v.raca||"-"}</p>
-          <p>Idade: ${idadeTexto(v.data_nascimento)}</p>
-        </div>`;
-      });
-    }
+  intervalos.splice(editando,1);
+  await salvarFirestore();
+  cancelar();
+  renderizar();
+}
 
-    if(!lista.innerHTML){
-      lista.innerHTML='<div class="vazio">🐄 Nenhuma vaca encontrada.</div>';
-    }
-  }
+async function salvarFirestore(){
+  await db.collection("config").doc("vacas").update({
+    gestacao_meses: Number(gestacao_meses.value),
+    idade_minima_meses: Number(idade_minima_meses.value),
+    prenhez_intervalos: intervalos
+  });
+}
 
-  render("todas");
-  filtro.onchange=e=>render(e.target.value);
+/* AUX */
+function cancelar(){
+  editor.classList.add("hidden");
+  limpar();
+}
+
+function limpar(){
+  classe.value = "ok";
+  dias_de.value = "";
+  dias_ate.value = "";
+  mensagem.value = "";
+  ativa.checked = true;
 }
 </script>
 
