@@ -39,3 +39,12 @@ self.addEventListener("fetch", event => {
     fetch(event.request).catch(() => caches.match(event.request))
   );
 });
+
+/* 📦 VERSÃO DO APP */
+self.addEventListener("message", event => {
+  if (event.data === "GET_VERSION") {
+    event.source.postMessage({
+      version: CACHE_NAME
+    });
+  }
+});
