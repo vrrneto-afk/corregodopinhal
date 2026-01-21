@@ -2,13 +2,20 @@
    MENU GLOBAL – PADRÃO DEFINITIVO
    ========================================= */
 
+/*
+  IMPORTANTE:
+  - A LOGO fica no fluxo normal da página
+  - O MENU fica logo abaixo da logo
+  - Ao rolar, o MENU gruda no topo (sticky)
+  - NÃO usamos position:fixed no menu
+*/
+
 .menu-wrapper{
-  position: fixed;
-  top: 0;
-  left: 0;
+  position: sticky;     /* gruda ao rolar */
+  top: 0;               /* ponto onde ele fixa */
   width: 100%;
   z-index: 1000;
-  visibility: hidden; /* controlado pelo menu-permissoes.js */
+  visibility: hidden;   /* controlado pelo menu-permissoes.js */
 }
 
 .menu-adm{
@@ -247,13 +254,18 @@
    FOOTER GLOBAL – USUÁRIO / SAIR
    ========================================= */
 
+/*
+  O footer fica SEMPRE visível (fixed),
+  independente do tamanho da página
+*/
+
 .footer-app{
   position: fixed;
   bottom: 0;
   left: 0;
   width: 100%;
   background: #7b3f2a;
-  padding: 6px 12px; /* reduzido levemente para ficar mais discreto */
+  padding: 6px 12px; /* levemente menor para não pesar */
   z-index: 1000;
 }
 
@@ -280,10 +292,14 @@
 }
 
 /* =========================================
-   COMPENSAÇÃO PARA MENU E FOOTER FIXOS
+   COMPENSAÇÃO PARA FOOTER FIXO
    ========================================= */
 
+/*
+  Como o footer é fixed,
+  evitamos que ele cubra o conteúdo
+*/
+
 body{
-  padding-top:110px;    /* evita que o menu cubra o conteúdo */
-  padding-bottom:60px; /* evita que o footer cubra o conteúdo */
+  padding-bottom:60px;
 }
