@@ -30,9 +30,6 @@ window.PERMISSAO_PAGINA = { area:"app", chave:"inicio" };
 
 <script src="../login/auth-guard.js"></script>
 
-<!-- CONTROLE DE PERMISSÕES DO MENU (APP) -->
-<script src="../menu/menu-permissoes.js"></script>
-
 <style>
 :root{
   --marrom:#7b3f2a;
@@ -50,32 +47,11 @@ body{margin:0;background:var(--bege);color:#333}
 
 /* HEADER */
 header{
-  position:relative;
   background:var(--logo);
   padding:15px 10px;
   text-align:center;
 }
 header img{max-width:260px;width:100%}
-
-/* BOTÃO ADMIN */
-.btn-admin{
-  position:absolute;
-  top:12px;
-  right:14px;
-  width:42px;
-  height:42px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-}
-.btn-admin img{
-  width:100%;
-  height:auto;
-  opacity:.85;
-}
-.btn-admin:hover img{
-  opacity:1;
-}
 
 .container{max-width:900px;margin:20px auto;padding:0 15px}
 h2{margin:28px 0 12px;color:var(--marrom)}
@@ -127,7 +103,7 @@ h2{margin:28px 0 12px;color:var(--marrom)}
   display:none;
   align-items:center;
   justify-content:center;
-  z-index:1000; /* 🔹 acima do menu */
+  z-index:1000;
 }
 #modalClima .box{
   background:#fff;
@@ -143,11 +119,6 @@ h2{margin:28px 0 12px;color:var(--marrom)}
 
 <header>
   <img src="../logo.png">
-
-  <!-- ÍCONE ÁREA ADMINISTRATIVA -->
-  <a href="../cadastro/cadastro_animais.html" class="btn-admin">
-    <img src="../icon/icone-admin.png" alt="Área Administrativa">
-  </a>
 </header>
 
 <div id="menu"></div>
@@ -187,8 +158,7 @@ fetch("../menu/menu.html")
         a.classList.add("ativo");
       }
     });
-    });
- 
+  });
 
 clima.onclick = ()=> modalClima.style.display="flex";
 modalClima.onclick = e=>{
@@ -216,13 +186,9 @@ async function loadConfigs(){
   const c2 = await db.collection("config").doc("vacas").get();
   const c3 = await db.collection("config").doc("vacinas").get();
 
-  CFG.clima = c1.exists ? c1.data() : {};
-  CFG.vacas = c2.exists ? c2.data() : {};
+  CFG.clima   = c1.exists ? c1.data() : {};
+  CFG.vacas   = c2.exists ? c2.data() : {};
   CFG.vacinas = c3.exists ? c3.data() : {};
-
-  CFG.vacas.prenhez_regras = Array.isArray(CFG.vacas.prenhez_regras)
-    ? CFG.vacas.prenhez_regras
-    : [];
 }
 
 /* CLIMA */
@@ -258,6 +224,24 @@ async function loadAlertas(){
   alertaRapido.innerText=s.size?`🔔 ${s.size} itens pendentes para comprar`:"🔔 Nenhum alerta no momento";
 }
 
+/* HELPERS – MESMA LÓGICA DA TELA VACAS */
+function regraPrenhez(dias){
+  if(dias <= 0) return { classe:"urgente" };
+
+  return (CFG.vacas.prenhez_intervalos || [])
+    .filter(r=>r.ativa!==false && dias>=r.dias_de && dias<=r.dias_ate)
+    .sort((a,b)=>a.dias_de-b.dias_de)[0]
+    || { classe:"ok" };
+}
+
+function mensagemPrenhez(dias){
+  const t = CFG.vacas.prenhez_textos || {};
+  if(dias === 0 && t.parto_hoje) return t.parto_hoje;
+  if(dias < 0 && t.parto_atrasado) return t.parto_atrasado.replace("{{dias}}",Math.abs(dias));
+  if(dias > 0 && t.antes_parto) return t.antes_parto.replace("{{dias}}",dias);
+  return "";
+}
+
 /* INDEX */
 async function loadIndex(){
   conteudo.innerHTML="";
@@ -272,7 +256,7 @@ async function loadIndex(){
   eventos
     .filter(e=>e.tipo_evento==="cobertura")
     .map(c=>{
-      const prev = addM(parse(c.data_evento), CFG.vacas.gestacao_meses || 9);
+      const prev = addM(parse(c.data_evento), Number(CFG.vacas.gestacao_meses || 9));
       const dias = diff(hojeZ, prev);
       return {
         animal: animais.find(a=>a._id===c.id_animal),
@@ -283,15 +267,22 @@ async function loadIndex(){
     .filter(v=>v.animal)
     .sort((a,b)=>a.dias-b.dias)
     .forEach(v=>{
-      const regra = CFG.vacas.prenhez_regras
-        .filter(r=>r.ativa!==false && v.dias >= (r.dias_min ?? 0))
-        .sort((a,b)=>(b.dias_min??0)-(a.dias_min??0))[0];
+      const regra = regraPrenhez(v.dias);
+      const msg   = mensagemPrenhez(v.dias);
 
       conteudo.innerHTML += `
-        <div class="card ${regra?.classe || "ok"}">
+        <div class="card ${regra.classe}">
           <strong>🐄 ${v.animal.nome.toUpperCase()}</strong>
-          <p class="dias">⏳ Faltam ${v.dias} dias</p>
-          ${regra?.mensagem ? `<p class="msg">${regra.mensagem}</p>` : ""}
+
+          ${msg
+            ? `<p class="msg">${msg}</p>`
+            : `<p class="dias">⏳ ${
+                v.dias>=0
+                  ? `Faltam ${v.dias} dias`
+                  : `Atrasado ${Math.abs(v.dias)} dias`
+              }</p>`
+          }
+
           <p class="data">📅 ${v.prev.toLocaleDateString("pt-BR")}</p>
         </div>
       `;
