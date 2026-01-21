@@ -43,6 +43,22 @@ window.PERMISSAO_PAGINA = {
   font-weight:600;
 }
 .check-row input{margin:0;}
+
+.msg{
+  padding:12px;
+  border-radius:8px;
+  margin-bottom:16px;
+  font-weight:600;
+}
+.msg.sucesso{
+  background:#e6f4ea;
+  color:#2f6b2f;
+}
+.msg.erro{
+  background:#fdecea;
+  color:#c0392b;
+}
+.hidden{display:none;}
 </style>
 </head>
 
@@ -52,6 +68,8 @@ window.PERMISSAO_PAGINA = {
 <div id="menu-adm"></div>
 
 <div class="container">
+
+<div id="msg" class="msg hidden"></div>
 
 <h2>Usuários do Sistema</h2>
 <div class="cards-grid" id="lista"></div>
@@ -88,16 +106,23 @@ window.PERMISSAO_PAGINA = {
 
 </div>
 
+<!-- MENU + PERMISSÕES (PADRÃO GLOBAL CORRETO) -->
 <script>
 fetch("../menu/menu-adm.html")
-  .then(r=>r.text())
-  .then(html=>{
+  .then(r => r.text())
+  .then(html => {
     document.getElementById("menu-adm").innerHTML = html;
 
-    const s=document.createElement("script");
-    s.src="../menu/menu-permissoes.js";
-    s.onload=()=>{
-      document.body.style.display="block";
+    document.querySelectorAll(".menu-link").forEach(a=>{
+      if(a.getAttribute("href")?.includes("config.html")){
+        a.classList.add("ativo");
+      }
+    });
+
+    const s = document.createElement("script");
+    s.src = "../menu/menu-permissoes.js";
+    s.onload = () => {
+      document.body.style.display = "block";
       carregar();
     };
     document.body.appendChild(s);
@@ -118,6 +143,13 @@ const secondaryAuth = secondaryApp.auth();
 let usuarios = [];
 let grupos   = [];
 let usuarioAtual = null;
+
+function mensagem(texto, tipo="sucesso"){
+  const m = document.getElementById("msg");
+  m.textContent = texto;
+  m.className = `msg ${tipo}`;
+  m.classList.remove("hidden");
+}
 
 /* LOAD */
 async function carregar(){
@@ -204,12 +236,11 @@ async function salvar(){
   const papel   = edit_grupo.value;
   const ativo   = edit_ativo.checked;
 
-  if(!nome) return alert("Informe o nome.");
-  if(!usuario) return alert("Informe o usuário.");
+  if(!nome) return mensagem("Informe o nome.","erro");
+  if(!usuario) return mensagem("Informe o usuário.","erro");
 
-  /* CRIAÇÃO */
   if(!usuarioAtual){
-    if(!email) return alert("Informe o email.");
+    if(!email) return mensagem("Informe o email.","erro");
 
     try{
       const senhaTemp = Math.random().toString(36).slice(-10);
@@ -227,26 +258,26 @@ async function salvar(){
       await secondaryAuth.sendPasswordResetEmail(email);
       await secondaryAuth.signOut();
 
-      alert("Usuário criado com sucesso.");
-      location.reload();
+      mensagem("Usuário criado com sucesso.");
+      setTimeout(()=>location.reload(),1200);
     }catch(e){
-      alert(e.message);
+      mensagem(e.message,"erro");
     }
     return;
   }
 
-  /* EDIÇÃO */
   await db.collection("usuarios")
     .doc(usuarioAtual._id)
     .update({ nome, usuario, papel, ativo });
 
-  location.reload();
+  mensagem("Usuário atualizado com sucesso.");
+  setTimeout(()=>location.reload(),1200);
 }
 
 /* RESET */
 function resetSenha(){
   auth.sendPasswordResetEmail(edit_email.value);
-  alert("Email enviado.");
+  mensagem("Email de redefinição enviado.");
 }
 
 /* EXCLUIR */
@@ -254,12 +285,16 @@ async function excluir(){
   if(!usuarioAtual) return;
   if(!confirm(`Excluir ${usuarioAtual.nome}?`)) return;
 
-  await db.collection("usuarios")
-    .doc(usuarioAtual._id)
-    .delete();
+  try{
+    await db.collection("usuarios")
+      .doc(usuarioAtual._id)
+      .delete();
 
-  alert("Usuário removido.");
-  location.reload();
+    mensagem("Usuário excluído com sucesso.");
+    setTimeout(()=>location.reload(),1200);
+  }catch(e){
+    mensagem(e.message,"erro");
+  }
 }
 </script>
 
