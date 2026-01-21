@@ -207,21 +207,22 @@ p.intro{
 <!-- MENU + PERMISSÕES -->
 <script>
 fetch("../menu/menu.html")
-  .then(r=>r.text())
-  .then(html=>{
+  .then(r => r.text())
+  .then(html => {
     document.getElementById("menu").innerHTML = html;
 
-    document.querySelectorAll("#menu a").forEach(a=>{
-      if(a.getAttribute("href")==="../trator/trator-inicio.html"){
+    /* Marca item ativo */
+    document.querySelectorAll("#menu a").forEach(a => {
+      if (a.getAttribute("href") === "../trator/trator-inicio.html") {
         a.classList.add("ativo");
       }
     });
-</script>
 
-<!-- FILTRO POR PERMISSÃO -->
-<script>
-function filtrarBlocosTrator(){
-  if(!window.PERMISSOES_USUARIO) return;
+    /* INJETA menu-permissoes.js (REGRA DEFINITIVA) */
+    const s = document.createElement("script");
+    s.src = "../menu/menu-permissoes.js";
+    document.body.appendChild(s);
+  });
 
   document.querySelectorAll(".bloco[data-area]").forEach(bloco=>{
     const area  = bloco.dataset.area;
