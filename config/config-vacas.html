@@ -183,6 +183,7 @@ function renderizar(){
     b.className = "config-card regra-card";
     b.onclick = ()=>editar(i);
     b.innerHTML = `
+      <span class="small">ID: ${r.id}</span>
       <strong>${r.classe.toUpperCase()}</strong>
       <span>${r.dias_de} até ${r.dias_ate} dias</span>
       <span>${r.mensagem || ""}</span>
