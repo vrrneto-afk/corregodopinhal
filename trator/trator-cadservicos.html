@@ -5,19 +5,14 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Cadastro de Serviços – Trator</title>
 
-<!-- MANIFEST -->
 <link rel="manifest" href="../manifest.json">
 <meta name="theme-color" content="#7b3f2a">
-
-<!-- MENU GLOBAL -->
 <link rel="stylesheet" href="../menu/menu.css">
 
-<!-- FIREBASE -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
-<!-- FIREBASE INIT (PADRÃO DEFINITIVO) -->
 <script>
 if (!firebase.apps.length) {
   firebase.initializeApp({
@@ -28,7 +23,6 @@ if (!firebase.apps.length) {
 }
 </script>
 
-<!-- IDENTIFICAÇÃO DA PÁGINA -->
 <script>
 window.PERMISSAO_PAGINA = {
   area: "trator",
@@ -36,143 +30,45 @@ window.PERMISSAO_PAGINA = {
 };
 </script>
 
-<!-- AUTH GUARD -->
 <script src="../login/auth-guard.js"></script>
 
 <style>
 :root{
   --marrom:#7b3f2a;
   --bege:#f6efe7;
-  --cinza:#666;
   --logo:#D0B485;
-  --verde:#2f6b2f;
+  --erro:#c0392b;
+  --ok:#2f6b2f;
 }
-
-*{
-  box-sizing:border-box;
-  font-family:Inter,system-ui,Arial;
-}
-
-body{
-  margin:0;
-  background:var(--bege);
-  color:#333;
-}
-
-header{
-  background:var(--logo);
-  padding:15px;
-  text-align:center;
-}
-
-header img{
-  max-width:260px;
-  width:100%;
-}
-
-.container{
-  max-width:900px;
-  margin:20px auto;
-  padding:0 15px;
-}
-
-h2{
-  color:var(--marrom);
-  margin-bottom:10px;
-}
-
-.card{
-  background:#fff;
-  border-radius:14px;
-  padding:16px;
-  box-shadow:0 2px 6px rgba(0,0,0,.06);
-  margin-bottom:20px;
-}
-
-label{
-  display:block;
-  font-weight:600;
-  margin-top:12px;
-}
-
-input, select, textarea{
-  width:100%;
-  padding:10px;
-  border-radius:10px;
-  border:1px solid #ccc;
-  margin-top:4px;
-  font-size:15px;
-}
-
-.radio-group{
-  display:flex;
-  gap:20px;
-  margin-top:8px;
-}
-
-.radio-group label{
-  font-weight:500;
-  margin:0;
-}
-
-.valor-total{
-  background:#f1f1f1;
-}
-
-button{
-  margin-top:16px;
-  width:100%;
-  padding:12px;
-  border:none;
-  border-radius:12px;
-  background:var(--marrom);
-  color:#fff;
-  font-size:16px;
-  font-weight:700;
-}
-
-button:disabled{
-  opacity:.6;
-}
-
-.filtros{
-  display:flex;
-  gap:10px;
-  margin-bottom:10px;
-}
-
-table{
-  width:100%;
-  border-collapse:collapse;
-  background:#fff;
-  border-radius:12px;
-  overflow:hidden;
-}
-
-th, td{
-  padding:10px;
-  text-align:left;
-  font-size:14px;
-}
-
-th{
-  background:#efe4d5;
-}
-
-tfoot td{
-  font-weight:700;
-  background:#f3eadf;
-}
+*{box-sizing:border-box;font-family:Inter,system-ui,Arial;}
+body{margin:0;background:var(--bege);color:#333;}
+header{background:var(--logo);padding:15px;text-align:center;}
+header img{max-width:260px;width:100%;}
+.container{max-width:900px;margin:20px auto;padding:0 15px;}
+.card{background:#fff;border-radius:14px;padding:16px;box-shadow:0 2px 6px rgba(0,0,0,.06);margin-bottom:20px;}
+label{display:block;font-weight:600;margin-top:12px;}
+input,select{width:100%;padding:10px;border-radius:10px;border:1px solid #ccc;margin-top:4px;}
+.radio-line{display:flex;align-items:center;gap:8px;margin-top:8px;}
+.valor-total{background:#f2f2f2;}
+button{margin-top:16px;width:100%;padding:12px;border:none;border-radius:12px;background:var(--marrom);color:#fff;font-size:16px;font-weight:700;}
+button:disabled{opacity:.6;}
+.msg{margin-top:10px;font-weight:600;}
+.msg.erro{color:var(--erro);}
+.msg.ok{color:var(--ok);}
+table{width:100%;border-collapse:collapse;background:#fff;border-radius:12px;overflow:hidden;}
+th,td{padding:10px;font-size:14px;}
+th{background:#efe4d5;}
+tfoot td{font-weight:700;background:#f3eadf;}
+.actions button{width:auto;margin:0 4px;padding:6px 10px;font-size:13px;}
 </style>
 </head>
 
 <body style="display:none">
 
 <header>
-  <img src="../logo.png" alt="Sítio Córrego do Pinhal">
+  <img src="../logo.png">
 </header>
 
-<!-- MENU -->
 <div id="menu"></div>
 
 <div class="container">
@@ -191,9 +87,11 @@ tfoot td{
 <input type="text" id="cliente">
 
 <label>Forma de cobrança</label>
-<div class="radio-group">
-  <label><input type="radio" name="cobranca" value="hora" checked> Por hora</label>
-  <label><input type="radio" name="cobranca" value="fechado"> Valor fechado</label>
+<div class="radio-line">
+  <input type="radio" name="cobranca" value="hora" checked> <span>Por hora</span>
+</div>
+<div class="radio-line">
+  <input type="radio" name="cobranca" value="fechado"> <span>Valor fechado</span>
 </div>
 
 <div id="porHora">
@@ -201,24 +99,25 @@ tfoot td{
   <input type="number" id="horas" step="0.1">
 
   <label>Valor por hora</label>
-  <input type="number" id="valorHora" step="0.01">
+  <input type="text" id="valorHora">
 
   <label>Valor total</label>
-  <input type="number" id="valorTotal" class="valor-total" disabled>
+  <input type="text" id="valorTotal" class="valor-total" readonly>
 </div>
 
 <div id="valorFechado" style="display:none">
   <label>Valor total</label>
-  <input type="number" id="valorFechadoInput" step="0.01">
+  <input type="text" id="valorFechadoInput">
 </div>
 
 <button id="salvar">💾 Salvar Serviço</button>
+<div id="msg" class="msg"></div>
 
 </div>
 
 <h2>📊 Serviços do Mês</h2>
 
-<div class="filtros">
+<div style="display:flex;gap:10px;margin-bottom:10px">
   <select id="mes"></select>
   <select id="ano"></select>
 </div>
@@ -230,6 +129,7 @@ tfoot td{
   <th>Tipo</th>
   <th>Cliente</th>
   <th>Valor</th>
+  <th>Ações</th>
 </tr>
 </thead>
 <tbody id="lista"></tbody>
@@ -237,127 +137,137 @@ tfoot td{
 <tr>
   <td colspan="3">Total do mês</td>
   <td id="totalMes">R$ 0,00</td>
+  <td></td>
 </tr>
 </tfoot>
 </table>
 
 </div>
 
-<!-- MENU + PERMISSÕES -->
 <script>
-fetch("../menu/menu.html")
-  .then(r => r.text())
-  .then(html => {
-    document.getElementById("menu").innerHTML = html;
-
-    // Marca item ativo
-    document.querySelectorAll("#menu a").forEach(a => {
-      if (a.getAttribute("href") === "../trator/trator-inicio.html") {
-        a.classList.add("ativo");
-      }
-    });
-
-    // INJETA menu-permissoes.js APÓS menu no DOM
-    const s = document.createElement("script");
-    s.src = "../menu/menu-permissoes.js";
-    document.body.appendChild(s);
-  })
-  .catch(err => {
-    console.error("Erro ao carregar menu:", err);
-  });
+fetch("../menu/menu.html").then(r=>r.text()).then(html=>{
+  menu.innerHTML=html;
+  const s=document.createElement("script");
+  s.src="../menu/menu-permissoes.js";
+  document.body.appendChild(s);
+});
 </script>
 
 <script>
-const db = firebase.firestore();
-const auth = firebase.auth();
+const db=firebase.firestore();
+const auth=firebase.auth();
+let editId=null;
 
-const radios = document.querySelectorAll("input[name='cobranca']");
-radios.forEach(r=>{
-  r.onchange = ()=>{
-    document.getElementById("porHora").style.display =
-      r.value==="hora" && r.checked ? "block":"none";
-    document.getElementById("valorFechado").style.display =
-      r.value==="fechado" && r.checked ? "block":"none";
+const meses=["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
+meses.forEach((m,i)=>mes.innerHTML+=`<option value="${i}">${m}</option>`);
+
+const anoAtual=new Date().getFullYear();
+for(let a=anoAtual-3;a<=anoAtual+1;a++)ano.innerHTML+=`<option>${a}</option>`;
+mes.value=new Date().getMonth();ano.value=anoAtual;
+
+function moeda(v){
+  return "R$ "+Number(v).toFixed(2).replace(".",",");
+}
+function limparMoeda(v){return Number(v.replace(/[^\d]/g,""))/100;}
+
+valorHora.oninput=()=>valorHora.value=moeda(limparMoeda(valorHora.value));
+valorFechadoInput.oninput=()=>valorFechadoInput.value=moeda(limparMoeda(valorFechadoInput.value));
+
+horas.oninput=()=>{
+  valorTotal.value=moeda(horas.value*limparMoeda(valorHora.value||"0"));
+};
+
+document.querySelectorAll("input[name='cobranca']").forEach(r=>{
+  r.onchange=()=>{
+    porHora.style.display=r.value==="hora"?"block":"none";
+    valorFechado.style.display=r.value==="fechado"?"block":"none";
   };
 });
 
-["horas","valorHora"].forEach(id=>{
-  document.getElementById(id).oninput = ()=>{
-    const h = +horas.value || 0;
-    const v = +valorHora.value || 0;
-    valorTotal.value = (h*v).toFixed(2);
+salvar.onclick=async()=>{
+  msg.textContent="";
+  const user=auth.currentUser;
+  if(!data.value||!tipo.value||!cliente.value){
+    msg.textContent="Preencha todos os campos";msg.className="msg erro";return;
+  }
+
+  let valor=document.querySelector("input[name='cobranca']:checked").value==="hora"
+    ? limparMoeda(valorTotal.value)
+    : limparMoeda(valorFechadoInput.value);
+
+  if(valor<=0){msg.textContent="Valor inválido";msg.className="msg erro";return;}
+
+  const dados={
+    data:firebase.firestore.Timestamp.fromDate(new Date(data.value)),
+    tipo:tipo.value,
+    cliente:cliente.value,
+    valor_total:valor,
+    criado_em:firebase.firestore.FieldValue.serverTimestamp(),
+    criado_por:user.uid
   };
-});
 
-salvar.onclick = async ()=>{
-  salvar.disabled = true;
-  const user = auth.currentUser;
+  editId
+    ? await db.collection("trator_servicos").doc(editId).update(dados)
+    : await db.collection("trator_servicos").add(dados);
 
-  let valor =
-    document.querySelector("input[name='cobranca']:checked").value==="hora"
-      ? +valorTotal.value
-      : +valorFechadoInput.value;
-
-  await db.collection("trator_servicos").add({
-    data: firebase.firestore.Timestamp.fromDate(new Date(data.value)),
-    tipo: tipo.value,
-    cliente: cliente.value,
-    valor_total: valor,
-    criado_em: firebase.firestore.FieldValue.serverTimestamp(),
-    criado_por: user.uid
-  });
-
-  location.reload();
+  msg.textContent="Serviço salvo com sucesso";
+  msg.className="msg ok";
+  editId=null;
+  salvar.textContent="💾 Salvar Serviço";
+  carregarTabela();
 };
 
 function carregarTabela(){
-  lista.innerHTML="";
-  totalMes.innerText="R$ 0,00";
-
-  const m = +mes.value;
-  const a = +ano.value;
-
-  const inicio = new Date(a,m,1);
-  const fim = new Date(a,m+1,0,23,59,59);
-
-  let total = 0;
+  lista.innerHTML="";totalMes.textContent="R$ 0,00";
+  const ini=new Date(ano.value,mes.value,1);
+  const fim=new Date(ano.value,Number(mes.value)+1,0,23,59,59);
+  let total=0;
 
   db.collection("trator_servicos")
-    .where("data",">=",inicio)
+    .where("data",">=",ini)
     .where("data","<=",fim)
     .get()
-    .then(snap=>{
-      snap.forEach(d=>{
-        const v = d.data();
-        total += v.valor_total;
-        lista.innerHTML += `
+    .then(s=>{
+      s.forEach(d=>{
+        const v=d.data();total+=v.valor_total;
+        lista.innerHTML+=`
           <tr>
             <td>${v.data.toDate().toLocaleDateString()}</td>
             <td>${v.tipo}</td>
             <td>${v.cliente}</td>
-            <td>R$ ${v.valor_total.toFixed(2)}</td>
+            <td>${moeda(v.valor_total)}</td>
+            <td class="actions">
+              <button onclick="editar('${d.id}')">Editar</button>
+              ${window.PERMISSOES_USUARIO?.adm?.tudo?`<button onclick="excluir('${d.id}')">Excluir</button>`:""}
+            </td>
           </tr>`;
       });
-      totalMes.innerText = "R$ " + total.toFixed(2);
+      totalMes.textContent=moeda(total);
     });
 }
 
-for(let i=0;i<12;i++){
-  mes.innerHTML += `<option value="${i}">${new Date(2000,i,1).toLocaleString("pt-BR",{month:"long"})}</option>`;
-}
-const anoAtual = new Date().getFullYear();
-for(let a=anoAtual-3;a<=anoAtual+1;a++){
-  ano.innerHTML += `<option value="${a}">${a}</option>`;
+function editar(id){
+  db.collection("trator_servicos").doc(id).get().then(d=>{
+    const v=d.data();editId=id;
+    data.value=v.data.toDate().toISOString().split("T")[0];
+    tipo.value=v.tipo;cliente.value=v.cliente;
+    valorFechadoInput.value=moeda(v.valor_total);
+    document.querySelector("input[value='fechado']").checked=true;
+    porHora.style.display="none";valorFechado.style.display="block";
+    salvar.textContent="✏️ Atualizar Serviço";
+  });
 }
 
-mes.value = new Date().getMonth();
-ano.value = anoAtual;
+function excluir(id){
+  if(confirm("Excluir este serviço?")){
+    db.collection("trator_servicos").doc(id).delete().then(carregarTabela);
+  }
+}
 
-mes.onchange = ano.onchange = carregarTabela;
+mes.onchange=ano.onchange=carregarTabela;
 carregarTabela();
 </script>
 
-<!-- LOGOUT -->
 <script src="../login/logout.js"></script>
 
 </body>
