@@ -41,11 +41,9 @@ window.PERMISSAO_PAGINA = { area:"app", chave:"inicio" };
   --cinza:#666;
   --logo:#D0B485;
 }
-
 *{box-sizing:border-box;font-family:'Inter',system-ui,-apple-system,Arial}
 body{margin:0;background:var(--bege);color:#333}
 
-/* HEADER */
 header{
   background:var(--logo);
   padding:15px 10px;
@@ -148,26 +146,22 @@ const conteudo = document.getElementById("conteudo");
 const alertaRapido = document.getElementById("alertaRapido");
 const modalClima = document.getElementById("modalClima");
 
-<script>
 /* MENU – PADRÃO DEFINITIVO */
 fetch("../menu/menu.html")
   .then(r => r.text())
   .then(h => {
     menu.innerHTML = h;
 
-    // ativa item atual
     document.querySelectorAll("#menu a").forEach(a=>{
       if(a.getAttribute("href")==="../app/index.html"){
         a.classList.add("ativo");
       }
     });
 
-    // injeta script de permissões SOMENTE após o menu existir
     const s = document.createElement("script");
     s.src = "../menu/menu-permissoes.js";
     document.body.appendChild(s);
   });
-</script>
 
 clima.onclick = ()=> modalClima.style.display="flex";
 modalClima.onclick = e=>{
@@ -233,101 +227,11 @@ async function loadAlertas(){
   alertaRapido.innerText=s.size?`🔔 ${s.size} itens pendentes para comprar`:"🔔 Nenhum alerta no momento";
 }
 
-/* HELPERS – MESMA LÓGICA DA TELA VACAS */
-function regraPrenhez(dias){
-  if(dias <= 0) return { classe:"urgente" };
-
-  return (CFG.vacas.prenhez_intervalos || [])
-    .filter(r=>r.ativa!==false && dias>=r.dias_de && dias<=r.dias_ate)
-    .sort((a,b)=>a.dias_de-b.dias_de)[0]
-    || { classe:"ok" };
-}
-
-function mensagemPrenhez(dias){
-  const t = CFG.vacas.prenhez_textos || {};
-  if(dias === 0 && t.parto_hoje) return t.parto_hoje;
-  if(dias < 0 && t.parto_atrasado) return t.parto_atrasado.replace("{{dias}}",Math.abs(dias));
-  if(dias > 0 && t.antes_parto) return t.antes_parto.replace("{{dias}}",dias);
-  return "";
-}
-
 /* INDEX */
-async function loadIndex(){
-  conteudo.innerHTML="";
-
-  const animais=(await db.collection("animais").get()).docs.map(d=>({_id:d.id,...d.data()}));
-  const eventos=(await db.collection("eventos").get()).docs.map(d=>d.data());
-  const vacinas=(await db.collection("vacinas").get()).docs.map(d=>d.data());
-
-  /* VACAS A CRIAR */
-  conteudo.innerHTML += "<h2>🐄 Vacas a Criar</h2>";
-
-  eventos
-    .filter(e=>e.tipo_evento==="cobertura")
-    .map(c=>{
-      const prev = addM(parse(c.data_evento), Number(CFG.vacas.gestacao_meses || 9));
-      const dias = diff(hojeZ, prev);
-      return {
-        animal: animais.find(a=>a._id===c.id_animal),
-        prev,
-        dias
-      };
-    })
-    .filter(v=>v.animal)
-    .sort((a,b)=>a.dias-b.dias)
-    .forEach(v=>{
-      const regra = regraPrenhez(v.dias);
-      const msg   = mensagemPrenhez(v.dias);
-
-      conteudo.innerHTML += `
-        <div class="card ${regra.classe}">
-          <strong>🐄 ${v.animal.nome.toUpperCase()}</strong>
-
-          ${msg
-            ? `<p class="msg">${msg}</p>`
-            : `<p class="dias">⏳ ${
-                v.dias>=0
-                  ? `Faltam ${v.dias} dias`
-                  : `Atrasado ${Math.abs(v.dias)} dias`
-              }</p>`
-          }
-
-          <p class="data">🪧 Parto previsto para: ${v.prev.toLocaleDateString("pt-BR")}</p>
-        </div>
-      `;
-    });
-
-  /* VACINAS */
-  conteudo.innerHTML += "<h2>💉 Vacinas pendentes</h2>";
-
-  vacinas
-    .filter(v=>v.status !== CFG.vacinas.status?.finalizada)
-    .forEach(v=>{
-      const animal = animais.find(a=>a._id===v.id_animal);
-      const reap = parse(v.data_aplicacao);
-      reap.setDate(reap.getDate() + Number(v.repeticao_dias || 0));
-      const dias = diff(hojeZ, reap);
-
-      conteudo.innerHTML += `
-        <div class="card ${dias < 0 ? "atrasada" : "pendente"}">
-          ${animal ? `<p><strong>🐄 ${animal.nome.toUpperCase()}</strong></p>` : ""}
-          💉 ${v.nome_vacina.toUpperCase()}
-          <p class="dias">
-            ${dias < 0 
-              ? `Atrasada há ${Math.abs(dias)} dias` 
-              : `Pendente em ${dias} dias`}
-          </p>
-          <p class="data">📅 ${reap.toLocaleDateString("pt-BR")}</p>
-        </div>
-      `;
-    });
-}
-
 (async()=>{
   await loadConfigs();
   await loadClima();
   await loadAlertas();
-  await loadIndex();
 })();
 </script>
 
