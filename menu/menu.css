@@ -3,20 +3,18 @@
    ========================================= */
 
 /*
-  IMPORTANTE:
-  - A LOGO fica no fluxo normal da página
-  - O MENU fica logo abaixo da logo
-  - Ao rolar, o MENU gruda no topo (sticky)
-  - NÃO usamos position:fixed no menu
+  PADRÃO FINAL:
+  - Logo no fluxo normal
+  - Menu logo abaixo da logo
+  - Menu NÃO fixo
+  - Footer fixo no rodapé
 */
 
 .menu-wrapper{
-  position: fixed;
-  top: 220px;          /* ALTURA DA LOGO */
-  left: 0;
+  position: relative;   /* volta ao comportamento original */
   width: 100%;
-  z-index: 1000;
-  visibility: hidden;
+  z-index: 100;
+  visibility: hidden;   /* controlado pelo menu-permissoes.js */
 }
 
 .menu-adm{
@@ -256,8 +254,7 @@
    ========================================= */
 
 /*
-  O footer fica SEMPRE visível (fixed),
-  independente do tamanho da página
+  Footer fixo no rodapé
 */
 
 .footer-app{
@@ -266,7 +263,7 @@
   left: 0;
   width: 100%;
   background: #7b3f2a;
-  padding: 6px 12px; /* levemente menor para não pesar */
+  padding: 6px 12px;
   z-index: 1000;
 }
 
@@ -296,12 +293,6 @@
    COMPENSAÇÃO PARA FOOTER FIXO
    ========================================= */
 
-/*
-  Como o footer é fixed,
-  evitamos que ele cubra o conteúdo
-*/
-
 body{
-  padding-top:320px;   /* logo + menu */
-  padding-bottom:60px; /* footer */
+  padding-bottom:60px; /* evita que o footer cubra o conteúdo */
 }
