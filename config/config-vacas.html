@@ -5,12 +5,17 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Configuração – Vacas</title>
 
+<!-- MANIFEST -->
 <link rel="manifest" href="../manifest.json">
 <meta name="theme-color" content="#7b3f2a">
 
+<!-- MENU GLOBAL -->
 <link rel="stylesheet" href="../menu/menu.css">
+
+<!-- CONFIG CSS -->
 <link rel="stylesheet" href="./config.css">
 
+<!-- FIREBASE -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
@@ -25,17 +30,25 @@ if (!firebase.apps.length) {
 }
 </script>
 
+<!-- IDENTIFICAÇÃO DA PÁGINA -->
 <script>
 window.PERMISSAO_PAGINA = { area:"config", chave:"config-vacas" };
 </script>
 
+<!-- AUTH GUARD -->
 <script src="../login/auth-guard.js"></script>
 
 <style>
-.label-check{display:flex;align-items:center;gap:8px;font-weight:600;margin-top:12px}
+.label-check{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  font-weight:600;
+  margin-top:12px;
+}
 .label-check input{margin:0}
 .regra-card span{font-size:13px;font-weight:500}
-.range{display:flex;gap:8px;align-items:center}
+.range{display:flex;align-items:center;gap:8px}
 </style>
 </head>
 
@@ -48,7 +61,7 @@ window.PERMISSAO_PAGINA = { area:"config", chave:"config-vacas" };
 
 <h2>Configuração – Vacas</h2>
 
-<!-- PARÂMETROS -->
+<!-- PARÂMETROS GERAIS -->
 <fieldset>
   <label>Gestação (meses)</label>
   <input type="number" id="gestacao_meses" min="0">
@@ -66,7 +79,7 @@ window.PERMISSAO_PAGINA = { area:"config", chave:"config-vacas" };
   <input type="text" id="txt_antes_parto" placeholder="Faltam {{dias}} dias">
 
   <label>Parto hoje</label>
-  <input type="text" id="txt_parto_hoje">
+  <input type="text" id="txt_parto_hoje" placeholder="Parto previsto para HOJE">
 
   <label>Parto atrasado</label>
   <input type="text" id="txt_parto_atrasado" placeholder="Parto atrasado em {{dias}} dias">
@@ -107,7 +120,7 @@ window.PERMISSAO_PAGINA = { area:"config", chave:"config-vacas" };
 </fieldset>
 
 <button class="salvar" onclick="salvarRegra()">💾 Salvar regra</button>
-<button class="voltar hidden" id="btn-excluir" onclick="excluirRegra()">🗑️ Excluir</button>
+<button class="voltar hidden" id="btn-excluir" onclick="excluirRegra()">🗑️ Excluir regra</button>
 <button class="voltar" onclick="cancelar()">❌ Cancelar</button>
 </div>
 
@@ -115,133 +128,178 @@ window.PERMISSAO_PAGINA = { area:"config", chave:"config-vacas" };
 
 </div>
 
-<!-- MENU -->
+<!-- MENU + PERMISSÕES -->
 <script>
 fetch("../menu/menu-adm.html")
-.then(r=>r.text())
-.then(html=>{
-  menu-adm.innerHTML=html;
-  const s=document.createElement("script");
-  s.src="../menu/menu-permissoes.js";
-  s.onload=()=>{document.body.style.display="block";carregar();}
-  document.body.appendChild(s);
-});
+  .then(r=>r.text())
+  .then(html=>{
+    const elMenuAdm = document.getElementById("menu-adm");
+    elMenuAdm.innerHTML = html;
+
+    const s = document.createElement("script");
+    s.src = "../menu/menu-permissoes.js";
+    s.onload = () => {
+      document.body.style.display = "block";
+      carregar();
+    };
+    document.body.appendChild(s);
+  });
 </script>
 
 <script>
-const db=firebase.firestore();
-let intervalos=[],editando=null;
+const db = firebase.firestore();
 
+const elListaRegras = document.getElementById("lista-regras");
+const editor        = document.getElementById("editor");
+const btnExcluir    = document.getElementById("btn-excluir");
+
+let intervalos = [];
+let editando = null;
+
+/* LOAD */
 async function carregar(){
-  const snap=await db.collection("config").doc("vacas").get();
+  const snap = await db.collection("config").doc("vacas").get();
   if(!snap.exists) return;
-  const d=snap.data();
 
-  gestacao_meses.value=d.gestacao_meses||"";
-  idade_minima_meses.value=d.idade_minima_meses||"";
+  const d = snap.data();
 
-  intervalos=d.prenhez_intervalos||[];
+  gestacao_meses.value     = d.gestacao_meses ?? "";
+  idade_minima_meses.value = d.idade_minima_meses ?? "";
 
-  txt_antes_parto.value=d.prenhez_textos?.antes_parto||"";
-  txt_parto_hoje.value=d.prenhez_textos?.parto_hoje||"";
-  txt_parto_atrasado.value=d.prenhez_textos?.parto_atrasado||"";
+  intervalos = d.prenhez_intervalos || [];
+
+  txt_antes_parto.value    = d.prenhez_textos?.antes_parto || "";
+  txt_parto_hoje.value     = d.prenhez_textos?.parto_hoje || "";
+  txt_parto_atrasado.value = d.prenhez_textos?.parto_atrasado || "";
 
   renderizar();
 }
 
+/* RENDER */
 function renderizar(){
-  lista-regras.innerHTML="";
+  elListaRegras.innerHTML = "";
+
   intervalos.forEach((r,i)=>{
-    if(r.ativa===false) return;
-    const b=document.createElement("button");
-    b.className="config-card regra-card";
-    b.onclick=()=>editar(i);
-    b.innerHTML=`
+    if(r.ativa === false) return;
+
+    const b = document.createElement("button");
+    b.className = "config-card regra-card";
+    b.onclick = ()=>editar(i);
+    b.innerHTML = `
       <strong>${r.classe.toUpperCase()}</strong>
       <span>${r.dias_de} até ${r.dias_ate} dias</span>
-      <span>${r.mensagem||""}</span>`;
-    lista-regras.appendChild(b);
+      <span>${r.mensagem || ""}</span>
+    `;
+    elListaRegras.appendChild(b);
   });
 
-  const n=document.createElement("button");
-  n.className="config-card";
-  n.innerHTML="➕ Nova regra";
-  n.onclick=nova;
-  lista-regras.appendChild(n);
+  const novo = document.createElement("button");
+  novo.className = "config-card";
+  novo.innerHTML = "➕ Nova regra";
+  novo.onclick = nova;
+  elListaRegras.appendChild(novo);
 }
 
-function nova(){editando=null;limpar();btn-excluir.classList.add("hidden");editor.classList.remove("hidden")}
-function editar(i){
-  editando=i;
-  const r=intervalos[i];
-  classe.value=r.classe;
-  dias_de.value=r.dias_de;
-  dias_ate.value=r.dias_ate;
-  mensagem.value=r.mensagem;
-  ativa.checked=r.ativa!==false;
-  btn-excluir.classList.remove("hidden");
+/* EDITOR */
+function nova(){
+  editando = null;
+  limpar();
+  btnExcluir.classList.add("hidden");
   editor.classList.remove("hidden");
 }
 
-async function salvarRegra(){
-  const obj={
-    classe:classe.value,
-    dias_de:Number(dias_de.value),
-    dias_ate:Number(dias_ate.value),
-    mensagem:mensagem.value.trim(),
-    ativa:ativa.checked
-  };
-  if(obj.dias_de>obj.dias_ate){alert("Intervalo inválido");return;}
-  if(editando===null) intervalos.push(obj);
-  else intervalos[editando]=obj;
-  await salvarFirestore();
-  cancelar();renderizar();
+function editar(i){
+  editando = i;
+  const r = intervalos[i];
+
+  classe.value   = r.classe;
+  dias_de.value  = r.dias_de;
+  dias_ate.value = r.dias_ate;
+  mensagem.value = r.mensagem || "";
+  ativa.checked  = r.ativa !== false;
+
+  btnExcluir.classList.remove("hidden");
+  editor.classList.remove("hidden");
 }
 
+/* SALVAR */
+async function salvarRegra(){
+  const obj = {
+    classe: classe.value,
+    dias_de: Number(dias_de.value),
+    dias_ate: Number(dias_ate.value),
+    mensagem: mensagem.value.trim(),
+    ativa: ativa.checked
+  };
+
+  if(isNaN(obj.dias_de) || isNaN(obj.dias_ate) || obj.dias_de > obj.dias_ate){
+    alert("Intervalo de dias inválido.");
+    return;
+  }
+
+  if(editando === null) intervalos.push(obj);
+  else intervalos[editando] = obj;
+
+  await salvarFirestore();
+  cancelar();
+  renderizar();
+}
+
+/* PARAMETROS */
 async function salvarParametros(){
   await db.collection("config").doc("vacas").update({
-    gestacao_meses:Number(gestacao_meses.value),
-    idade_minima_meses:Number(idade_minima_meses.value)
+    gestacao_meses: Number(gestacao_meses.value),
+    idade_minima_meses: Number(idade_minima_meses.value)
   });
-  alert("Parâmetros salvos.");
+  alert("Parâmetros gerais salvos.");
 }
 
+/* TEXTOS */
 async function salvarTextos(){
   await db.collection("config").doc("vacas").update({
     prenhez_textos:{
-      antes_parto:txt_antes_parto.value,
-      parto_hoje:txt_parto_hoje.value,
-      parto_atrasado:txt_parto_atrasado.value
+      antes_parto: txt_antes_parto.value,
+      parto_hoje: txt_parto_hoje.value,
+      parto_atrasado: txt_parto_atrasado.value
     }
   });
   alert("Textos salvos.");
 }
 
+/* EXCLUIR */
 async function excluirRegra(){
-  if(editando===null) return;
+  if(editando === null) return;
+  if(!confirm("Deseja excluir esta regra?")) return;
+
   intervalos.splice(editando,1);
   await salvarFirestore();
-  cancelar();renderizar();
+  cancelar();
+  renderizar();
 }
 
 async function salvarFirestore(){
   await db.collection("config").doc("vacas").update({
-    gestacao_meses:Number(gestacao_meses.value),
-    idade_minima_meses:Number(idade_minima_meses.value),
-    prenhez_intervalos:intervalos
+    gestacao_meses: Number(gestacao_meses.value),
+    idade_minima_meses: Number(idade_minima_meses.value),
+    prenhez_intervalos: intervalos
   });
 }
 
-function cancelar(){editor.classList.add("hidden");limpar()}
+/* AUX */
+function cancelar(){
+  editor.classList.add("hidden");
+  limpar();
+}
 function limpar(){
-  classe.value="ok";
-  dias_de.value="";
-  dias_ate.value="";
-  mensagem.value="";
-  ativa.checked=true;
+  classe.value = "ok";
+  dias_de.value = "";
+  dias_ate.value = "";
+  mensagem.value = "";
+  ativa.checked = true;
 }
 </script>
 
+<!-- LOGOUT -->
 <script src="../login/logout.js"></script>
 
 </body>
