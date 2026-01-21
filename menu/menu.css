@@ -267,6 +267,21 @@
   z-index: 1000;
 }
 
+/* garante a mesma fonte do menu */
+.footer-app,
+.footer-app a,
+.footer-app span{
+  font-family: inherit;
+}
+
+/* versão do app */
+.footer-versao,
+.footer-versao span{
+  color:#fff;
+  font-weight:600;
+  opacity:.85;
+}
+
 .footer-content{
   max-width:1100px;
   margin:auto;
