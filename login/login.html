@@ -5,18 +5,25 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Login – Sítio Córrego do Pinhal</title>
 
+<!-- PWA -->
+<link rel="manifest" href="../manifest.json">
+<meta name="theme-color" content="#7b3f2a">
+
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
 
 <!-- FIREBASE -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 
+<!-- FIREBASE INIT (SEGURO PARA PWA) -->
 <script>
-firebase.initializeApp({
-  apiKey: "AIzaSyCW-CuFDrOLO-dteckl_GrPTocmyS-IrzY",
-  authDomain: "sitio-corrego-do-pinhal.firebaseapp.com",
-  projectId: "sitio-corrego-do-pinhal"
-});
+if (!firebase.apps.length) {
+  firebase.initializeApp({
+    apiKey: "AIzaSyCW-CuFDrOLO-dteckl_GrPTocmyS-IrzY",
+    authDomain: "sitio-corrego-do-pinhal.firebaseapp.com",
+    projectId: "sitio-corrego-do-pinhal"
+  });
+}
 </script>
 
 <style>
@@ -87,7 +94,7 @@ body{
 <body>
 
 <div class="login-box">
-  <img src="../logo.png">
+  <img src="../logo.png" alt="Sítio Córrego do Pinhal">
   <h2>Acesso ao Sistema</h2>
   <p>Entre com seu e-mail e senha</p>
 
@@ -112,7 +119,7 @@ async function login(){
       senha.value
     );
 
-    // 🔁 Redirecionamento controlado (SEM listener)
+    // Redirecionamento limpo
     location.replace("../app/index.html");
 
   }catch(e){
@@ -128,6 +135,18 @@ async function resetarSenha(){
   }
   await auth.sendPasswordResetEmail(email.value.trim());
   alert("E-mail enviado para redefinição de senha.");
+}
+</script>
+
+<!-- SERVICE WORKER (OBRIGATÓRIO PARA PWA) -->
+<script>
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker
+      .register("/corregodopinhal/sw.js")
+      .then(() => console.log("Service Worker registrado"))
+      .catch(err => console.error("Erro no SW", err));
+  });
 }
 </script>
 
