@@ -61,6 +61,7 @@ body{
   color:#333;
 }
 
+/* ================= HEADER ================= */
 header{
   background:var(--logo);
   padding:15px;
@@ -72,6 +73,7 @@ header img{
   width:100%;
 }
 
+/* ================= CONTAINER ================= */
 .container{
   max-width:900px;
   margin:20px auto;
@@ -116,7 +118,7 @@ select{
   margin:0;
 }
 
-/* ================= BOTÕES ================= */
+/* ================= BOTÃO ================= */
 button{
   margin-top:16px;
   width:100%;
@@ -271,22 +273,18 @@ fetch("../menu/menu.html")
   .then(html => {
     document.getElementById("menu").innerHTML = html;
 
-    // Marca item ativo
     document.querySelectorAll("#menu a").forEach(a => {
       if (a.getAttribute("href") === "../trator/trator-inicio.html") {
         a.classList.add("ativo");
       }
     });
 
-    // INJETA menu-permissoes.js APÓS menu no DOM
     const s = document.createElement("script");
     s.src = "../menu/menu-permissoes.js";
     document.body.appendChild(s);
-  })
 
-  document.body.style.display = "block";
+    document.body.style.display = "block";
   })
-
   .catch(err => {
     console.error("Erro ao carregar menu:", err);
   });
@@ -298,7 +296,7 @@ const db = firebase.firestore();
 const auth = firebase.auth();
 let editId = null;
 
-/* ======= MESES ======= */
+/* ===== MESES ===== */
 const meses = [
   "Janeiro","Fevereiro","Março","Abril","Maio","Junho",
   "Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"
@@ -316,7 +314,7 @@ for(let a = anoAtual - 3; a <= anoAtual + 10; a++){
 mes.value = new Date().getMonth();
 ano.value = anoAtual;
 
-/* ======= MOEDA ======= */
+/* ===== MOEDA ===== */
 function moeda(v){
   return "R$ " + Number(v).toFixed(2).replace(".",",");
 }
@@ -325,7 +323,7 @@ function limparMoeda(v){
   return Number(v.replace(/[^\d]/g,"")) / 100;
 }
 
-/* ======= CÁLCULO ======= */
+/* ===== CÁLCULO ===== */
 function recalcularTotalHora(){
   const h = Number(horas.value.replace(",", "."));
   const v = limparMoeda(valorHora.value || "0");
@@ -339,6 +337,7 @@ function recalcularTotalHora(){
 }
 
 horas.addEventListener("input", recalcularTotalHora);
+
 valorHora.addEventListener("input", () => {
   valorHora.value = moeda(limparMoeda(valorHora.value));
   recalcularTotalHora();
@@ -348,7 +347,7 @@ valorFechadoInput.addEventListener("input", () => {
   valorFechadoInput.value = moeda(limparMoeda(valorFechadoInput.value));
 });
 
-/* ======= TOGGLE COBRANÇA ======= */
+/* ===== TOGGLE COBRANÇA ===== */
 document.querySelectorAll("input[name='cobranca']").forEach(r=>{
   r.addEventListener("change", ()=>{
     porHora.style.display = r.value === "hora" && r.checked ? "block" : "none";
@@ -356,16 +355,13 @@ document.querySelectorAll("input[name='cobranca']").forEach(r=>{
   });
 });
 
-/* ======= SALVAR ======= */
+/* ===== SALVAR ===== */
 salvar.onclick = async ()=>{
   msg.textContent = "";
 
-  try {
+  try{
     const user = auth.currentUser;
-
-    if(!user){
-      throw new Error("Usuário não autenticado");
-    }
+    if(!user) throw new Error("Usuário não autenticado");
 
     if(!data.value || !tipo.value || !cliente.value){
       throw new Error("Preencha todos os campos");
@@ -378,9 +374,7 @@ salvar.onclick = async ()=>{
       ? limparMoeda(valorTotal.value)
       : limparMoeda(valorFechadoInput.value);
 
-    if(valor <= 0){
-      throw new Error("Valor inválido");
-    }
+    if(valor <= 0) throw new Error("Valor inválido");
 
     const dados = {
       data: firebase.firestore.Timestamp.fromDate(new Date(data.value)),
@@ -404,14 +398,14 @@ salvar.onclick = async ()=>{
     salvar.textContent = "💾 Salvar Serviço";
     carregarTabela();
 
-  } catch (err) {
+  }catch(err){
     console.error(err);
     msg.textContent = err.message || "Erro ao salvar serviço";
     msg.className = "msg erro";
   }
 };
 
-/* ======= TABELA ======= */
+/* ===== TABELA ===== */
 function carregarTabela(){
   lista.innerHTML = "";
   totalMes.textContent = "R$ 0,00";
