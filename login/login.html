@@ -9,7 +9,7 @@
 <link rel="manifest" href="../manifest.json">
 <meta name="theme-color" content="#7b3f2a">
 
-<!-- Fonte padrão do app -->
+<!-- Fonte -->
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
 
 <!-- FIREBASE -->
@@ -88,7 +88,7 @@ body{
   font-size:15px;
 }
 
-/* CHECKBOX – DEFINITIVO MOBILE */
+/* CHECKBOX */
 .lembrar-wrap{
   display:flex;
   align-items:center;
@@ -103,14 +103,6 @@ body{
   margin:0;
   width:16px;
   height:16px;
-}
-
-.lembrar-wrap label{
-  margin:0;
-  padding:0;
-  cursor:pointer;
-  white-space:nowrap;
-  display:inline-block;
 }
 
 .login-box button{
@@ -157,7 +149,6 @@ body{
   <input type="email" id="email" placeholder="E-mail">
   <input type="password" id="senha" placeholder="Senha">
 
-  <!-- CHECKBOX -->
   <div class="lembrar-wrap">
     <input type="checkbox" id="lembrar">
     <label for="lembrar">Permanecer conectado</label>
@@ -173,9 +164,17 @@ body{
 const auth = firebase.auth();
 const erro = document.getElementById("erro");
 const emailInput = document.getElementById("email");
+const senhaInput = document.getElementById("senha");
 const lembrarCheck = document.getElementById("lembrar");
 
-/* ====== RESTAURA EMAIL SALVO ====== */
+/* ====== SE JÁ ESTIVER LOGADO, NÃO MOSTRA LOGIN ====== */
+auth.onAuthStateChanged(user => {
+  if (user) {
+    location.replace("../app/index.html");
+  }
+});
+
+/* ====== RESTAURA EMAIL ====== */
 if (localStorage.getItem("email_salvo")) {
   emailInput.value = localStorage.getItem("email_salvo");
   lembrarCheck.checked = true;
@@ -194,10 +193,9 @@ async function login(){
 
     await auth.signInWithEmailAndPassword(
       emailInput.value.trim(),
-      senha.value
+      senhaInput.value
     );
 
-    /* salva email se marcado */
     if (lembrarCheck.checked) {
       localStorage.setItem("email_salvo", emailInput.value.trim());
     } else {
@@ -212,7 +210,7 @@ async function login(){
   }
 }
 
-/* ====== RESET DE SENHA ====== */
+/* ====== RESET SENHA ====== */
 async function resetarSenha(){
   if(!emailInput.value){
     alert("Informe o e-mail.");
