@@ -1,27 +1,48 @@
 {
   "name": "Sítio Córrego do Pinhal",
   "short_name": "Córrego do Pinhal",
-  "start_url": "/sitio-corrego-do-pinhal/index.html",
-  "scope": "/sitio-corrego-do-pinhal/",
+  "start_url": "/corregodopinhal/login/login.html",
+  "scope": "/corregodopinhal/",
   "display": "standalone",
   "background_color": "#f6efe7",
   "theme_color": "#7b3f2a",
   "orientation": "portrait",
   "icons": [
     {
-      "src": "/sitio-corrego-do-pinhal/icon/icon-72.png",
+      "src": "/corregodopinhal/icon/icon-72.png",
       "sizes": "72x72",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any"
     },
     {
-      "src": "/sitio-corrego-do-pinhal/icon/icon-192.png",
+      "src": "/corregodopinhal/icon/icon-192.png",
       "sizes": "192x192",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any"
     },
     {
-      "src": "/sitio-corrego-do-pinhal/icon/icon-512.png",
+      "src": "/corregodopinhal/icon/icon-256.png",
+      "sizes": "256x256",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/corregodopinhal/icon/icon-512.png",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/corregodopinhal/icon/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/corregodopinhal/icon/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
     }
   ]
 }
