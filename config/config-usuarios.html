@@ -62,6 +62,9 @@ window.PERMISSAO_PAGINA = {
 <label>Nome</label>
 <input id="edit_nome">
 
+<label>Usuário</label>
+<input id="edit_usuario">
+
 <label>Email</label>
 <input id="edit_email">
 
@@ -157,11 +160,11 @@ function render(){
 /* EDITAR */
 function editar(u){
   usuarioAtual = u;
-  edit_nome.value  = u.nome || "";
+  edit_nome.value     = u.nome || "";
   edit_usuario.value  = u.usuario || "";
-  edit_email.value = u.email;
+  edit_email.value    = u.email;
   edit_email.disabled = true;
-  edit_ativo.checked = u.ativo !== false;
+  edit_ativo.checked  = u.ativo !== false;
   preencherGrupos(u.papel);
   editor.classList.remove("hidden");
 }
@@ -169,11 +172,11 @@ function editar(u){
 /* NOVO */
 function criarNovo(){
   usuarioAtual = null;
-  edit_nome.value="";
-  edit_usuario.value  = u.usuario || "";
-  edit_email.value="";
-  edit_email.disabled=false;
-  edit_ativo.checked=true;
+  edit_nome.value     = "";
+  edit_usuario.value  = "";
+  edit_email.value    = "";
+  edit_email.disabled = false;
+  edit_ativo.checked  = true;
   preencherGrupos(null);
   editor.classList.remove("hidden");
 }
@@ -195,13 +198,14 @@ function cancelar(){
 
 /* SALVAR */
 async function salvar(){
-  const nome  = edit_nome.value.trim();
+  const nome    = edit_nome.value.trim();
   const usuario = edit_usuario.value.trim();
-  const email = edit_email.value.trim();
-  const papel = edit_grupo.value;
-  const ativo = edit_ativo.checked;
+  const email   = edit_email.value.trim();
+  const papel   = edit_grupo.value;
+  const ativo   = edit_ativo.checked;
 
   if(!nome) return alert("Informe o nome.");
+  if(!usuario) return alert("Informe o usuário.");
 
   /* CRIAÇÃO */
   if(!usuarioAtual){
