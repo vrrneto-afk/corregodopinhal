@@ -301,8 +301,8 @@ async function loadIndex(){
 
       conteudo.innerHTML += `
         <div class="card ${dias < 0 ? "atrasada" : "pendente"}">
-          💉 ${v.nome_vacina.toUpperCase()}
           ${animal ? `<p><strong>🐄 ${animal.nome.toUpperCase()}</strong></p>` : ""}
+          💉 ${v.nome_vacina.toUpperCase()}
           <p class="dias">
             ${dias < 0 
               ? `Atrasada há ${Math.abs(dias)} dias` 
