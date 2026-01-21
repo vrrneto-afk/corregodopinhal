@@ -34,7 +34,10 @@ if (!firebase.apps.length) {
   --vermelho:#b03a2e;
   --logo:#D0B485;
 }
-*{box-sizing:border-box;font-family:'Inter',system-ui,Arial;}
+*{
+  box-sizing:border-box;
+  font-family:'Inter',system-ui,Arial;
+}
 body{
   margin:0;
   min-height:100vh;
@@ -52,9 +55,21 @@ body{
   box-shadow:0 8px 20px rgba(0,0,0,.18);
   text-align:center;
 }
-.login-box img{max-width:240px;margin-bottom:20px;}
-.login-box h2{margin:0 0 6px;color:var(--marrom);font-size:22px;font-weight:800;}
-.login-box p{margin:0 0 22px;font-size:14px;color:#5a2b1e;}
+.login-box img{
+  max-width:240px;
+  margin-bottom:20px;
+}
+.login-box h2{
+  margin:0 0 6px;
+  color:var(--marrom);
+  font-size:22px;
+  font-weight:800;
+}
+.login-box p{
+  margin:0 0 22px;
+  font-size:14px;
+  color:#5a2b1e;
+}
 .login-box input{
   width:100%;
   padding:14px;
@@ -63,6 +78,22 @@ body{
   border:none;
   font-size:15px;
 }
+
+/* ✅ CHECKBOX CENTRALIZADO E ALINHADO */
+.lembrar{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  margin:6px 0 16px;
+  font-size:14px;
+  color:#5a2b1e;
+}
+
+.lembrar input{
+  margin:0;
+}
+
 .login-box button{
   width:100%;
   padding:14px;
@@ -74,15 +105,8 @@ body{
   font-weight:800;
   cursor:pointer;
 }
-.login-box button:hover{opacity:.9;}
-
-.lembrar{
-  display:flex;
-  align-items:center;
-  gap:8px;
-  font-size:14px;
-  color:#5a2b1e;
-  margin:8px 0 14px;
+.login-box button:hover{
+  opacity:.9;
 }
 
 .link{
@@ -92,6 +116,7 @@ body{
   cursor:pointer;
   text-decoration:underline;
 }
+
 .erro{
   margin-top:14px;
   color:var(--vermelho);
@@ -113,7 +138,7 @@ body{
 
   <label class="lembrar">
     <input type="checkbox" id="lembrar">
-    Permanecer conectado
+    <span>Permanecer conectado</span>
   </label>
 
   <button onclick="login()">Entrar</button>
@@ -136,7 +161,6 @@ window.addEventListener("load", () => {
 
 async function login(){
   erro.style.display="none";
-
   const lembrar = document.getElementById("lembrar").checked;
 
   try{
