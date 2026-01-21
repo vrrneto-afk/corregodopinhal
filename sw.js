@@ -1,4 +1,4 @@
-const CACHE_NAME = "corregodopinhal-v1";
+const CACHE_NAME = "corregodopinhal-v1.0.1";
 
 const URLS = [
   "/corregodopinhal/",
