@@ -5,14 +5,19 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Cadastro de Serviços – Trator</title>
 
+<!-- MANIFEST -->
 <link rel="manifest" href="../manifest.json">
 <meta name="theme-color" content="#7b3f2a">
+
+<!-- MENU GLOBAL -->
 <link rel="stylesheet" href="../menu/menu.css">
 
+<!-- FIREBASE -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
+<!-- FIREBASE INIT -->
 <script>
 if (!firebase.apps.length) {
   firebase.initializeApp({
@@ -23,6 +28,7 @@ if (!firebase.apps.length) {
 }
 </script>
 
+<!-- IDENTIFICAÇÃO DA PÁGINA -->
 <script>
 window.PERMISSAO_PAGINA = {
   area: "trator",
@@ -30,9 +36,11 @@ window.PERMISSAO_PAGINA = {
 };
 </script>
 
+<!-- AUTH GUARD -->
 <script src="../login/auth-guard.js"></script>
 
 <style>
+/* ================= VARIÁVEIS ================= */
 :root{
   --marrom:#7b3f2a;
   --bege:#f6efe7;
@@ -40,35 +48,143 @@ window.PERMISSAO_PAGINA = {
   --erro:#c0392b;
   --ok:#2f6b2f;
 }
-*{box-sizing:border-box;font-family:Inter,system-ui,Arial;}
-body{margin:0;background:var(--bege);color:#333;}
-header{background:var(--logo);padding:15px;text-align:center;}
-header img{max-width:260px;width:100%;}
-.container{max-width:900px;margin:20px auto;padding:0 15px;}
-.card{background:#fff;border-radius:14px;padding:16px;box-shadow:0 2px 6px rgba(0,0,0,.06);margin-bottom:20px;}
-label{display:block;font-weight:600;margin-top:12px;}
-input,select{width:100%;padding:10px;border-radius:10px;border:1px solid #ccc;margin-top:4px;}
-.radio-line{display:flex;align-items:center;gap:8px;margin-top:8px;}
-.valor-total{background:#f2f2f2;}
-button{margin-top:16px;width:100%;padding:12px;border:none;border-radius:12px;background:var(--marrom);color:#fff;font-size:16px;font-weight:700;}
-button:disabled{opacity:.6;}
-.msg{margin-top:10px;font-weight:600;}
-.msg.erro{color:var(--erro);}
-.msg.ok{color:var(--ok);}
-table{width:100%;border-collapse:collapse;background:#fff;border-radius:12px;overflow:hidden;}
-th,td{padding:10px;font-size:14px;}
-th{background:#efe4d5;}
-tfoot td{font-weight:700;background:#f3eadf;}
-.actions button{width:auto;margin:0 4px;padding:6px 10px;font-size:13px;}
+
+/* ================= BASE ================= */
+*{
+  box-sizing:border-box;
+  font-family:Inter,system-ui,Arial;
+}
+
+body{
+  margin:0;
+  background:var(--bege);
+  color:#333;
+}
+
+header{
+  background:var(--logo);
+  padding:15px;
+  text-align:center;
+}
+
+header img{
+  max-width:260px;
+  width:100%;
+}
+
+.container{
+  max-width:900px;
+  margin:20px auto;
+  padding:0 15px;
+}
+
+/* ================= CARD ================= */
+.card{
+  background:#fff;
+  border-radius:14px;
+  padding:16px;
+  box-shadow:0 2px 6px rgba(0,0,0,.06);
+  margin-bottom:20px;
+}
+
+label{
+  display:block;
+  font-weight:600;
+  margin-top:12px;
+}
+
+input,
+select{
+  width:100%;
+  padding:10px;
+  border-radius:10px;
+  border:1px solid #ccc;
+  margin-top:4px;
+  font-size:15px;
+}
+
+/* ================= RADIO ================= */
+.radio-line{
+  display:flex;
+  align-items:center;
+  justify-content:flex-start;
+  gap:6px;
+  margin-top:8px;
+}
+
+.radio-line input{
+  margin:0;
+}
+
+/* ================= BOTÕES ================= */
+button{
+  margin-top:16px;
+  width:100%;
+  padding:12px;
+  border:none;
+  border-radius:12px;
+  background:var(--marrom);
+  color:#fff;
+  font-size:16px;
+  font-weight:700;
+}
+
+button:disabled{
+  opacity:.6;
+}
+
+/* ================= FEEDBACK ================= */
+.msg{
+  margin-top:10px;
+  font-weight:600;
+}
+
+.msg.erro{ color:var(--erro); }
+.msg.ok{ color:var(--ok); }
+
+/* ================= TABELA ================= */
+table{
+  width:100%;
+  border-collapse:collapse;
+  background:#fff;
+  border-radius:12px;
+  overflow:hidden;
+}
+
+th, td{
+  padding:10px;
+  font-size:14px;
+}
+
+th{
+  background:#efe4d5;
+}
+
+tfoot td{
+  font-weight:700;
+  background:#f3eadf;
+}
+
+.actions button{
+  width:auto;
+  margin:0 4px;
+  padding:6px 10px;
+  font-size:13px;
+}
+
+.valor-total{
+  background:#f2f2f2;
+}
 </style>
 </head>
 
 <body style="display:none">
 
 <header>
-  <img src="../logo.png">
+  <img src="../logo.png" alt="Sítio Córrego do Pinhal">
 </header>
 
+<!-- MENU -->
 <div id="menu"></div>
 
 <div class="container">
@@ -87,11 +203,15 @@ tfoot td{font-weight:700;background:#f3eadf;}
 <input type="text" id="cliente">
 
 <label>Forma de cobrança</label>
+
 <div class="radio-line">
-  <input type="radio" name="cobranca" value="hora" checked> <span>Por hora</span>
+  <input type="radio" name="cobranca" value="hora" checked>
+  <span>Por hora</span>
 </div>
+
 <div class="radio-line">
-  <input type="radio" name="cobranca" value="fechado"> <span>Valor fechado</span>
+  <input type="radio" name="cobranca" value="fechado">
+  <span>Valor fechado</span>
 </div>
 
 <div id="porHora">
@@ -144,117 +264,193 @@ tfoot td{font-weight:700;background:#f3eadf;}
 
 </div>
 
+<!-- MENU + PERMISSÕES (PADRÃO DEFINITIVO) -->
 <script>
-fetch("../menu/menu.html").then(r=>r.text()).then(html=>{
-  menu.innerHTML=html;
-  const s=document.createElement("script");
-  s.src="../menu/menu-permissoes.js";
-  document.body.appendChild(s);
-});
+fetch("../menu/menu.html")
+  .then(r => r.text())
+  .then(html => {
+    document.getElementById("menu").innerHTML = html;
+
+    // Marca item ativo
+    document.querySelectorAll("#menu a").forEach(a => {
+      if (a.getAttribute("href") === "../trator/trator-inicio.html") {
+        a.classList.add("ativo");
+      }
+    });
+
+    // INJETA menu-permissoes.js APÓS menu no DOM
+    const s = document.createElement("script");
+    s.src = "../menu/menu-permissoes.js";
+    document.body.appendChild(s);
+  })
+  .catch(err => {
+    console.error("Erro ao carregar menu:", err);
+  });
 </script>
 
+<!-- SCRIPT PRINCIPAL -->
 <script>
-const db=firebase.firestore();
-const auth=firebase.auth();
-let editId=null;
+const db = firebase.firestore();
+const auth = firebase.auth();
+let editId = null;
 
-const meses=["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
-meses.forEach((m,i)=>mes.innerHTML+=`<option value="${i}">${m}</option>`);
+/* ======= MESES ======= */
+const meses = [
+  "Janeiro","Fevereiro","Março","Abril","Maio","Junho",
+  "Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"
+];
 
-const anoAtual=new Date().getFullYear();
-for(let a=anoAtual-3;a<=anoAtual+1;a++)ano.innerHTML+=`<option>${a}</option>`;
-mes.value=new Date().getMonth();ano.value=anoAtual;
-
-function moeda(v){
-  return "R$ "+Number(v).toFixed(2).replace(".",",");
-}
-function limparMoeda(v){return Number(v.replace(/[^\d]/g,""))/100;}
-
-valorHora.oninput=()=>valorHora.value=moeda(limparMoeda(valorHora.value));
-valorFechadoInput.oninput=()=>valorFechadoInput.value=moeda(limparMoeda(valorFechadoInput.value));
-
-horas.oninput=()=>{
-  valorTotal.value=moeda(horas.value*limparMoeda(valorHora.value||"0"));
-};
-
-document.querySelectorAll("input[name='cobranca']").forEach(r=>{
-  r.onchange=()=>{
-    porHora.style.display=r.value==="hora"?"block":"none";
-    valorFechado.style.display=r.value==="fechado"?"block":"none";
-  };
+meses.forEach((m,i)=>{
+  mes.innerHTML += `<option value="${i}">${m}</option>`;
 });
 
-salvar.onclick=async()=>{
-  msg.textContent="";
-  const user=auth.currentUser;
-  if(!data.value||!tipo.value||!cliente.value){
-    msg.textContent="Preencha todos os campos";msg.className="msg erro";return;
+const anoAtual = new Date().getFullYear();
+for(let a = anoAtual - 3; a <= anoAtual + 10; a++){
+  ano.innerHTML += `<option value="${a}">${a}</option>`;
+}
+
+mes.value = new Date().getMonth();
+ano.value = anoAtual;
+
+/* ======= MOEDA ======= */
+function moeda(v){
+  return "R$ " + Number(v).toFixed(2).replace(".",",");
+}
+
+function limparMoeda(v){
+  return Number(v.replace(/[^\d]/g,"")) / 100;
+}
+
+/* ======= CÁLCULO ======= */
+function recalcularTotalHora(){
+  const h = Number(horas.value.replace(",", "."));
+  const v = limparMoeda(valorHora.value || "0");
+
+  if(!h || !v){
+    valorTotal.value = "R$ 0,00";
+    return;
   }
 
-  let valor=document.querySelector("input[name='cobranca']:checked").value==="hora"
+  valorTotal.value = moeda(h * v);
+}
+
+horas.addEventListener("input", recalcularTotalHora);
+valorHora.addEventListener("input", () => {
+  valorHora.value = moeda(limparMoeda(valorHora.value));
+  recalcularTotalHora();
+});
+
+valorFechadoInput.addEventListener("input", () => {
+  valorFechadoInput.value = moeda(limparMoeda(valorFechadoInput.value));
+});
+
+/* ======= TOGGLE COBRANÇA ======= */
+document.querySelectorAll("input[name='cobranca']").forEach(r=>{
+  r.addEventListener("change", ()=>{
+    porHora.style.display = r.value === "hora" && r.checked ? "block" : "none";
+    valorFechado.style.display = r.value === "fechado" && r.checked ? "block" : "none";
+  });
+});
+
+/* ======= SALVAR ======= */
+salvar.onclick = async ()=>{
+  msg.textContent = "";
+
+  const user = auth.currentUser;
+  if(!data.value || !tipo.value || !cliente.value){
+    msg.textContent = "Preencha todos os campos.";
+    msg.className = "msg erro";
+    return;
+  }
+
+  const porHoraSel = document.querySelector("input[name='cobranca']:checked").value === "hora";
+  const valor = porHoraSel
     ? limparMoeda(valorTotal.value)
     : limparMoeda(valorFechadoInput.value);
 
-  if(valor<=0){msg.textContent="Valor inválido";msg.className="msg erro";return;}
+  if(valor <= 0){
+    msg.textContent = "Valor inválido.";
+    msg.className = "msg erro";
+    return;
+  }
 
-  const dados={
-    data:firebase.firestore.Timestamp.fromDate(new Date(data.value)),
-    tipo:tipo.value,
-    cliente:cliente.value,
-    valor_total:valor,
-    criado_em:firebase.firestore.FieldValue.serverTimestamp(),
-    criado_por:user.uid
+  const dados = {
+    data: firebase.firestore.Timestamp.fromDate(new Date(data.value)),
+    tipo: tipo.value,
+    cliente: cliente.value,
+    valor_total: valor,
+    criado_em: firebase.firestore.FieldValue.serverTimestamp(),
+    criado_por: user.uid
   };
 
-  editId
-    ? await db.collection("trator_servicos").doc(editId).update(dados)
-    : await db.collection("trator_servicos").add(dados);
+  if(editId){
+    await db.collection("trator_servicos").doc(editId).update(dados);
+  }else{
+    await db.collection("trator_servicos").add(dados);
+  }
 
-  msg.textContent="Serviço salvo com sucesso";
-  msg.className="msg ok";
-  editId=null;
-  salvar.textContent="💾 Salvar Serviço";
+  msg.textContent = "Serviço salvo com sucesso.";
+  msg.className = "msg ok";
+  editId = null;
+  salvar.textContent = "💾 Salvar Serviço";
   carregarTabela();
 };
 
+/* ======= TABELA ======= */
 function carregarTabela(){
-  lista.innerHTML="";totalMes.textContent="R$ 0,00";
-  const ini=new Date(ano.value,mes.value,1);
-  const fim=new Date(ano.value,Number(mes.value)+1,0,23,59,59);
-  let total=0;
+  lista.innerHTML = "";
+  totalMes.textContent = "R$ 0,00";
+
+  const inicio = new Date(ano.value, mes.value, 1);
+  const fim = new Date(ano.value, Number(mes.value) + 1, 0, 23, 59, 59);
+
+  let total = 0;
 
   db.collection("trator_servicos")
-    .where("data",">=",ini)
-    .where("data","<=",fim)
+    .where("data", ">=", inicio)
+    .where("data", "<=", fim)
     .get()
-    .then(s=>{
-      s.forEach(d=>{
-        const v=d.data();total+=v.valor_total;
-        lista.innerHTML+=`
+    .then(snapshot=>{
+      snapshot.forEach(doc=>{
+        const v = doc.data();
+        total += v.valor_total;
+
+        lista.innerHTML += `
           <tr>
             <td>${v.data.toDate().toLocaleDateString()}</td>
             <td>${v.tipo}</td>
             <td>${v.cliente}</td>
             <td>${moeda(v.valor_total)}</td>
             <td class="actions">
-              <button onclick="editar('${d.id}')">Editar</button>
-              ${window.PERMISSOES_USUARIO?.adm?.tudo?`<button onclick="excluir('${d.id}')">Excluir</button>`:""}
+              <button onclick="editar('${doc.id}')">Editar</button>
+              ${window.PERMISSOES_USUARIO?.adm?.tudo
+                ? `<button onclick="excluir('${doc.id}')">Excluir</button>`
+                : ""
+              }
             </td>
-          </tr>`;
+          </tr>
+        `;
       });
-      totalMes.textContent=moeda(total);
+
+      totalMes.textContent = moeda(total);
     });
 }
 
 function editar(id){
-  db.collection("trator_servicos").doc(id).get().then(d=>{
-    const v=d.data();editId=id;
-    data.value=v.data.toDate().toISOString().split("T")[0];
-    tipo.value=v.tipo;cliente.value=v.cliente;
-    valorFechadoInput.value=moeda(v.valor_total);
-    document.querySelector("input[value='fechado']").checked=true;
-    porHora.style.display="none";valorFechado.style.display="block";
-    salvar.textContent="✏️ Atualizar Serviço";
+  db.collection("trator_servicos").doc(id).get().then(doc=>{
+    const v = doc.data();
+    editId = id;
+
+    data.value = v.data.toDate().toISOString().split("T")[0];
+    tipo.value = v.tipo;
+    cliente.value = v.cliente;
+
+    document.querySelector("input[value='fechado']").checked = true;
+    porHora.style.display = "none";
+    valorFechado.style.display = "block";
+    valorFechadoInput.value = moeda(v.valor_total);
+
+    salvar.textContent = "✏️ Atualizar Serviço";
   });
 }
 
@@ -264,10 +460,11 @@ function excluir(id){
   }
 }
 
-mes.onchange=ano.onchange=carregarTabela;
+mes.onchange = ano.onchange = carregarTabela;
 carregarTabela();
 </script>
 
+<!-- LOGOUT -->
 <script src="../login/logout.js"></script>
 
 </body>
