@@ -16,41 +16,40 @@
 
       /* ================= NÃO LOGADO ================= */
       if (!user) {
-        location.replace("../login/login.html");
-        return;
+        return location.replace("../login/login.html");
       }
 
       /* ================= PERMISSAO DA PAGINA ================= */
       if (!window.PERMISSAO_PAGINA) {
-        location.replace("../login/login.html");
-        return;
+        await auth.signOut();
+        return location.replace("../login/login.html");
       }
 
       try {
         /* ================= USUARIO ================= */
         const snapUser = await db.collection("usuarios").doc(user.uid).get();
         if (!snapUser.exists) {
-          location.replace("../login/login.html");
-          return;
+          await auth.signOut();
+          return location.replace("../login/login.html");
         }
 
         const grupoId = snapUser.data().papel;
         if (!grupoId) {
-          location.replace("../login/login.html");
-          return;
+          await auth.signOut();
+          return location.replace("../login/login.html");
         }
 
         /* ================= GRUPO ================= */
         const snapGrp = await db.collection("config").doc("grupos").get();
         if (!snapGrp.exists) {
-          location.replace("../login/login.html");
-          return;
+          await auth.signOut();
+          return location.replace("../login/login.html");
         }
 
         const grupo = snapGrp.data().lista.find(g => g.id === grupoId);
         if (!grupo) {
-          location.replace("../login/login.html");
-          return;
+          await auth.signOut();
+          return location.replace("../login/login.html");
         }
 
         /* ================= PERMISSOES ================= */
@@ -64,18 +63,19 @@
           permissoes[area]?.[chave] === true;
 
         if (!permitido) {
-          location.replace("../app/index.html");
-          return;
+          return location.replace("../app/index.html");
         }
 
         /* ================= OK ================= */
         document.body.style.display = "block";
 
-        /* EVENTO PARA MENU */
-        document.dispatchEvent(new Event("permissoes-carregadas"));
+        document.dispatchEvent(
+          new Event("permissoes-carregadas")
+        );
 
       } catch (err) {
         console.error("Erro no auth-guard:", err);
+        await auth.signOut();
         location.replace("../login/login.html");
       }
     });
