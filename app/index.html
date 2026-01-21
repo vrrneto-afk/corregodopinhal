@@ -163,28 +163,44 @@ fetch("../menu/menu.html")
     document.body.appendChild(s);
   });
 
-clima.onclick = ()=> modalClima.style.display="flex";
-modalClima.onclick = e=>{
-  if(e.target===modalClima) modalClima.style.display="none";
+clima.onclick = () => modalClima.style.display = "flex";
+
+modalClima.onclick = e => {
+  if (e.target === modalClima) {
+    modalClima.style.display = "none";
+  }
 };
 
 /* DATAS */
 const hoje = new Date();
-const hojeZ = new Date(hoje.getFullYear(),hoje.getMonth(),hoje.getDate());
+const hojeZ = new Date(
+  hoje.getFullYear(),
+  hoje.getMonth(),
+  hoje.getDate()
+);
 
-function parse(d){
-  if(!d) return null;
-  if(d.seconds) return new Date(d.seconds*1000);
-  const p=d.split("-");
-  return new Date(p[0],p[1]-1,p[2]);
+function parse(d) {
+  if (!d) return null;
+  if (d.seconds) return new Date(d.seconds * 1000);
+
+  const p = d.split("-");
+  return new Date(p[0], p[1] - 1, p[2]);
 }
-function addM(d,m){const x=new Date(d);x.setMonth(x.getMonth()+m);return x;}
-function diff(a,b){return Math.floor((b-a)/86400000);}
+
+function addM(d, m) {
+  const x = new Date(d);
+  x.setMonth(x.getMonth() + m);
+  return x;
+}
+
+function diff(a, b) {
+  return Math.floor((b - a) / 86400000);
+}
 
 /* CONFIG */
-let CFG={};
+let CFG = {};
 
-async function loadConfigs(){
+async function loadConfigs() {
   const c1 = await db.collection("config").doc("clima").get();
   const c2 = await db.collection("config").doc("vacas").get();
   const c3 = await db.collection("config").doc("vacinas").get();
@@ -195,43 +211,189 @@ async function loadConfigs(){
 }
 
 /* CLIMA */
-async function loadClima(){
-  if(!CFG.clima.latitude){
-    clima.innerText="☁️ Clima indisponível";
+async function loadClima() {
+  if (!CFG.clima.latitude) {
+    clima.innerText = "☁️ Clima indisponível";
     return;
   }
 
   const c = CFG.clima;
-  const url=`https://api.open-meteo.com/v1/forecast?latitude=${c.latitude}&longitude=${c.longitude}&current_weather=true&hourly=precipitation_probability&timezone=${c.timezone}`;
+  const url = `https://api.open-meteo.com/v1/forecast?latitude=${c.latitude}&longitude=${c.longitude}&current_weather=true&hourly=precipitation_probability&timezone=${c.timezone}`;
   const d = await (await fetch(url)).json();
 
   let texto = c.textos?.sem_chuva || "Sem previsão de chuva.";
-  const agora=new Date();
+  const agora = new Date();
 
-  for(let i=0;i<d.hourly.time.length;i++){
-    const h=new Date(d.hourly.time[i]);
-    const min=(h-agora)/60000;
-    if(min>0 && min<=c.janela_previsao_minutos && d.hourly.precipitation_probability[i]>=c.limite_chuva_percentual){
-      texto=`${c.textos?.chuva_em || "Chuva em"} ${Math.round(min)} minutos.`;
+  for (let i = 0; i < d.hourly.time.length; i++) {
+    const h = new Date(d.hourly.time[i]);
+    const min = (h - agora) / 60000;
+
+    if (
+      min > 0 &&
+      min <= c.janela_previsao_minutos &&
+      d.hourly.precipitation_probability[i] >= c.limite_chuva_percentual
+    ) {
+      texto = `${c.textos?.chuva_em || "Chuva em"} ${Math.round(min)} minutos.`;
       break;
     }
   }
 
-  clima.innerHTML=`☀️ ${c.cidade||""} • ${Math.round(d.current_weather.temperature)}°C<br>${texto}`;
+  clima.innerHTML = `☀️ ${c.cidade || ""} • ${Math.round(
+    d.current_weather.temperature
+  )}°C<br>${texto}`;
 }
 
 /* ALERTAS */
-async function loadAlertas(){
-  const s=await db.collection("lembretes").get();
-  alertaRapido.className=s.size?"alerta-rapido alerta-on":"alerta-rapido alerta-ok";
-  alertaRapido.innerText=s.size?`🔔 ${s.size} itens pendentes para comprar`:"🔔 Nenhum alerta no momento";
+async function loadAlertas() {
+  const s = await db.collection("lembretes").get();
+
+  alertaRapido.className = s.size
+    ? "alerta-rapido alerta-on"
+    : "alerta-rapido alerta-ok";
+
+  alertaRapido.innerText = s.size
+    ? `🔔 ${s.size} itens pendentes para comprar`
+    : "🔔 Nenhum alerta no momento";
+}
+
+/* HELPERS – MESMA LÓGICA DA TELA VACAS */
+function regraPrenhez(dias) {
+  if (dias <= 0) return { classe: "urgente" };
+
+  return (
+    (CFG.vacas.prenhez_intervalos || [])
+      .filter(
+        r =>
+          r.ativa !== false &&
+          dias >= r.dias_de &&
+          dias <= r.dias_ate
+      )
+      .sort((a, b) => a.dias_de - b.dias_de)[0] || { classe: "ok" }
+  );
+}
+
+function mensagemPrenhez(dias) {
+  const t = CFG.vacas.prenhez_textos || {};
+
+  if (dias === 0 && t.parto_hoje) return t.parto_hoje;
+  if (dias < 0 && t.parto_atrasado)
+    return t.parto_atrasado.replace("{{dias}}", Math.abs(dias));
+  if (dias > 0 && t.antes_parto)
+    return t.antes_parto.replace("{{dias}}", dias);
+
+  return "";
 }
 
 /* INDEX */
-(async()=>{
+async function loadIndex() {
+  conteudo.innerHTML = "";
+
+  const animais = (await db.collection("animais").get()).docs.map(d => ({
+    _id: d.id,
+    ...d.data()
+  }));
+
+  const eventos = (await db.collection("eventos").get()).docs.map(d =>
+    d.data()
+  );
+
+  const vacinas = (await db.collection("vacinas").get()).docs.map(d =>
+    d.data()
+  );
+
+  /* VACAS A CRIAR */
+  conteudo.innerHTML += "<h2>🐄 Vacas a Criar</h2>";
+
+  eventos
+    .filter(e => e.tipo_evento === "cobertura")
+    .map(c => {
+      const prev = addM(
+        parse(c.data_evento),
+        Number(CFG.vacas.gestacao_meses || 9)
+      );
+
+      const dias = diff(hojeZ, prev);
+
+      return {
+        animal: animais.find(a => a._id === c.id_animal),
+        prev,
+        dias
+      };
+    })
+    .filter(v => v.animal)
+    .sort((a, b) => a.dias - b.dias)
+    .forEach(v => {
+      const regra = regraPrenhez(v.dias);
+      const msg = mensagemPrenhez(v.dias);
+
+      conteudo.innerHTML += `
+        <div class="card ${regra.classe}">
+          <strong>🐄 ${v.animal.nome.toUpperCase()}</strong>
+
+          ${
+            msg
+              ? `<p class="msg">${msg}</p>`
+              : `<p class="dias">⏳ ${
+                  v.dias >= 0
+                    ? `Faltam ${v.dias} dias`
+                    : `Atrasado ${Math.abs(v.dias)} dias`
+                }</p>`
+          }
+
+          <p class="data">
+            🪧 Parto previsto para:
+            ${v.prev.toLocaleDateString("pt-BR")}
+          </p>
+        </div>
+      `;
+    });
+
+  /* VACINAS */
+  conteudo.innerHTML += "<h2>💉 Vacinas pendentes</h2>";
+
+  vacinas
+    .filter(v => v.status !== CFG.vacinas.status?.finalizada)
+    .forEach(v => {
+      const animal = animais.find(a => a._id === v.id_animal);
+      const reap = parse(v.data_aplicacao);
+
+      reap.setDate(
+        reap.getDate() + Number(v.repeticao_dias || 0)
+      );
+
+      const dias = diff(hojeZ, reap);
+
+      conteudo.innerHTML += `
+        <div class="card ${dias < 0 ? "atrasada" : "pendente"}">
+          ${
+            animal
+              ? `<p><strong>🐄 ${animal.nome.toUpperCase()}</strong></p>`
+              : ""
+          }
+
+          💉 ${v.nome_vacina.toUpperCase()}
+
+          <p class="dias">
+            ${
+              dias < 0
+                ? `Atrasada há ${Math.abs(dias)} dias`
+                : `Pendente em ${dias} dias`
+            }
+          </p>
+
+          <p class="data">
+            📅 ${reap.toLocaleDateString("pt-BR")}
+          </p>
+        </div>
+      `;
+    });
+}
+
+(async () => {
   await loadConfigs();
   await loadClima();
   await loadAlertas();
+  await loadIndex();
 })();
 </script>
 
