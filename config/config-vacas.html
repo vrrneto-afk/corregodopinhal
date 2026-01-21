@@ -32,11 +32,20 @@ window.PERMISSAO_PAGINA = { area:"config", chave:"config-vacas" };
 <script src="../login/auth-guard.js"></script>
 
 <style>
-.label-check{display:flex;align-items:center;gap:8px;font-weight:600;margin-top:12px}
+.label-check{
+  display:flex;
+  align-items:center;
+  justify-content:flex-start;
+  gap:6px;
+  font-weight:600;
+  margin-top:12px;
+  width:100%;
+}
 .label-check input{margin:0}
 .regra-card span{font-size:13px;font-weight:500}
 .range{display:flex;align-items:center;gap:8px}
 .info{font-size:13px;opacity:.75;margin:10px 0 14px}
+.small{font-size:12px;opacity:.6}
 </style>
 </head>
 
@@ -108,7 +117,8 @@ Datas iguais ou posteriores ao dia previsto são tratadas apenas pelos textos ac
   <input type="text" id="mensagem">
 
   <label class="label-check">
-    <input type="checkbox" id="ativa"> Regra ativa
+    <input type="checkbox" id="ativa">
+    <span>Regra ativa</span>
   </label>
 
 </fieldset>
@@ -148,7 +158,6 @@ const btnExcluir = document.getElementById("btn-excluir");
 let intervalos = [];
 let editando = null;
 
-/* UTIL */
 function gerarId(classe, de, ate){
   return `${classe}_${de}_${ate}`;
 }
@@ -183,7 +192,6 @@ function renderizar(){
     b.className = "config-card regra-card";
     b.onclick = ()=>editar(i);
     b.innerHTML = `
-      <span class="small">ID: ${r.id}</span>
       <strong>${r.classe.toUpperCase()}</strong>
       <span>${r.dias_de} até ${r.dias_ate} dias</span>
       <span>${r.mensagem || ""}</span>
