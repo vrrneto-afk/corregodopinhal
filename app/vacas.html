@@ -47,16 +47,12 @@ window.PERMISSAO_PAGINA = { area:"app", chave:"vacas" };
   --cinza-escuro:#555;
   --logo:#D0B485;
 }
-
 *{box-sizing:border-box;font-family:'Inter',system-ui,-apple-system,Arial}
 body{margin:0;background:var(--bege);color:#333;display:none}
-
 header{background:var(--logo);padding:15px;text-align:center}
 header img{max-width:260px;width:100%}
-
 .container{max-width:900px;margin:20px auto;padding:0 15px}
 h2{color:var(--marrom);margin-bottom:12px;display:flex;gap:8px}
-
 select{
   width:100%;
   padding:12px;
@@ -65,7 +61,6 @@ select{
   border:1.5px solid #ddd;
   margin-bottom:20px;
 }
-
 .card{
   background:#fff;
   padding:15px;
@@ -75,19 +70,16 @@ select{
   box-shadow:0 2px 6px rgba(0,0,0,.06);
   cursor:pointer;
 }
-
 .card.ok{border-color:var(--verde)}
 .card.atencao{border-color:var(--amarelo)}
 .card.alerta{border-color:var(--laranja)}
 .card.urgente{border-color:var(--vermelho)}
 .card.parida{border-color:var(--azul)}
 .card.vazia{border-color:var(--cinza-escuro)}
-
 .card strong{font-size:17px;font-weight:800;display:block;margin-bottom:6px}
 .card p{margin:4px 0;font-size:14px;color:var(--cinza)}
 .card .dias{font-size:16px;font-weight:800}
 .card .msg{font-weight:800;margin-top:4px}
-
 .badge{
   display:inline-block;
   padding:4px 10px;
@@ -100,7 +92,6 @@ select{
 .badge.prenha{background:var(--amarelo)}
 .badge.parida{background:var(--azul)}
 .badge.vazia{background:var(--cinza-escuro)}
-
 .vazio{text-align:center;color:#777;margin-top:30px;font-style:italic}
 </style>
 </head>
@@ -142,7 +133,6 @@ fetch("../menu/menu.html")
           link.classList.add("ativo");
         }
       });
-
       document.body.style.display = "block";
       iniciarPagina();
     };
@@ -176,11 +166,11 @@ function abrirAnimal(id){
   location.href="../app/animal.html?id="+encodeURIComponent(id);
 }
 
-let CFG_VACAS={};
+let CFG_VACAS = {};
 
 async function iniciarPagina(){
   const snap = await db.collection("config").doc("vacas").get();
-  CFG_VACAS = snap.data();
+  CFG_VACAS = snap.data() || {};
 
   const animaisSnap = await db.collection("animais").get();
   const eventosSnap = await db.collection("eventos").get();
@@ -192,16 +182,29 @@ async function iniciarPagina(){
     a.status==="Ativo" &&
     a.especie==="Bovino" &&
     a.sexo==="F" &&
-    idadeMeses(a.data_nascimento)>=CFG_VACAS.idade_minima_meses
+    idadeMeses(a.data_nascimento)>=Number(CFG_VACAS.idade_minima_meses || 0)
   );
 
   const lista = document.getElementById("lista");
 
   function regraPrenhez(dias){
-    const r = CFG_VACAS.prenhez_regras
-      .filter(x=>x.ativa!==false && dias>=x.dias_min)
-      .sort((a,b)=>b.dias_min-a.dias_min);
-    return r[0] || {classe:"ok",mensagem:""};
+    if(dias <= 0) return null;
+
+    return (CFG_VACAS.prenhez_intervalos || [])
+      .filter(r =>
+        r.ativa !== false &&
+        dias >= r.dias_de &&
+        dias <= r.dias_ate
+      )
+      .sort((a,b)=>a.dias_de - b.dias_de)[0] || null;
+  }
+
+  function mensagemPrenhez(dias){
+    const t = CFG_VACAS.prenhez_textos || {};
+    if(dias === 0 && t.parto_hoje) return t.parto_hoje;
+    if(dias < 0 && t.parto_atrasado) return t.parto_atrasado.replace("{{dias}}", Math.abs(dias));
+    if(dias > 0 && t.antes_parto) return t.antes_parto.replace("{{dias}}", dias);
+    return "";
   }
 
   function render(f){
@@ -214,36 +217,30 @@ async function iniciarPagina(){
       const par = ev.filter(e=>e.tipo_evento==="parto").sort((a,b)=>new Date(b.data_evento)-new Date(a.data_evento))[0];
 
       if(cob && (!par || new Date(cob.data_evento)>new Date(par.data_evento))){
-        prenhas.push({v,prev:addMonths(new Date(cob.data_evento+"T00:00:00"),CFG_VACAS.gestacao_meses)});
+        prenhas.push({v,prev:addMonths(new Date(cob.data_evento+"T00:00:00"),Number(CFG_VACAS.gestacao_meses || 0))});
       }else if(par){
         paridas.push({v,par});
       }else{
         vazias.push(v);
       }
     });
-// 🔹 ORDENAR PRENHAS – parto mais próximo primeiro
-prenhas.sort((a, b) => a.prev - b.prev);
 
-// 🔹 ORDENAR PARIDAS – parto mais recente primeiro
-paridas.sort((a, b) =>
-  new Date(b.par.data_evento) - new Date(a.par.data_evento)
-);
-
-// 🔹 ORDENAR VAZIAS – mais nova primeiro
-vazias.sort((a, b) =>
-  new Date(b.data_nascimento) - new Date(a.data_nascimento)
-);
+    prenhas.sort((a,b)=>a.prev-b.prev);
+    paridas.sort((a,b)=>new Date(b.par.data_evento)-new Date(a.par.data_evento));
+    vazias.sort((a,b)=>new Date(b.data_nascimento)-new Date(a.data_nascimento));
 
     if(f==="todas"||f==="prenhas"){
       prenhas.forEach(p=>{
         const dias=Math.ceil((p.prev-new Date())/86400000);
-        const r=regraPrenhez(dias);
+        const regra=regraPrenhez(dias);
+        const msg=mensagemPrenhez(dias);
+
         lista.innerHTML+=`
-        <div class="card ${r.classe}" onclick="abrirAnimal('${p.v._id}')">
+        <div class="card ${regra?.classe || "ok"}" onclick="abrirAnimal('${p.v._id}')">
           <strong>🐄 ${p.v.nome.toUpperCase()} <span class="badge prenha">Prenha</span></strong>
           <p>Previsão do parto: ${p.prev.toLocaleDateString("pt-BR")}</p>
-          <p class="dias">⏳ Faltam ${dias} dias</p>
-          ${r.mensagem?`<p class="msg">${r.mensagem}</p>`:""}
+          <p class="dias">⏳ ${dias>=0?`Faltam ${dias} dias`:`Atrasado ${Math.abs(dias)} dias`}</p>
+          ${msg?`<p class="msg">${msg}</p>`:""}
           <p>Raça: ${p.v.raca||"-"}</p>
           <p>Idade: ${idadeTexto(p.v.data_nascimento)}</p>
         </div>`;
