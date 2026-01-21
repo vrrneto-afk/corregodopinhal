@@ -196,16 +196,21 @@ async function iniciarPagina(){
   const lista = document.getElementById("lista");
 
   function regraPrenhez(dias){
-    if(dias <= 0) return null;
-
-    return (CFG_VACAS.prenhez_intervalos || [])
-      .filter(r =>
-        r.ativa !== false &&
-        dias >= r.dias_de &&
-        dias <= r.dias_ate
-      )
-      .sort((a,b)=>a.dias_de - b.dias_de)[0] || null;
+  // Parto hoje ou atrasado → URGENTE
+  if(dias <= 0){
+    return { classe: "urgente" };
   }
+
+  // Antes do parto → usa régua configurável
+  return (CFG_VACAS.prenhez_intervalos || [])
+    .filter(r =>
+      r.ativa !== false &&
+      dias >= r.dias_de &&
+      dias <= r.dias_ate
+    )
+    .sort((a,b)=>a.dias_de - b.dias_de)[0]
+    || { classe: "ok" };
+}
 
   function mensagemPrenhez(dias){
     const t = CFG_VACAS.prenhez_textos || {};
