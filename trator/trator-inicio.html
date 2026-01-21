@@ -17,7 +17,7 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
-<!-- FIREBASE INIT -->
+<!-- FIREBASE INIT (PADRÃO DEFINITIVO) -->
 <script>
 if (!firebase.apps.length) {
   firebase.initializeApp({
@@ -129,6 +129,7 @@ p.intro{
   <img src="../logo.png" alt="Sítio Córrego do Pinhal">
 </header>
 
+<!-- MENU -->
 <div id="menu"></div>
 
 <div class="container">
@@ -204,25 +205,34 @@ p.intro{
 
 </div>
 
-<!-- MENU + PERMISSÕES -->
+<!-- MENU + PERMISSÕES (PADRÃO DEFINITIVO) -->
 <script>
 fetch("../menu/menu.html")
   .then(r => r.text())
   .then(html => {
     document.getElementById("menu").innerHTML = html;
 
-    /* Marca item ativo */
+    // Marca item ativo
     document.querySelectorAll("#menu a").forEach(a => {
       if (a.getAttribute("href") === "../trator/trator-inicio.html") {
         a.classList.add("ativo");
       }
     });
 
-    /* INJETA menu-permissoes.js (REGRA DEFINITIVA) */
+    // INJETA menu-permissoes.js APÓS menu no DOM
     const s = document.createElement("script");
     s.src = "../menu/menu-permissoes.js";
     document.body.appendChild(s);
+  })
+  .catch(err => {
+    console.error("Erro ao carregar menu:", err);
   });
+</script>
+
+<!-- FILTRO POR PERMISSÃO -->
+<script>
+function filtrarBlocosTrator(){
+  if(!window.PERMISSOES_USUARIO) return;
 
   document.querySelectorAll(".bloco[data-area]").forEach(bloco=>{
     const area  = bloco.dataset.area;
