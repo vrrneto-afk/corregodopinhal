@@ -50,6 +50,43 @@
       window.PERMISSOES_USUARIO = permissoes;
       document.dispatchEvent(new Event("permissoes-carregadas"));
 
+      /* =================================================
+         FOOTER GLOBAL – USUÁRIO LOGADO / SAIR
+         ================================================= */
+
+      // evita duplicar footer
+      if (!document.getElementById("footer-global")) {
+
+        const footerContainer = document.createElement("div");
+        footerContainer.id = "footer-global";
+        document.body.appendChild(footerContainer);
+
+        try {
+          const r = await fetch("../menu/footer.html");
+          const html = await r.text();
+          footerContainer.innerHTML = html;
+
+          /* --- preenche usuário --- */
+          const elUsuario = document.getElementById("footerUsuario");
+          if (elUsuario && snapUser.data().usuario) {
+            elUsuario.querySelector("span").textContent =
+              `Usuário: ${snapUser.data().usuario}`;
+          }
+
+          /* --- logout --- */
+          const btnLogout = document.getElementById("footerLogout");
+          if (btnLogout) {
+            btnLogout.addEventListener("click", (e) => {
+              e.preventDefault();
+              auth.signOut();
+            });
+          }
+
+        } catch (e) {
+          console.error("Erro ao carregar footer:", e);
+        }
+      }
+
     } catch (err) {
       console.error("Erro em menu-permissoes.js:", err);
     }
