@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Trator – Painel Geral</title>
+
+<!-- MENU GLOBAL -->
+<link rel="stylesheet" href="../menu/menu.css">
+
+<!-- IDENTIFICAÇÃO DA PÁGINA -->
+<script>
+window.PERMISSAO_PAGINA = {
+  area: "trator",
+  chave: "chave-trator-inicio"
+};
+</script>
+
+<style>
+:root{
+  --marrom:#7b3f2a;
+  --bege:#f6efe7;
+  --verde:#2f6b2f;
+  --vermelho:#c0392b;
+  --amarelo:#e0a800;
+  --cinza:#666;
+  --cinza-escuro:#555;
+  --branco:#fff;
+}
+
+*{
+  box-sizing:border-box;
+  font-family:'Inter',system-ui,-apple-system,Arial,Helvetica,sans-serif;
+}
+
+body{
+  margin:0;
+  background:var(--bege);
+  color:#222;
+}
+
+/* CONTAINER PADRÃO */
+.container{
+  max-width:1200px;
+  margin:0 auto;
+  padding:20px;
+}
+
+/* TÍTULO */
+.page-title{
+  font-size:26px;
+  font-weight:800;
+  color:var(--marrom);
+  margin-bottom:6px;
+}
+
+.page-subtitle{
+  font-size:14px;
+  color:var(--cinza);
+  margin-bottom:20px;
+}
+
+/* GRID DE CARDS */
+.cards{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+  gap:16px;
+}
+
+/* CARD */
+.card{
+  background:var(--branco);
+  border-radius:14px;
+  padding:18px;
+  box-shadow:0 4px 10px rgba(0,0,0,.06);
+}
+
+.card h3{
+  font-size:14px;
+  font-weight:700;
+  color:var(--cinza-escuro);
+  margin:0 0 6px;
+  text-transform:uppercase;
+}
+
+.card .valor{
+  font-size:26px;
+  font-weight:800;
+}
+
+.card.receita .valor{ color:var(--verde); }
+.card.despesa .valor{ color:var(--vermelho); }
+.card.lucro .valor{ color:var(--marrom); }
+
+/* SEÇÕES */
+.section{
+  margin-top:30px;
+}
+
+.section-title{
+  font-size:18px;
+  font-weight:800;
+  color:var(--marrom);
+  margin-bottom:12px;
+}
+
+/* AÇÕES */
+.actions{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+  gap:14px;
+}
+
+.action{
+  background:var(--branco);
+  border-radius:14px;
+  padding:16px;
+  box-shadow:0 4px 10px rgba(0,0,0,.06);
+  text-decoration:none;
+  color:#222;
+  transition:.2s;
+}
+
+.action:hover{
+  transform:translateY(-2px);
+  box-shadow:0 8px 16px rgba(0,0,0,.08);
+}
+
+.action h4{
+  margin:0 0 6px;
+  font-size:16px;
+  font-weight:800;
+}
+
+.action p{
+  margin:0;
+  font-size:13px;
+  color:var(--cinza);
+}
+</style>
+</head>
+
+<body>
+
+<!-- MENU -->
+<div id="menu-container"></div>
+
+<div class="container">
+
+  <!-- TÍTULO -->
+  <div class="page-title">Painel do Trator</div>
+  <div class="page-subtitle">Resumo geral de operação, custos e resultados</div>
+
+  <!-- RESUMO FINANCEIRO -->
+  <div class="cards">
+    <div class="card">
+      <h3>Horas Trabalhadas</h3>
+      <div class="valor">0,0 h</div>
+    </div>
+
+    <div class="card receita">
+      <h3>Receita Total</h3>
+      <div class="valor">R$ 0,00</div>
+    </div>
+
+    <div class="card despesa">
+      <h3>Despesas Totais</h3>
+      <div class="valor">R$ 0,00</div>
+    </div>
+
+    <div class="card lucro">
+      <h3>Resultado Líquido</h3>
+      <div class="valor">R$ 0,00</div>
+    </div>
+  </div>
+
+  <!-- INDICADORES -->
+  <div class="section">
+    <div class="section-title">Indicadores por Hora</div>
+
+    <div class="cards">
+      <div class="card">
+        <h3>Receita / Hora</h3>
+        <div class="valor">R$ 0,00</div>
+      </div>
+
+      <div class="card">
+        <h3>Custo / Hora</h3>
+        <div class="valor">R$ 0,00</div>
+      </div>
+
+      <div class="card">
+        <h3>Lucro / Hora</h3>
+        <div class="valor">R$ 0,00</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- AÇÕES RÁPIDAS -->
+  <div class="section">
+    <div class="section-title">Ações Rápidas</div>
+
+    <div class="actions">
+      <a href="servicos.html" class="action">
+        <h4>Registrar Serviço</h4>
+        <p>Lançar horas trabalhadas e faturamento</p>
+      </a>
+
+      <a href="despesas.html" class="action">
+        <h4>Registrar Despesa</h4>
+        <p>Combustível, manutenção, peças</p>
+      </a>
+
+      <a href="fechamento-motorista.html" class="action">
+        <h4>Fechamento do Motorista</h4>
+        <p>Apurar salário, FGTS e pagamento</p>
+      </a>
+
+      <a href="relatorio-financeiro.html" class="action">
+        <h4>Relatório Financeiro</h4>
+        <p>Visão completa de receitas e custos</p>
+      </a>
+    </div>
+  </div>
+
+</div>
+
+</body>
+</html>
