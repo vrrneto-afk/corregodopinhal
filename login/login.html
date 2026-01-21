@@ -15,7 +15,7 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 
-<!-- FIREBASE INIT (SEGURO PARA PWA) -->
+<!-- FIREBASE INIT -->
 <script>
 if (!firebase.apps.length) {
   firebase.initializeApp({
@@ -75,6 +75,16 @@ body{
   cursor:pointer;
 }
 .login-box button:hover{opacity:.9;}
+
+.lembrar{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  font-size:14px;
+  color:#5a2b1e;
+  margin:8px 0 14px;
+}
+
 .link{
   margin-top:12px;
   font-size:14px;
@@ -101,6 +111,11 @@ body{
   <input type="email" id="email" placeholder="E-mail">
   <input type="password" id="senha" placeholder="Senha">
 
+  <label class="lembrar">
+    <input type="checkbox" id="lembrar">
+    Permanecer conectado
+  </label>
+
   <button onclick="login()">Entrar</button>
   <div class="link" onclick="resetarSenha()">Esqueci minha senha</div>
   <div id="erro" class="erro"></div>
@@ -110,16 +125,38 @@ body{
 const auth = firebase.auth();
 const erro = document.getElementById("erro");
 
+/* PREENCHE EMAIL SALVO */
+window.addEventListener("load", () => {
+  const emailSalvo = localStorage.getItem("email_salvo");
+  if (emailSalvo) {
+    document.getElementById("email").value = emailSalvo;
+    document.getElementById("lembrar").checked = true;
+  }
+});
+
 async function login(){
   erro.style.display="none";
 
+  const lembrar = document.getElementById("lembrar").checked;
+
   try{
+    await auth.setPersistence(
+      lembrar
+        ? firebase.auth.Auth.Persistence.LOCAL
+        : firebase.auth.Auth.Persistence.SESSION
+    );
+
     await auth.signInWithEmailAndPassword(
       email.value.trim(),
       senha.value
     );
 
-    // Redirecionamento limpo
+    if (lembrar) {
+      localStorage.setItem("email_salvo", email.value.trim());
+    } else {
+      localStorage.removeItem("email_salvo");
+    }
+
     location.replace("../app/index.html");
 
   }catch(e){
@@ -138,7 +175,7 @@ async function resetarSenha(){
 }
 </script>
 
-<!-- SERVICE WORKER (OBRIGATÓRIO PARA PWA) -->
+<!-- SERVICE WORKER -->
 <script>
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {
