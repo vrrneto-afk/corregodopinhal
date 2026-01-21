@@ -178,11 +178,19 @@ async function iniciarPagina(){
   const ANIMAIS = animaisSnap.docs.map(d=>({_id:d.id,...d.data()}));
   const EVENTOS = eventosSnap.docs.map(d=>d.data());
 
+  const idadeMin = isNaN(Number(CFG_VACAS.idade_minima_meses))
+    ? 0
+    : Number(CFG_VACAS.idade_minima_meses);
+
+  const gestacaoMeses = isNaN(Number(CFG_VACAS.gestacao_meses))
+    ? 9
+    : Number(CFG_VACAS.gestacao_meses);
+
   const vacas = ANIMAIS.filter(a =>
     a.status==="Ativo" &&
     a.especie==="Bovino" &&
     a.sexo==="F" &&
-    idadeMeses(a.data_nascimento)>=Number(CFG_VACAS.idade_minima_meses || 0)
+    idadeMeses(a.data_nascimento)>=idadeMin
   );
 
   const lista = document.getElementById("lista");
@@ -217,7 +225,10 @@ async function iniciarPagina(){
       const par = ev.filter(e=>e.tipo_evento==="parto").sort((a,b)=>new Date(b.data_evento)-new Date(a.data_evento))[0];
 
       if(cob && (!par || new Date(cob.data_evento)>new Date(par.data_evento))){
-        prenhas.push({v,prev:addMonths(new Date(cob.data_evento+"T00:00:00"),Number(CFG_VACAS.gestacao_meses || 0))});
+        prenhas.push({
+          v,
+          prev:addMonths(new Date(cob.data_evento+"T00:00:00"), gestacaoMeses)
+        });
       }else if(par){
         paridas.push({v,par});
       }else{
@@ -236,11 +247,18 @@ async function iniciarPagina(){
         const msg=mensagemPrenhez(dias);
 
         lista.innerHTML+=`
-        <div class="card ${regra?.classe || "ok"}" onclick="abrirAnimal('${p.v._id}')">
+        <div class="card ${regra && regra.classe ? regra.classe : "ok"}" onclick="abrirAnimal('${p.v._id}')">
           <strong>🐄 ${p.v.nome.toUpperCase()} <span class="badge prenha">Prenha</span></strong>
           <p>Previsão do parto: ${p.prev.toLocaleDateString("pt-BR")}</p>
-          <p class="dias">⏳ ${dias>=0?`Faltam ${dias} dias`:`Atrasado ${Math.abs(dias)} dias`}</p>
-          ${msg?`<p class="msg">${msg}</p>`:""}
+
+          ${msg
+            ? `<p class="msg">${msg}</p>`
+            : `<p class="dias">⏳ ${dias>=0
+                ? `Faltam ${dias} dias`
+                : `Atrasado ${Math.abs(dias)} dias`
+              }</p>`
+          }
+
           <p>Raça: ${p.v.raca||"-"}</p>
           <p>Idade: ${idadeTexto(p.v.data_nascimento)}</p>
         </div>`;
