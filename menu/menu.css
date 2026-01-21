@@ -11,11 +11,12 @@
 */
 
 .menu-wrapper{
-  position: sticky;     /* gruda ao rolar */
-  top: 0;               /* ponto onde ele fixa */
+  position: fixed;
+  top: 220px;          /* ALTURA DA LOGO */
+  left: 0;
   width: 100%;
   z-index: 1000;
-  visibility: hidden;   /* controlado pelo menu-permissoes.js */
+  visibility: hidden;
 }
 
 .menu-adm{
@@ -301,5 +302,6 @@
 */
 
 body{
-  padding-bottom:60px;
+  padding-top:320px;   /* logo + menu */
+  padding-bottom:60px; /* footer */
 }
