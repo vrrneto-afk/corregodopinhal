@@ -5,17 +5,12 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Configuração – Vacas</title>
 
-<!-- MANIFEST -->
 <link rel="manifest" href="../manifest.json">
 <meta name="theme-color" content="#7b3f2a">
 
-<!-- MENU GLOBAL -->
 <link rel="stylesheet" href="../menu/menu.css">
-
-<!-- CONFIG CSS -->
 <link rel="stylesheet" href="./config.css">
 
-<!-- FIREBASE -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
@@ -30,30 +25,18 @@ if (!firebase.apps.length) {
 }
 </script>
 
-<!-- IDENTIFICAÇÃO DA PÁGINA -->
 <script>
 window.PERMISSAO_PAGINA = { area:"config", chave:"config-vacas" };
 </script>
 
-<!-- AUTH GUARD -->
 <script src="../login/auth-guard.js"></script>
 
 <style>
-.label-check{
-  display:flex;
-  align-items:center;
-  gap:8px;
-  font-weight:600;
-  margin-top:12px;
-}
+.label-check{display:flex;align-items:center;gap:8px;font-weight:600;margin-top:12px}
 .label-check input{margin:0}
 .regra-card span{font-size:13px;font-weight:500}
 .range{display:flex;align-items:center;gap:8px}
-.info{
-  font-size:13px;
-  opacity:.75;
-  margin:10px 0 14px;
-}
+.info{font-size:13px;opacity:.75;margin:10px 0 14px}
 </style>
 </head>
 
@@ -66,7 +49,7 @@ window.PERMISSAO_PAGINA = { area:"config", chave:"config-vacas" };
 
 <h2>Configuração – Vacas</h2>
 
-<!-- PARÂMETROS GERAIS -->
+<!-- PARÂMETROS -->
 <fieldset>
   <label>Gestação (meses)</label>
   <input type="number" id="gestacao_meses" min="0">
@@ -139,13 +122,12 @@ Datas iguais ou posteriores ao dia previsto são tratadas apenas pelos textos ac
 
 </div>
 
-<!-- MENU + PERMISSÕES -->
+<!-- MENU -->
 <script>
 fetch("../menu/menu-adm.html")
   .then(r=>r.text())
   .then(html=>{
     document.getElementById("menu-adm").innerHTML = html;
-
     const s = document.createElement("script");
     s.src = "../menu/menu-permissoes.js";
     s.onload = () => {
@@ -160,11 +142,16 @@ fetch("../menu/menu-adm.html")
 const db = firebase.firestore();
 
 const elListaRegras = document.getElementById("lista-regras");
-const editor        = document.getElementById("editor");
-const btnExcluir    = document.getElementById("btn-excluir");
+const editor = document.getElementById("editor");
+const btnExcluir = document.getElementById("btn-excluir");
 
 let intervalos = [];
 let editando = null;
+
+/* UTIL */
+function gerarId(classe, de, ate){
+  return `${classe}_${de}_${ate}`;
+}
 
 /* LOAD */
 async function carregar(){
@@ -199,6 +186,7 @@ function renderizar(){
       <strong>${r.classe.toUpperCase()}</strong>
       <span>${r.dias_de} até ${r.dias_ate} dias</span>
       <span>${r.mensagem || ""}</span>
+      <span class="small">ID: ${r.id}</span>
     `;
     elListaRegras.appendChild(b);
   });
@@ -222,11 +210,11 @@ function editar(i){
   editando = i;
   const r = intervalos[i];
 
-  classe.value   = r.classe;
-  dias_de.value  = r.dias_de;
+  classe.value = r.classe;
+  dias_de.value = r.dias_de;
   dias_ate.value = r.dias_ate;
   mensagem.value = r.mensagem || "";
-  ativa.checked  = r.ativa !== false;
+  ativa.checked = r.ativa !== false;
 
   btnExcluir.classList.remove("hidden");
   editor.classList.remove("hidden");
@@ -234,23 +222,22 @@ function editar(i){
 
 /* SALVAR */
 async function salvarRegra(){
-  const obj = {
-    classe: classe.value,
-    dias_de: Number(dias_de.value),
-    dias_ate: Number(dias_ate.value),
-    mensagem: mensagem.value.trim(),
-    ativa: ativa.checked
-  };
+  const de = Number(dias_de.value);
+  const ate = Number(dias_ate.value);
 
-  if(
-    isNaN(obj.dias_de) ||
-    isNaN(obj.dias_ate) ||
-    obj.dias_de < 1 ||
-    obj.dias_de > obj.dias_ate
-  ){
+  if(isNaN(de) || isNaN(ate) || de < 1 || de > ate){
     alert("Informe um intervalo válido (dias ≥ 1).");
     return;
   }
+
+  const obj = {
+    id: gerarId(classe.value, de, ate),
+    classe: classe.value,
+    dias_de: de,
+    dias_ate: ate,
+    mensagem: mensagem.value.trim(),
+    ativa: ativa.checked
+  };
 
   if(editando === null) intervalos.push(obj);
   else intervalos[editando] = obj;
@@ -314,7 +301,6 @@ function limpar(){
 }
 </script>
 
-<!-- LOGOUT -->
 <script src="../login/logout.js"></script>
 
 </body>
