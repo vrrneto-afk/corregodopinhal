@@ -207,14 +207,15 @@ p.intro{
 <!-- MENU + PERMISSÕES -->
 <script>
 fetch("../menu/menu.html")
-  .then(r => r.text())
-  .then(h => {
-    document.getElementById("menu").innerHTML = h;
+  .then(r=>r.text())
+  .then(html=>{
+    document.getElementById("menu").innerHTML = html;
 
-    const s = document.createElement("script");
-    s.src = "../menu/menu-permissoes.js";
-    document.body.appendChild(s);
-  });
+    document.querySelectorAll("#menu a").forEach(a=>{
+      if(a.getAttribute("href")==="../trator/trator-inicio.html"){
+        a.classList.add("ativo");
+      }
+    });
 </script>
 
 <!-- FILTRO POR PERMISSÃO -->
