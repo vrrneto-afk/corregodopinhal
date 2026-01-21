@@ -148,17 +148,26 @@ const conteudo = document.getElementById("conteudo");
 const alertaRapido = document.getElementById("alertaRapido");
 const modalClima = document.getElementById("modalClima");
 
-/* MENU */
+<script>
+/* MENU – PADRÃO DEFINITIVO */
 fetch("../menu/menu.html")
-  .then(r=>r.text())
-  .then(h=>{
-    menu.innerHTML=h;
+  .then(r => r.text())
+  .then(h => {
+    menu.innerHTML = h;
+
+    // ativa item atual
     document.querySelectorAll("#menu a").forEach(a=>{
       if(a.getAttribute("href")==="../app/index.html"){
         a.classList.add("ativo");
       }
     });
+
+    // injeta script de permissões SOMENTE após o menu existir
+    const s = document.createElement("script");
+    s.src = "../menu/menu-permissoes.js";
+    document.body.appendChild(s);
   });
+</script>
 
 clima.onclick = ()=> modalClima.style.display="flex";
 modalClima.onclick = e=>{
