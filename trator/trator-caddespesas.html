@@ -5,19 +5,15 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Cadastro de Despesas – Trator</title>
 
-<!-- MANIFEST -->
 <link rel="manifest" href="../manifest.json">
 <meta name="theme-color" content="#7b3f2a">
 
-<!-- MENU GLOBAL -->
 <link rel="stylesheet" href="../menu/menu.css">
 
-<!-- FIREBASE -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
-<!-- FIREBASE INIT -->
 <script>
 if (!firebase.apps.length) {
   firebase.initializeApp({
@@ -28,7 +24,6 @@ if (!firebase.apps.length) {
 }
 </script>
 
-<!-- IDENTIFICAÇÃO DA PÁGINA -->
 <script>
 window.PERMISSAO_PAGINA = {
   area: "trator",
@@ -36,10 +31,8 @@ window.PERMISSAO_PAGINA = {
 };
 </script>
 
-<!-- AUTH GUARD -->
 <script src="../login/auth-guard.js"></script>
 
-<!-- 🔴 ESTILO CLONADO DO CADSERVICOS (PADRÃO VISUAL) -->
 <style>
 :root{
   --marrom:#7b3f2a;
@@ -49,78 +42,46 @@ window.PERMISSAO_PAGINA = {
   --ok:#2f6b2f;
 }
 
-*{
-  box-sizing:border-box;
-  font-family:Inter,system-ui,Arial;
-}
+*{box-sizing:border-box;font-family:Inter,system-ui,Arial;}
+body{margin:0;background:var(--bege);color:#333;}
 
-body{
-  margin:0;
-  background:var(--bege);
-  color:#333;
-}
+header{background:var(--logo);padding:15px;text-align:center;}
+header img{max-width:260px;width:100%;}
 
-header{
-  background:var(--logo);
-  padding:15px;
-  text-align:center;
-}
+.container{max-width:900px;margin:20px auto;padding:0 15px;}
 
-header img{
-  max-width:260px;
-  width:100%;
-}
+.card{background:#fff;border-radius:14px;padding:16px;box-shadow:0 2px 6px rgba(0,0,0,.06);margin-bottom:20px;}
 
-.container{
-  max-width:900px;
-  margin:20px auto;
-  padding:0 15px;
-}
+label{display:block;font-weight:600;margin-top:12px;}
 
-.card{
-  background:#fff;
-  border-radius:14px;
-  padding:16px;
-  box-shadow:0 2px 6px rgba(0,0,0,.06);
-  margin-bottom:20px;
-}
-
-label{
-  display:block;
-  font-weight:600;
-  margin-top:12px;
-}
-
-input,
-select{
-  width:100%;
-  padding:10px;
-  border-radius:10px;
-  border:1px solid #ccc;
-  margin-top:4px;
-  font-size:15px;
+input,select{
+  width:100%;padding:10px;border-radius:10px;
+  border:1px solid #ccc;margin-top:4px;font-size:15px;
 }
 
 button{
-  margin-top:16px;
-  width:100%;
-  padding:12px;
-  border:none;
-  border-radius:12px;
-  background:var(--marrom);
-  color:#fff;
-  font-size:16px;
-  font-weight:700;
+  margin-top:16px;width:100%;padding:12px;
+  border-radius:12px;font-size:16px;font-weight:700;
 }
 
-button:disabled{ opacity:.6; }
-
-.msg{
-  margin-top:10px;
-  font-weight:600;
+.btn-primary{
+  border:none;background:var(--marrom);color:#fff;
 }
-.msg.erro{ color:var(--erro); }
-.msg.ok{ color:var(--ok); }
+
+.btn-outline{
+  background:#fff;color:var(--marrom);
+  border:2px solid var(--marrom);
+}
+
+.msg{margin-top:12px;font-weight:700;}
+.msg.ok{color:var(--ok);}
+.msg.erro{color:var(--erro);}
+
+.btn-delete{
+  background:var(--erro);color:#fff;border:none;
+}
+
+.footer-space{height:60px;}
 </style>
 </head>
 
@@ -134,9 +95,9 @@ button:disabled{ opacity:.6; }
 
 <div class="container">
 
-<!-- 🔙 BOTÃO VOLTAR -->
-<button onclick="location.href='../trator/trator-inicio.html'">
-  ⬅️ Voltar para Trator
+<!-- 🔙 BOTÃO VOLTAR (PADRÃO VISUAL CORRETO) -->
+<button class="btn-outline" onclick="location.href='../trator/trator-inicio.html'">
+  ← Voltar para Trator
 </button>
 
 <h2>🧾 Cadastro de Despesas</h2>
@@ -147,7 +108,7 @@ button:disabled{ opacity:.6; }
   <input type="date" id="data">
 
   <label>Tipo da despesa</label>
-  <input type="text" id="tipo" placeholder="Ex: Diesel, Manutenção, Peça">
+  <input type="text" id="tipo">
 
   <label>Descrição (opcional)</label>
   <input type="text" id="descricao">
@@ -155,7 +116,7 @@ button:disabled{ opacity:.6; }
   <label>Valor</label>
   <input type="text" id="valor">
 
-  <button id="salvar">💾 Salvar Despesa</button>
+  <button id="salvar" class="btn-primary">💾 Salvar Despesa</button>
   <div id="msg" class="msg"></div>
 
 </div>
@@ -167,146 +128,152 @@ button:disabled{ opacity:.6; }
   <select id="ano"></select>
 </div>
 
-<div class="table-wrapper">
-<table>
+<div class="card">
+<table width="100%">
 <thead>
 <tr>
-  <th class="col-data">Data</th>
-  <th class="col-tipo">Tipo</th>
-  <th class="col-descricao">Descrição</th>
-  <th class="col-valor">Valor</th>
-  <th class="col-acoes">Ações</th>
+  <th>Data</th>
+  <th>Tipo</th>
+  <th>Descrição</th>
+  <th>Valor</th>
+  <th>Ações</th>
 </tr>
 </thead>
 <tbody id="lista"></tbody>
 <tfoot>
 <tr>
-  <td colspan="3">Total do mês</td>
-  <td id="totalMes">R$ 0,00</td>
-  <td></td>
+  <th colspan="3">Total do mês</th>
+  <th id="totalMes">R$ 0,00</th>
+  <th></th>
 </tr>
 </tfoot>
 </table>
 </div>
 
+<div class="footer-space"></div>
+
 </div>
 
-<!-- MENU + PERMISSÕES (PADRÃO DEFINITIVO) -->
+<!-- MENU -->
 <script>
 fetch("../menu/menu.html")
-  .then(r => r.text())
-  .then(html => {
-    document.getElementById("menu").innerHTML = html;
+  .then(r=>r.text())
+  .then(html=>{
+    document.getElementById("menu").innerHTML=html;
 
-    document.querySelectorAll("#menu a").forEach(a => {
-      if (a.getAttribute("href") === "../trator/trator-inicio.html") {
+    document.querySelectorAll("#menu a").forEach(a=>{
+      if(a.getAttribute("href")==="../trator/trator-inicio.html"){
         a.classList.add("ativo");
       }
     });
 
-    const s = document.createElement("script");
-    s.src = "../menu/menu-permissoes.js";
+    const s=document.createElement("script");
+    s.src="../menu/menu-permissoes.js";
     document.body.appendChild(s);
 
-    document.body.style.display = "block";
+    document.body.style.display="block";
   });
 </script>
 
 <script>
-const db = firebase.firestore();
-const auth = firebase.auth();
-let editId = null;
+const db=firebase.firestore();
+const auth=firebase.auth();
 
-const meses = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
+let editId=null;
+let isAdmin=false;
+
+auth.onAuthStateChanged(async user=>{
+  if(user){
+    const u=await db.collection("usuarios").doc(user.uid).get();
+    isAdmin = u.exists && u.data().papel==="admin";
+    carregarTabela();
+  }
+});
+
+const meses=["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
 meses.forEach((m,i)=>mes.innerHTML+=`<option value="${i}">${m}</option>`);
 
-const anoAtual = new Date().getFullYear();
-for(let a=anoAtual-3;a<=anoAtual+10;a++) ano.innerHTML+=`<option>${a}</option>`;
+const anoAtual=new Date().getFullYear();
+for(let a=anoAtual-3;a<=anoAtual+5;a++) ano.innerHTML+=`<option>${a}</option>`;
 mes.value=new Date().getMonth();
 ano.value=anoAtual;
 
-function moeda(v){ return "R$ "+Number(v).toFixed(2).replace(".",","); }
-function limparMoeda(v){ return Number(v.replace(/[^\d]/g,""))/100; }
+function moeda(v){return "R$ "+Number(v).toFixed(2).replace(".",",");}
+function limparMoeda(v){return Number(v.replace(/[^\d]/g,""))/100;}
 
-valor.oninput = () => {
-  valor.value = moeda(limparMoeda(valor.value));
-};
+valor.oninput=()=>valor.value=moeda(limparMoeda(valor.value));
 
-salvar.onclick = async () => {
+salvar.onclick=async()=>{
   try{
-    const user = auth.currentUser;
+    const user=auth.currentUser;
     if(!user) throw "Usuário não autenticado";
 
-    const v = limparMoeda(valor.value);
-    if(v <= 0) throw "Valor inválido";
+    const v=limparMoeda(valor.value);
+    if(v<=0) throw "Valor inválido";
 
-    const dados = {
-      data: firebase.firestore.Timestamp.fromDate(new Date(data.value)),
-      tipo: tipo.value,
-      descricao: descricao.value,
-      valor_total: v,
-      criado_por: user.uid
+    const dados={
+      data:firebase.firestore.Timestamp.fromDate(new Date(data.value)),
+      tipo:tipo.value,
+      descricao:descricao.value,
+      valor_total:v,
+      criado_por:user.uid
     };
 
-    editId
-      ? await db.collection("trator_despesas").doc(editId).update(dados)
-      : await db.collection("trator_despesas").add(dados);
+    if(editId){
+      await db.collection("trator_despesas").doc(editId).update(dados);
+      msg.textContent="Despesa editada com sucesso";
+    }else{
+      await db.collection("trator_despesas").add(dados);
+      msg.textContent="Despesa salva com sucesso";
+    }
 
-    msg.textContent = "Despesa salva com sucesso";
-    msg.className = "msg ok";
+    msg.className="msg ok";
+    editId=null;
     carregarTabela();
 
   }catch(e){
-    msg.textContent = e;
-    msg.className = "msg erro";
+    msg.textContent=e;
+    msg.className="msg erro";
   }
 };
 
-function carregarTabela(){
-  lista.innerHTML = "";
-  let total = 0;
-
-  const ini = new Date(ano.value, mes.value, 1);
-  const fim = new Date(ano.value, Number(mes.value)+1, 0, 23,59,59);
-
-  db.collection("trator_despesas")
-    .where("data", ">=", ini)
-    .where("data", "<=", fim)
-    .get()
-    .then(snap=>{
-      snap.forEach(d=>{
-        const v = d.data();
-        total += v.valor_total;
-
-        lista.innerHTML += `
-          <tr>
-            <td class="col-data">${v.data.toDate().toLocaleDateString("pt-BR",{day:"2-digit",month:"2-digit"})}</td>
-            <td class="col-tipo">${v.tipo}</td>
-            <td class="col-descricao">${v.descricao || ""}</td>
-            <td class="col-valor">${moeda(v.valor_total)}</td>
-            <td class="col-acoes">
-              <button onclick="editar('${d.id}')">Editar</button>
-            </td>
-          </tr>
-        `;
-      });
-      totalMes.textContent = moeda(total);
-    });
-}
-
-function editar(id){
-  db.collection("trator_despesas").doc(id).get().then(d=>{
-    const v = d.data();
-    editId = id;
-    data.value = v.data.toDate().toISOString().split("T")[0];
-    tipo.value = v.tipo;
-    descricao.value = v.descricao || "";
-    valor.value = moeda(v.valor_total);
+function excluir(id){
+  if(!confirm("Deseja excluir esta despesa?")) return;
+  db.collection("trator_despesas").doc(id).delete().then(()=>{
+    msg.textContent="Despesa excluída com sucesso";
+    msg.className="msg ok";
+    carregarTabela();
   });
 }
 
-mes.onchange = ano.onchange = carregarTabela;
-carregarTabela();
+function carregarTabela(){
+  lista.innerHTML="";let total=0;
+  const ini=new Date(ano.value,mes.value,1);
+  const fim=new Date(ano.value,Number(mes.value)+1,0,23,59,59);
+
+  db.collection("trator_despesas")
+    .where("data",">=",ini)
+    .where("data","<=",fim)
+    .get()
+    .then(s=>{
+      s.forEach(d=>{
+        const v=d.data();total+=v.valor_total;
+        lista.innerHTML+=`
+        <tr>
+          <td>${v.data.toDate().toLocaleDateString("pt-BR")}</td>
+          <td>${v.tipo}</td>
+          <td>${v.descricao||""}</td>
+          <td>${moeda(v.valor_total)}</td>
+          <td>
+            ${isAdmin?`<button class="btn-delete" onclick="excluir('${d.id}')">Excluir</button>`:""}
+          </td>
+        </tr>`;
+      });
+      totalMes.textContent=moeda(total);
+    });
+}
+
+mes.onchange=ano.onchange=carregarTabela;
 </script>
 
 <script src="../login/logout.js"></script>
