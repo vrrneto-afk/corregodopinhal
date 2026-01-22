@@ -9,7 +9,7 @@
 <link rel="manifest" href="../manifest.json">
 <meta name="theme-color" content="#7b3f2a">
 
-<!-- MENU GLOBAL -->
+<!-- MENU GLOBAL (forms.css + tables.css + components.css) -->
 <link rel="stylesheet" href="../menu/menu.css">
 
 <!-- FIREBASE -->
@@ -100,7 +100,6 @@ select{
   font-size:15px;
 }
 
-/* ===== BOTÃO ===== */
 button{
   margin-top:16px;
   width:100%;
@@ -122,36 +121,8 @@ button:disabled{ opacity:.6; }
 .msg.erro{ color:var(--erro); }
 .msg.ok{ color:var(--ok); }
 
-/* ===== TABELA ===== */
-table{
-  width:100%;
-  border-collapse:collapse;
-  background:#fff;
-  border-radius:12px;
-  overflow:hidden;
-}
-
-th, td{
-  padding:10px;
-  font-size:14px;
-  text-align:center;
-  vertical-align:middle;
-  white-space:nowrap;
-}
-
-th{ background:#efe4d5; }
-
-tfoot td{
-  font-weight:700;
-  background:#f3eadf;
-}
-
 .valor-total{
   background:#f2f2f2;
-}
-
-table td:nth-child(3){
-  white-space:normal;
 }
 </style>
 </head>
@@ -221,14 +192,15 @@ table td:nth-child(3){
   <select id="ano"></select>
 </div>
 
+<div class="table-wrapper">
 <table>
 <thead>
 <tr>
-  <th>Data</th>
-  <th>Tipo</th>
-  <th>Cliente</th>
-  <th>Valor</th>
-  <th>Ações</th>
+  <th class="col-data">Data</th>
+  <th class="col-tipo">Tipo</th>
+  <th class="col-cliente">Cliente</th>
+  <th class="col-valor">Valor</th>
+  <th class="col-acoes">Ações</th>
 </tr>
 </thead>
 <tbody id="lista"></tbody>
@@ -240,10 +212,11 @@ table td:nth-child(3){
 </tr>
 </tfoot>
 </table>
+</div>
 
 </div>
 
-<!-- MENU + PERMISSÕES (PADRÃO DEFINITIVO) -->
+<!-- MENU + PERMISSÕES -->
 <script>
 fetch("../menu/menu.html")
   .then(r => r.text())
@@ -264,7 +237,6 @@ fetch("../menu/menu.html")
   });
 </script>
 
-<!-- SCRIPT PRINCIPAL -->
 <script>
 const db = firebase.firestore();
 const auth = firebase.auth();
@@ -340,11 +312,11 @@ function carregarTabela(){
         const v=d.data();total+=v.valor_total;
         lista.innerHTML+=`
         <tr>
-          <td>${v.data.toDate().toLocaleDateString("pt-BR",{day:"2-digit",month:"2-digit"})}</td>
-          <td>${v.tipo}</td>
-          <td>${v.cliente}</td>
-          <td>${moeda(v.valor_total)}</td>
-          <td><button onclick="editar('${d.id}')">Editar</button></td>
+          <td class="col-data">${v.data.toDate().toLocaleDateString("pt-BR",{day:"2-digit",month:"2-digit"})}</td>
+          <td class="col-tipo">${v.tipo}</td>
+          <td class="col-cliente">${v.cliente}</td>
+          <td class="col-valor">${moeda(v.valor_total)}</td>
+          <td class="col-acoes"><button onclick="editar('${d.id}')">Editar</button></td>
         </tr>`;
       });
       totalMes.textContent=moeda(total);
