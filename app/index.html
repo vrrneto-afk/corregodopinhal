@@ -165,36 +165,59 @@ async function loadIndex(){
   const eventos = (await db.collection("eventos").get()).docs.map(d=>d.data());
   const vacinas = (await db.collection("vacinas").get()).docs.map(d=>d.data());
 
-  /* ===== VACAS ===== */
-  conteudo.innerHTML += "<h2>🐄 Vacas a Criar</h2>";
+ /* ===== VACAS ===== */
+conteudo.innerHTML += "<h2>🐄 Vacas a Criar</h2>";
 
-  eventos
-    .filter(e=>e.tipo_evento==="cobertura")
-    .map(c=>{
-      const prev = addMeses(parseData(c.data_evento), cfgVacas.gestacao_meses);
-      const dias = diffDias(hojeZ, prev);
-      return { animal: animais.find(a=>a._id===c.id_animal), prev, dias };
-    })
-    .filter(x=>x.animal)
-    .sort((a,b)=>a.dias-b.dias)
-    .forEach(v=>{
-      let regra = cfgVacas.prenhez_intervalos
-        .filter(r=>r.ativa!==false && v.dias>=r.dias_de && v.dias<=r.dias_ate)
-        .sort((a,b)=>a.dias_de-b.dias_de)[0];
+eventos
+  .filter(e => e.tipo_evento === "cobertura")
+  .map(c => {
+    const prev = addMeses(parseData(c.data_evento), cfgVacas.gestacao_meses);
+    const dias = diffDias(hojeZ, prev);
+    return {
+      animal: animais.find(a => a._id === c.id_animal),
+      prev,
+      dias
+    };
+  })
+  .filter(x => x.animal)
+  .sort((a, b) => a.dias - b.dias) // mais próxima do parto primeiro
+  .forEach(v => {
 
-      let textoPrenhez = "";
-      if(v.dias>0) textoPrenhez = cfgVacas.prenhez_textos?.antes_parto?.replace("{{dias}}",v.dias);
-      else if(v.dias===0) textoPrenhez = cfgVacas.prenhez_textos?.parto_hoje;
-      else textoPrenhez = cfgVacas.prenhez_textos?.parto_atrasado?.replace("{{dias}}",Math.abs(v.dias));
+    const diasAbs = Math.abs(v.dias);
 
-      conteudo.innerHTML += `
-        <div class="card ${regra?.classe || "ok"}">
-          <strong>🐄 ${v.animal.nome.toUpperCase()}</strong>
-          <p class="dias">${textoPrenhez}</p>
-          ${regra?.mensagem ? `<p class="msg">${regra.mensagem}</p>` : ""}
-          <p class="data">📅 ${v.prev.toLocaleDateString("pt-BR")}</p>
-        </div>`;
-    });
+    /* REGRA DE INTERVALO (mensagem auxiliar) */
+    let regra = cfgVacas.prenhez_intervalos
+      .filter(r =>
+        r.ativa !== false &&
+        diasAbs >= r.dias_de &&
+        diasAbs <= r.dias_ate
+      )
+      .sort((a, b) => a.dias_de - b.dias_de)[0];
+
+    /* TEXTO PRINCIPAL DE PRENHEZ */
+    let textoPrenhez = "";
+
+    if (v.dias > 0) {
+      textoPrenhez = cfgVacas.prenhez_textos?.antes_parto
+        ?.replace("{{dias}}", v.dias);
+    }
+    else if (v.dias === 0) {
+      textoPrenhez = cfgVacas.prenhez_textos?.parto_hoje;
+    }
+    else {
+      textoPrenhez = cfgVacas.prenhez_textos?.parto_atrasado
+        ?.replace("{{dias}}", diasAbs);
+    }
+
+    conteudo.innerHTML += `
+      <div class="card ${regra?.classe || "ok"}">
+        <strong>🐄 ${v.animal.nome.toUpperCase()}</strong>
+        <p class="dias">${textoPrenhez}</p>
+        <p class="data">📅 ${v.prev.toLocaleDateString("pt-BR")}</p>
+        ${regra?.mensagem ? `<p class="msg">${regra.mensagem}</p>` : ""}
+      </div>
+    `;
+  });
 
   /* ===== VACINAS ===== */
   conteudo.innerHTML += "<h2>💉 Vacinas pendentes</h2>";
