@@ -1,0 +1,49 @@
+/* =========================================
+   TABLES.CSS – PADRÃO DE TABELAS E RELATÓRIOS
+   ========================================= */
+
+table{
+  width:100%;
+  border-collapse:collapse;
+  background:#fff;
+  border-radius:12px;
+  overflow:hidden;
+}
+
+th,
+td{
+  padding:10px;
+  font-size:14px;
+  text-align:center;
+  vertical-align:middle;
+  white-space:nowrap;
+}
+
+th{
+  background:#efe4d5;
+  font-weight:700;
+}
+
+/* coluna CLIENTE pode quebrar */
+td.col-cliente{
+  white-space:normal;
+}
+
+/* valor sempre em uma linha */
+td.col-valor{
+  font-weight:600;
+  white-space:nowrap;
+}
+
+/* rodapé */
+tfoot td{
+  font-weight:700;
+  background:#f3eadf;
+}
+
+/* ações */
+.actions{
+  display:flex;
+  justify-content:center;
+  gap:6px;
+}
