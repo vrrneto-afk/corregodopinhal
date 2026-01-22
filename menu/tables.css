@@ -1,12 +1,12 @@
+
 /* =========================================
    TABLES.CSS – PADRÃO DE TABELAS E RELATÓRIOS
    ========================================= */
 
-/* Wrapper obrigatório para mobile */
+/* Wrapper (mantido por compatibilidade, sem scroll forçado) */
 .table-wrapper{
   width:100%;
-  overflow-x:auto;
-  -webkit-overflow-scrolling:touch;
+  overflow-x:hidden; /* impede rolagem lateral */
 }
 
 /* ================= BASE ================= */
@@ -17,7 +17,9 @@ table{
   background:#fff;
   border-radius:12px;
   overflow:hidden;
-  min-width:480px; /* evita esmagar colunas no mobile */
+
+  /* REMOVIDO:
+     min-width que forçava overflow no mobile */
 }
 
 th,
@@ -42,34 +44,31 @@ th{
 td.col-cliente,
 td.col-fornecedor{
   white-space:normal;
-  min-width:160px;
+  word-break:break-word;
   line-height:1.25;
 }
 
 /* Tipo / Descrição curta */
 td.col-tipo{
   white-space:normal;
-  min-width:120px;
+  word-break:break-word;
 }
 
 /* Datas sempre compactas */
 td.col-data{
   white-space:nowrap;
-  min-width:70px;
 }
 
 /* Valor sempre em uma linha */
 td.col-valor{
   white-space:nowrap;
   font-weight:600;
-  min-width:90px;
 }
 
 /* ================= AÇÕES ================= */
 
 td.col-acoes{
   white-space:nowrap;
-  min-width:90px;
 }
 
 .actions{
@@ -105,7 +104,6 @@ tfoot td{
     padding:8px;
   }
 
-  table{
-    min-width:520px;
-  }
+  /* SEM min-width no mobile
+     -> tabela encolhe e quebra linhas */
 }
