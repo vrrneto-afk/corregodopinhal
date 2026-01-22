@@ -105,14 +105,23 @@ form,
   width:100%;
 }
 
-.radio-option{
-  display:flex !important;
-  flex-direction:row !important;
-  align-items:center !important;
-  justify-content:flex-start !important;
+.radio-option,
+.checkbox-option{
+  display:flex;
+  align-items:center;
+  justify-content:flex-start;
   gap:8px;
-  width:100%;
-  text-align:left !important;
+
+  /* 🔒 correção */
+  width:auto;
+  max-width:100%;
+}
+
+.radio-option span,
+.checkbox-option span{
+  display:inline-block;
+  white-space:normal;
+  text-align:left;
 }
 
 /* impede herança de flex */
