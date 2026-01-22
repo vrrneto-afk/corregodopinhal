@@ -38,6 +38,90 @@ window.PERMISSAO_PAGINA = {
 
 <!-- AUTH GUARD -->
 <script src="../login/auth-guard.js"></script>
+
+<!-- 🔴 ESTILO CLONADO DO CADSERVICOS (PADRÃO VISUAL) -->
+<style>
+:root{
+  --marrom:#7b3f2a;
+  --bege:#f6efe7;
+  --logo:#D0B485;
+  --erro:#c0392b;
+  --ok:#2f6b2f;
+}
+
+*{
+  box-sizing:border-box;
+  font-family:Inter,system-ui,Arial;
+}
+
+body{
+  margin:0;
+  background:var(--bege);
+  color:#333;
+}
+
+header{
+  background:var(--logo);
+  padding:15px;
+  text-align:center;
+}
+
+header img{
+  max-width:260px;
+  width:100%;
+}
+
+.container{
+  max-width:900px;
+  margin:20px auto;
+  padding:0 15px;
+}
+
+.card{
+  background:#fff;
+  border-radius:14px;
+  padding:16px;
+  box-shadow:0 2px 6px rgba(0,0,0,.06);
+  margin-bottom:20px;
+}
+
+label{
+  display:block;
+  font-weight:600;
+  margin-top:12px;
+}
+
+input,
+select{
+  width:100%;
+  padding:10px;
+  border-radius:10px;
+  border:1px solid #ccc;
+  margin-top:4px;
+  font-size:15px;
+}
+
+button{
+  margin-top:16px;
+  width:100%;
+  padding:12px;
+  border:none;
+  border-radius:12px;
+  background:var(--marrom);
+  color:#fff;
+  font-size:16px;
+  font-weight:700;
+}
+
+button:disabled{ opacity:.6; }
+
+.msg{
+  margin-top:10px;
+  font-weight:600;
+}
+.msg.erro{ color:var(--erro); }
+.msg.ok{ color:var(--ok); }
+</style>
 </head>
 
 <body style="display:none">
@@ -49,6 +133,11 @@ window.PERMISSAO_PAGINA = {
 <div id="menu"></div>
 
 <div class="container">
+
+<!-- 🔙 BOTÃO VOLTAR -->
+<button onclick="location.href='../trator/trator-inicio.html'">
+  ⬅️ Voltar para Trator
+</button>
 
 <h2>🧾 Cadastro de Despesas</h2>
 
@@ -136,12 +225,8 @@ for(let a=anoAtual-3;a<=anoAtual+10;a++) ano.innerHTML+=`<option>${a}</option>`;
 mes.value=new Date().getMonth();
 ano.value=anoAtual;
 
-function moeda(v){
-  return "R$ "+Number(v).toFixed(2).replace(".",",");
-}
-function limparMoeda(v){
-  return Number(v.replace(/[^\d]/g,""))/100;
-}
+function moeda(v){ return "R$ "+Number(v).toFixed(2).replace(".",","); }
+function limparMoeda(v){ return Number(v.replace(/[^\d]/g,""))/100; }
 
 valor.oninput = () => {
   valor.value = moeda(limparMoeda(valor.value));
