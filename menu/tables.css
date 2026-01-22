@@ -2,12 +2,22 @@
    TABLES.CSS – PADRÃO DE TABELAS E RELATÓRIOS
    ========================================= */
 
+/* Wrapper obrigatório para mobile */
+.table-wrapper{
+  width:100%;
+  overflow-x:auto;
+  -webkit-overflow-scrolling:touch;
+}
+
+/* ================= BASE ================= */
+
 table{
   width:100%;
   border-collapse:collapse;
   background:#fff;
   border-radius:12px;
   overflow:hidden;
+  min-width:480px; /* evita esmagar colunas no mobile */
 }
 
 th,
@@ -19,31 +29,83 @@ td{
   white-space:nowrap;
 }
 
+/* ================= HEADER ================= */
+
 th{
   background:#efe4d5;
   font-weight:700;
 }
 
-/* coluna CLIENTE pode quebrar */
-td.col-cliente{
+/* ================= COLUNAS ESPECÍFICAS ================= */
+
+/* Cliente / Fornecedor – pode quebrar linha */
+td.col-cliente,
+td.col-fornecedor{
   white-space:normal;
+  min-width:160px;
+  line-height:1.25;
 }
 
-/* valor sempre em uma linha */
-td.col-valor{
-  font-weight:600;
+/* Tipo / Descrição curta */
+td.col-tipo{
+  white-space:normal;
+  min-width:120px;
+}
+
+/* Datas sempre compactas */
+td.col-data{
   white-space:nowrap;
+  min-width:70px;
 }
 
-/* rodapé */
-tfoot td{
-  font-weight:700;
-  background:#f3eadf;
+/* Valor sempre em uma linha */
+td.col-valor{
+  white-space:nowrap;
+  font-weight:600;
+  min-width:90px;
 }
 
-/* ações */
+/* ================= AÇÕES ================= */
+
+td.col-acoes{
+  white-space:nowrap;
+  min-width:90px;
+}
+
 .actions{
   display:flex;
   justify-content:center;
+  align-items:center;
   gap:6px;
+}
+
+.actions button{
+  padding:6px 10px;
+  font-size:13px;
+  border-radius:10px;
+  border:none;
+  cursor:pointer;
+}
+
+/* ================= FOOTER / TOTAL ================= */
+
+tfoot td{
+  font-weight:700;
+  background:#f3eadf;
+  text-align:center;
+}
+
+/* ================= MOBILE REFINO ================= */
+
+@media (max-width:600px){
+
+  th,
+  td{
+    font-size:13px;
+    padding:8px;
+  }
+
+  table{
+    min-width:520px;
+  }
 }
