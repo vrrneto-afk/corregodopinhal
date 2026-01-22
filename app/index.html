@@ -7,7 +7,6 @@
 
 <link rel="manifest" href="../manifest.json">
 <meta name="theme-color" content="#7b3f2a">
-
 <link rel="stylesheet" href="../menu/menu.css">
 
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
@@ -29,7 +28,6 @@ window.PERMISSAO_PAGINA = { area:"app", chave:"inicio" };
 <script src="../login/auth-guard.js"></script>
 
 <style>
-/* --- SEU CSS ORIGINAL, SEM ALTERAÇÃO --- */
 :root{
   --marrom:#7b3f2a;
   --bege:#f6efe7;
@@ -46,7 +44,7 @@ header{background:var(--logo);padding:15px 10px;text-align:center}
 header img{max-width:260px;width:100%}
 .container{max-width:900px;margin:20px auto;padding:0 15px}
 h2{margin:28px 0 12px;color:var(--marrom)}
-.clima-bar{background:#fff;margin:12px auto 16px;padding:10px;border-radius:10px;box-shadow:0 1px 4px rgba(0,0,0,.08);text-align:center;cursor:pointer}
+.clima-bar{background:#fff;margin:12px auto 16px;padding:10px;border-radius:10px;box-shadow:0 1px 4px rgba(0,0,0,.08);text-align:center}
 .alerta-rapido{display:block;margin:0 auto 20px;padding:12px;border-radius:12px;font-weight:700;text-align:center}
 .alerta-ok{background:#eaf6ec;color:var(--verde)}
 .alerta-on{background:#fdecea;color:var(--vermelho)}
@@ -70,7 +68,9 @@ h2{margin:28px 0 12px;color:var(--marrom)}
 
 <div class="container">
   <div id="clima" class="clima-bar">⏳ Carregando clima...</div>
-  <a id="alertaRapido" href="../app/lembretes.html" class="alerta-rapido alerta-ok">🔔 Nenhum alerta no momento</a>
+  <a id="alertaRapido" href="../app/lembretes.html" class="alerta-rapido alerta-ok">
+    🔔 Nenhum alerta no momento
+  </a>
   <div id="conteudo"></div>
 </div>
 
@@ -81,14 +81,16 @@ const clima = document.getElementById("clima");
 const conteudo = document.getElementById("conteudo");
 const alertaRapido = document.getElementById("alertaRapido");
 
-/* MENU */
+/* MENU DINÂMICO */
 fetch("../menu/menu.html")
   .then(r=>r.text())
-  .then(h=>{
-    menu.innerHTML=h;
-    const s=document.createElement("script");
-    s.src="../menu/menu-permissoes.js";
-    document.body.appendChild(s);
+  .then(html=>{
+    document.getElementById("menu").innerHTML = html;
+    document.querySelectorAll("#menu a").forEach(a=>{
+      if(a.getAttribute("href")==="../app/bezerros.html"){
+        a.classList.add("ativo");
+      }
+    });
   });
 
 /* DATAS */
@@ -112,19 +114,15 @@ async function loadConfigs(){
   CFG.vacinas=(await db.collection("config").doc("vacinas").get()).data()||{};
 }
 
-/* HELPERS CORRIGIDOS */
+/* REGRA PRENHEZ (CORRETA) */
 function regraPrenhez(dias){
-  if(dias<=0) return {classe:"urgente"};
-  const regras=CFG.vacas.prenhez_intervalos||[];
-  return regras.find(r=>r.ativa!==false && dias>=r.dias_de && dias<=r.dias_ate) || {classe:"ok"};
-}
-
-function mensagemPrenhez(dias){
-  const t=CFG.vacas.prenhez_textos||{};
-  if(dias===0 && t.parto_hoje) return t.parto_hoje;
-  if(dias<0 && t.parto_atrasado) return t.parto_atrasado.replace("{{dias}}",Math.abs(dias));
-  if(dias>0 && t.antes_parto) return t.antes_parto.replace("{{dias}}",dias);
-  return "";
+  const regras = CFG.vacas.prenhez_intervalos || [];
+  return (
+    regras
+      .filter(r => r.ativa === true && dias >= r.dias_de && dias <= r.dias_ate)
+      .sort((a,b)=>a.dias_de-b.dias_de)[0]
+    || { classe:"ok", mensagem:"" }
+  );
 }
 
 /* INDEX */
@@ -135,86 +133,79 @@ async function loadIndex(){
   const eventos=(await db.collection("eventos").get()).docs.map(d=>d.data());
   const vacinas=(await db.collection("vacinas").get()).docs.map(d=>d.data());
 
-  /* VACAS */
+  /* VACAS A CRIAR */
   conteudo.innerHTML+="<h2>🐄 Vacas a Criar</h2>";
-  eventos.filter(e=>e.tipo_evento==="cobertura").forEach(c=>{
-    const animal=animais.find(a=>a._id===c.id_animal);
-    if(!animal) return;
-    const prev=addM(parse(c.data_evento),Number(CFG.vacas.gestacao_meses||9));
-    const dias=diff(hojeZ,prev);
-    const regra=regraPrenhez(dias);
-    const msg=mensagemPrenhez(dias);
+
+  const listaVacas = eventos
+    .filter(e=>e.tipo_evento==="cobertura")
+    .map(e=>{
+      const animal=animais.find(a=>a._id===e.id_animal);
+      if(!animal) return null;
+      const prev=addM(parse(e.data_evento),Number(CFG.vacas.gestacao_meses||9));
+      const dias=diff(hojeZ,prev);
+      return {animal,prev,dias};
+    })
+    .filter(Boolean)
+    .sort((a,b)=>a.dias-b.dias);
+
+  if(!listaVacas.length){
+    conteudo.innerHTML+=`
+      <div class="card ok">
+        <strong>🐄 Nenhuma vaca em acompanhamento</strong>
+      </div>`;
+  }
+
+  listaVacas.forEach(v=>{
+    const regra=regraPrenhez(v.dias);
+
+    const mensagem =
+      regra.mensagem && regra.mensagem.trim() !== ""
+        ? regra.mensagem.replace("{{dias}}",Math.abs(v.dias))
+        : v.dias>=0
+          ? `⏳ Faltam ${v.dias} dias`
+          : `🚨 Parto atrasado em ${Math.abs(v.dias)} dias`;
 
     conteudo.innerHTML+=`
       <div class="card ${regra.classe}">
-        <strong>🐄 ${animal.nome.toUpperCase()}</strong>
-        ${msg?`<p class="msg">${msg}</p>`:`<p class="dias">${dias>=0?`Faltam ${dias} dias`:`Atrasado ${Math.abs(dias)} dias`}</p>`}
-        <p class="data">📅 ${prev.toLocaleDateString("pt-BR")}</p>
+        <strong>🐄 ${v.animal.nome.toUpperCase()}</strong>
+        <p class="dias">${mensagem}</p>
+        <p class="data">📅 ${v.prev.toLocaleDateString("pt-BR")}</p>
       </div>`;
   });
 
-  /* ================= VACINAS PENDENTES ================= */
-conteudo.innerHTML += "<h2>💉 Vacinas pendentes</h2>";
+  /* VACINAS */
+  conteudo.innerHTML+="<h2>💉 Vacinas pendentes</h2>";
 
-let encontrouVacinas = false;
+  const pendentes = vacinas.filter(v=>(v.status||"").toLowerCase()==="pendente");
 
-vacinas
-  /* SOMENTE vacinas realmente pendentes */
-  .filter(v => (v.status || "").toLowerCase() === "pendente")
-  .forEach(v => {
+  if(!pendentes.length){
+    conteudo.innerHTML+=`
+      <div class="card ok">
+        <strong>💉 Nenhuma vacina pendente</strong>
+      </div>`;
+  }
 
-    const reap = parse(v.data_aplicacao);
-    if (!reap) return;
+  pendentes.forEach(v=>{
+    const animal=animais.find(a=>a._id===v.id_animal);
+    const reap=parse(v.data_aplicacao);
+    if(!reap) return;
 
-    reap.setDate(
-      reap.getDate() + Number(v.repeticao_dias || 0)
-    );
+    reap.setDate(reap.getDate()+Number(v.repeticao_dias||0));
+    const dias=diff(hojeZ,reap);
 
-    const dias = diff(hojeZ, reap);
-    const animal = animais.find(a => a._id === v.id_animal);
+    const texto =
+      dias<0
+        ? `${CFG.vacinas.status?.atrasada||"Atrasada"} ${Math.abs(dias)} dias`
+        : `${CFG.vacinas.status?.pendente||"Reaplicar"} em ${dias} dias`;
 
-    encontrouVacinas = true;
-
-    let classe = "pendente";
-    let texto = "";
-
-    if (dias < 0) {
-      classe = "atrasada";
-      texto = (CFG.vacinas.textos?.atrasada || "Dose atrasada há {{dias}} dias")
-        .replace("{{dias}}", Math.abs(dias));
-    } else {
-      texto = (CFG.vacinas.textos?.pendente || "Reaplicar em {{dias}} dias")
-        .replace("{{dias}}", dias);
-    }
-
-    conteudo.innerHTML += `
-      <div class="card ${classe}">
-        ${
-          animal
-            ? `<p><strong>🐄 ${animal.nome.toUpperCase()}</strong></p>`
-            : ""
-        }
-
-        💉 ${v.nome_vacina.toUpperCase()}
-
-        <p class="dias">
-          ${texto}
-        </p>
-
-        <p class="data">
-          📅 ${reap.toLocaleDateString("pt-BR")}
-        </p>
-      </div>
-    `;
+    conteudo.innerHTML+=`
+      <div class="card ${dias<0?"atrasada":"pendente"}">
+        ${animal?`<strong>🐄 ${animal.nome.toUpperCase()}</strong>`:""}
+        <p>💉 ${v.nome_vacina.toUpperCase()}</p>
+        <p class="dias">${texto}</p>
+        <p class="data">📅 ${reap.toLocaleDateString("pt-BR")}</p>
+      </div>`;
   });
-
-if (!encontrouVacinas) {
-  conteudo.innerHTML += `
-    <div class="card ok">
-      <strong>💉 Nenhuma vacina pendente</strong>
-      <p class="data">Todas as vacinas estão em dia</p>
-    </div>
-  `;
 }
 
 (async()=>{
