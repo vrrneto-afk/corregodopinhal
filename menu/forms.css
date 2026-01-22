@@ -134,7 +134,7 @@ form,
 .radio-option span,
 .checkbox-option span{
   display:inline-block !important;
-  white-space:normal !important;
+  white-space:nowrap !important;
   text-align:left !important;
   line-height:1.25;
 }
