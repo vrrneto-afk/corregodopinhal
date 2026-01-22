@@ -1,308 +1,389 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Sítio Córrego do Pinhal</title>
+Index não tá funcionando
 
-<link rel="manifest" href="../manifest.json">
-<meta name="theme-color" content="#7b3f2a">
-
-<!-- MENU GLOBAL -->
-<link rel="stylesheet" href="../menu/menu.css">
-
-<!-- FIREBASE -->
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-
-<script>
-firebase.initializeApp({
-  apiKey: "AIzaSyCW-CuFDrOLO-dteckl_GrPTocmyS-IrzY",
-  authDomain: "sitio-corrego-do-pinhal.firebaseapp.com",
-  projectId: "sitio-corrego-do-pinhal"
-});
-</script>
-
-<script>
-window.PERMISSAO_PAGINA = { area:"app", chave:"inicio" };
-</script>
-
-<script src="../login/auth-guard.js"></script>
-
-<style>
-:root{
-  --marrom:#7b3f2a;
-  --bege:#f6efe7;
-  --verde:#2f6b2f;
-  --vermelho:#c0392b;
-  --amarelo:#e0a800;
-  --laranja:#e67e22;
-  --cinza:#666;
-  --logo:#D0B485;
-}
-*{box-sizing:border-box;font-family:'Inter',system-ui,Arial}
-body{margin:0;background:var(--bege);color:#333}
-
-header{
-  background:var(--logo);
-  padding:15px;
-  text-align:center;
-}
-header img{max-width:260px;width:100%}
-
-.container{max-width:900px;margin:20px auto;padding:0 15px}
-h2{margin:28px 0 12px;color:var(--marrom)}
-
-.clima-bar{
-  background:#fff;
-  padding:10px;
-  border-radius:10px;
-  text-align:center;
-  box-shadow:0 1px 4px rgba(0,0,0,.08);
-  cursor:pointer;
-}
-
-.alerta-rapido{
-  display:block;
-  margin:16px auto;
-  padding:12px;
-  border-radius:12px;
-  font-weight:700;
-  text-align:center;
-}
-.alerta-ok{background:#eaf6ec;color:var(--verde)}
-.alerta-on{background:#fdecea;color:var(--vermelho)}
-
-.card{
-  background:#fff;
-  padding:15px;
-  margin-bottom:12px;
-  border-left:6px solid var(--verde);
-  border-radius:12px;
-}
-.card.ok{border-color:var(--verde)}
-.card.atencao{border-color:var(--amarelo)}
-.card.alerta{border-color:var(--laranja)}
-.card.urgente,
-.card.atrasada{border-color:var(--vermelho)}
-.card.pendente{border-color:var(--amarelo)}
-
-.card strong{font-size:17px;font-weight:800}
-.card .dias{font-size:18px;font-weight:800;margin:6px 0}
-.card .data{font-size:13px;color:var(--cinza)}
-.card .msg{font-weight:700;margin-top:4px}
-
-#modalClima{
-  position:fixed;
-  inset:0;
-  background:rgba(0,0,0,.45);
-  display:none;
-  align-items:center;
-  justify-content:center;
-  z-index:1000;
-}
-#modalClima .box{
-  background:#fff;
-  width:90%;
-  max-width:420px;
-  border-radius:16px;
-  overflow:hidden;
-}
-</style>
-</head>
-
-<body>
-
-<header>
-  <img src="../logo.png">
-</header>
-
-<div id="menu"></div>
-
-<div class="container">
-
-  <div id="clima" class="clima-bar">⏳ Carregando clima...</div>
-
-  <a id="alertaRapido" href="../app/lembretes.html" class="alerta-rapido alerta-ok">
-    🔔 Nenhum alerta no momento
-  </a>
-
-  <div id="conteudo"></div>
-
-</div>
-
-<div id="modalClima">
-  <div class="box">
-    <iframe src="../app/tempo.html" style="width:100%;height:460px;border:none"></iframe>
-  </div>
-</div>
-
-<script>
-const db = firebase.firestore();
-
-const menu = document.getElementById("menu");
-const clima = document.getElementById("clima");
-const conteudo = document.getElementById("conteudo");
-const alertaRapido = document.getElementById("alertaRapido");
-const modalClima = document.getElementById("modalClima");
-
-/* MENU */
-fetch("../menu/menu.html")
-  .then(r => r.text())
-  .then(h => {
-    menu.innerHTML = h;
-    document.querySelectorAll("#menu a").forEach(a=>{
-      if(a.getAttribute("href")==="../app/index.html"){
-        a.classList.add("ativo");
-      }
-    });
-    const s = document.createElement("script");
-    s.src = "../menu/menu-permissoes.js";
-    document.body.appendChild(s);
-  });
-
-clima.onclick = () => modalClima.style.display = "flex";
-modalClima.onclick = e => { if(e.target === modalClima) modalClima.style.display="none"; };
-
-/* DATAS */
-const hoje = new Date();
-const hojeZ = new Date(hoje.getFullYear(), hoje.getMonth(), hoje.getDate());
-
-function parse(d){
-  if(!d) return null;
-  if(d.seconds) return new Date(d.seconds * 1000);
-  if(typeof d === "string"){
-    const p = d.split("-");
-    if(p.length !== 3) return null;
-    return new Date(p[0], p[1]-1, p[2]);
+<!DOCTYPE html>  <html lang="pt-BR">  
+<head>  
+<meta charset="UTF-8" />  
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>  
+<title>Sítio Córrego do Pinhal</title>  <link rel="manifest" href="../manifest.json">  
+<meta name="theme-color" content="#7b3f2a">  <!-- MENU GLOBAL -->  <link rel="stylesheet" href="../menu/menu.css">  <!-- FIREBASE -->  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>  <script>  
+firebase.initializeApp({  
+  apiKey: "AIzaSyCW-CuFDrOLO-dteckl_GrPTocmyS-IrzY",  
+  authDomain: "sitio-corrego-do-pinhal.firebaseapp.com",  
+  projectId: "sitio-corrego-do-pinhal"  
+});  
+</script>  <script>  
+window.PERMISSAO_PAGINA = { area:"app", chave:"inicio" };  
+</script>  <script src="../login/auth-guard.js"></script>  <style>  
+:root{  
+  --marrom:#7b3f2a;  
+  --bege:#f6efe7;  
+  --verde:#2f6b2f;  
+  --vermelho:#c0392b;  
+  --amarelo:#e0a800;  
+  --laranja:#e67e22;  
+  --cinza:#666;  
+  --logo:#D0B485;  
+}  
+*{box-sizing:border-box;font-family:'Inter',system-ui,-apple-system,Arial}  
+body{margin:0;background:var(--bege);color:#333}  
+  
+header{  
+  background:var(--logo);  
+  padding:15px 10px;  
+  text-align:center;  
+}  
+header img{max-width:260px;width:100%}  
+  
+.container{max-width:900px;margin:20px auto;padding:0 15px}  
+h2{margin:28px 0 12px;color:var(--marrom)}  
+  
+.clima-bar{  
+  background:#fff;  
+  margin:12px auto 16px;  
+  padding:10px;  
+  border-radius:10px;  
+  box-shadow:0 1px 4px rgba(0,0,0,.08);  
+  text-align:center;  
+  cursor:pointer;  
+}  
+  
+.alerta-rapido{  
+  display:block;  
+  margin:0 auto 20px;  
+  padding:12px;  
+  border-radius:12px;  
+  font-weight:700;  
+  text-align:center;  
+}  
+.alerta-ok{background:#eaf6ec;color:var(--verde)}  
+.alerta-on{background:#fdecea;color:var(--vermelho)}  
+  
+.card{  
+  background:#fff;  
+  padding:15px;  
+  margin-bottom:12px;  
+  border-left:6px solid var(--verde);  
+  border-radius:12px;  
+}  
+.card.ok{border-color:var(--verde)}  
+.card.atencao{border-color:var(--amarelo)}  
+.card.alerta{border-color:var(--laranja)}  
+.card.urgente,  
+.card.atrasada{border-color:var(--vermelho)}  
+.card.pendente{border-color:var(--amarelo)}  
+  
+.card strong{font-size:17px;font-weight:800}  
+.card .dias{font-size:18px;font-weight:800;margin:6px 0}  
+.card .data{font-size:13px;color:var(--cinza)}  
+.card .msg{font-weight:700;margin-top:4px}  
+  
+#modalClima{  
+  position:fixed;  
+  inset:0;  
+  background:rgba(0,0,0,.45);  
+  display:none;  
+  align-items:center;  
+  justify-content:center;  
+  z-index:1000;  
+}  
+#modalClima .box{  
+  background:#fff;  
+  width:90%;  
+  max-width:420px;  
+  border-radius:16px;  
+  overflow:hidden;  
+}  
+</style>  </head>  <body>  <header>  
+  <img src="../logo.png">  
+</header>  <div id="menu"></div>  <div class="container">  
+  <div id="clima" class="clima-bar">⏳ Carregando clima...</div>    <a id="alertaRapido" href="../app/lembretes.html" class="alerta-rapido alerta-ok">  
+    🔔 Nenhum alerta no momento  
+  </a>    <div id="conteudo"></div>  
+</div>  <div id="modalClima">  
+  <div class="box">  
+    <iframe src="../app/tempo.html" style="width:100%;height:460px;border:none"></iframe>  
+  </div>  
+</div>  <script>  
+const db = firebase.firestore();  
+  
+const menu = document.getElementById("menu");  
+const clima = document.getElementById("clima");  
+const conteudo = document.getElementById("conteudo");  
+const alertaRapido = document.getElementById("alertaRapido");  
+const modalClima = document.getElementById("modalClima");  
+  
+/* MENU – PADRÃO DEFINITIVO */  
+fetch("../menu/menu.html")  
+  .then(r => r.text())  
+  .then(h => {  
+    menu.innerHTML = h;  
+  
+    document.querySelectorAll("#menu a").forEach(a=>{  
+      if(a.getAttribute("href")==="../app/index.html"){  
+        a.classList.add("ativo");  
+      }  
+    });  
+  
+    const s = document.createElement("script");  
+    s.src = "../menu/menu-permissoes.js";  
+    document.body.appendChild(s);  
+  });  
+  
+clima.onclick = () => modalClima.style.display = "flex";  
+  
+modalClima.onclick = e => {  
+  if (e.target === modalClima) {  
+    modalClima.style.display = "none";  
+  }  
+};  
+  
+/* DATAS */  
+const hoje = new Date();  
+const hojeZ = new Date(  
+  hoje.getFullYear(),  
+  hoje.getMonth(),  
+  hoje.getDate()  
+);  
+  
+function parse(d) {  
+  if (!d) return null;  
+  if (d.seconds) return new Date(d.seconds * 1000);  
+  
+  const p = d.split("-");  
+  return new Date(p[0], p[1] - 1, p[2]);  
+}  
+  
+function addM(d, m) {  
+  const x = new Date(d);  
+  x.setMonth(x.getMonth() + m);  
+  return x;  
+}  
+  
+function diff(a, b) {  
+  return Math.floor((b - a) / 86400000);  
+}  
+  
+/* CONFIG */  
+let CFG = {};  
+  
+async function loadConfigs() {  
+  const c1 = await db.collection("config").doc("clima").get();  
+  const c2 = await db.collection("config").doc("vacas").get();  
+  const c3 = await db.collection("config").doc("vacinas").get();  
+  
+  CFG.clima   = c1.exists ? c1.data() : {};  
+  CFG.vacas   = c2.exists ? c2.data() : {};  
+  CFG.vacinas = c3.exists ? c3.data() : {};  
+}  
+  
+/* CLIMA */  
+async function loadClima() {  
+  if (!CFG.clima.latitude) {  
+    clima.innerText = "☁️ Clima indisponível";  
+    return;  
+  }  
+  
+  const c = CFG.clima;  
+  const url = `https://api.open-meteo.com/v1/forecast?latitude=${c.latitude}&longitude=${c.longitude}&current_weather=true&hourly=precipitation_probability&timezone=${c.timezone}`;  
+  const d = await (await fetch(url)).json();  
+  
+  let texto = c.textos?.sem_chuva || "Sem previsão de chuva.";  
+  const agora = new Date();  
+  
+  for (let i = 0; i < d.hourly.time.length; i++) {  
+    const h = new Date(d.hourly.time[i]);  
+    const min = (h - agora) / 60000;  
+  
+    if (  
+      min > 0 &&  
+      min <= c.janela_previsao_minutos &&  
+      d.hourly.precipitation_probability[i] >= c.limite_chuva_percentual  
+    ) {  
+      texto = `${c.textos?.chuva_em || "Chuva em"} ${Math.round(min)} minutos.`;  
+      break;  
+    }  
+  }  
+  
+  clima.innerHTML = `☀️ ${c.cidade || ""} • ${Math.round(  
+    d.current_weather.temperature  
+  )}°C<br>${texto}`;  
+}  
+  
+/* ALERTAS */  
+async function loadAlertas() {  
+  const s = await db.collection("lembretes").get();  
+  
+  alertaRapido.className = s.size  
+    ? "alerta-rapido alerta-on"  
+    : "alerta-rapido alerta-ok";  
+  
+  alertaRapido.innerText = s.size  
+    ? `🔔 ${s.size} itens pendentes para comprar`  
+    : "🔔 Nenhum alerta no momento";  
+}  
+  
+/* HELPERS – MESMA LÓGICA DA TELA VACAS */  
+function regraPrenhez(dias) {  
+  if (dias <= 0) return { classe: "urgente" };  
+  
+  return (  
+    (CFG.vacas.prenhez_intervalos || [])  
+      .filter(  
+        r =>  
+          r.ativa !== false &&  
+          dias >= r.dias_de &&  
+          dias <= r.dias_ate  
+      )  
+      .sort((a, b) => a.dias_de - b.dias_de)[0] || { classe: "ok" }  
+  );  
+}  
+  
+function mensagemPrenhez(dias) {  
+  const t = CFG.vacas.prenhez_textos || {};  
+  
+  if (dias === 0 && t.parto_hoje) return t.parto_hoje;  
+  if (dias < 0 && t.parto_atrasado)  
+    return t.parto_atrasado.replace("{{dias}}", Math.abs(dias));  
+  if (dias > 0 && t.antes_parto)  
+    return t.antes_parto.replace("{{dias}}", dias);  
+  
+  return "";  
+}  
+  
+/* INDEX */  
+async function loadIndex() {  
+  conteudo.innerHTML = "";  
+  
+  const animais = (await db.collection("animais").get()).docs.map(d => ({  
+    _id: d.id,  
+    ...d.data()  
+  }));  
+  
+  const eventos = (await db.collection("eventos").get()).docs.map(d =>  
+    d.data()  
+  );  
+  
+  const vacinas = (await db.collection("vacinas").get()).docs.map(d =>  
+    d.data()  
+  );  
+  
+  /* VACAS A CRIAR */  
+  conteudo.innerHTML += "<h2>🐄 Vacas a Criar</h2>";  
+  
+  eventos  
+    .filter(e => e.tipo_evento === "cobertura")  
+    .map(c => {  
+      const prev = addM(  
+        parse(c.data_evento),  
+        Number(CFG.vacas.gestacao_meses || 9)  
+      );  
+  
+      const dias = diff(hojeZ, prev);  
+  
+      return {  
+        animal: animais.find(a => a._id === c.id_animal),  
+        prev,  
+        dias  
+      };  
+    })  
+    .filter(v => v.animal)  
+    .sort((a, b) => a.dias - b.dias)  
+    .forEach(v => {  
+      const regra = regraPrenhez(v.dias);  
+      const msg = mensagemPrenhez(v.dias);  
+  
+      conteudo.innerHTML += `  
+        <div class="card ${regra.classe}">  
+          <strong>🐄 ${v.animal.nome.toUpperCase()}</strong>  
+  
+          ${  
+            msg  
+              ? `<p class="msg">${msg}</p>`  
+              : `<p class="dias">⏳ ${  
+                  v.dias >= 0  
+                    ? `Faltam ${v.dias} dias`  
+                    : `Atrasado ${Math.abs(v.dias)} dias`  
+                }</p>`  
+          }  
+  
+          <p class="data">  
+            🪧 Parto previsto para:  
+            ${v.prev.toLocaleDateString("pt-BR")}  
+          </p>  
+        </div>  
+      `;  
+    });  
+  
+  /* VACINAS */  
+  conteudo.innerHTML += "<h2>💉 Vacinas pendentes</h2>";  
+  
+  vacinas  
+    .filter(v => v.status !== CFG.vacinas.status?.finalizada)  
+    .forEach(v => {  
+      const animal = animais.find(a => a._id === v.id_animal);  
+      const reap = parse(v.data_aplicacao);  
+  
+      reap.setDate(  
+        reap.getDate() + Number(v.repeticao_dias || 0)  
+      );  
+  
+      const dias = diff(hojeZ, reap);  
+  
+      conteudo.innerHTML += `  
+        <div class="card ${dias < 0 ? "atrasada" : "pendente"}">  
+          ${  
+            animal  
+              ? `<p><strong>🐄 ${animal.nome.toUpperCase()}</strong></p>`  
+              : ""  
+          }  
+  
+          💉 ${v.nome_vacina.toUpperCase()}  
+  
+          <p class="dias">  
+            ${  
+              dias < 0  
+                ? `Atrasada há ${Math.abs(dias)} dias`  
+                : `Pendente em ${dias} dias`  
+            }  
+          </p>  
+  
+          <p class="data">  
+            📅 ${reap.toLocaleDateString("pt-BR")}  
+          </p>  
+        </div>  
+      `;  
+    });  
+}  
+  
+(async () => {
+  try {
+    await loadConfigs();
+  } catch (e) {
+    console.error("Erro ao carregar configs:", e);
   }
-  return null;
-}
 
-function addM(d,m){
-  if(!d || isNaN(d)) return null;
-  const x = new Date(d);
-  x.setMonth(x.getMonth()+m);
-  return x;
-}
-
-function diff(a,b){
-  if(!a || !b || isNaN(b)) return null;
-  return Math.floor((b - a) / 86400000);
-}
-
-/* CONFIG */
-let CFG = {};
-
-async function loadConfigs(){
-  const c1 = await db.collection("config").doc("clima").get();
-  const c2 = await db.collection("config").doc("vacas").get();
-  const c3 = await db.collection("config").doc("vacinas").get();
-
-  CFG.clima = c1.exists ? c1.data() : {};
-  CFG.vacas = c2.exists ? c2.data() : {};
-  CFG.vacinas = c3.exists ? c3.data() : {};
-}
-
-/* CLIMA */
-async function loadClima(){
-  if(!CFG.clima.latitude){
+  try {
+    await loadClima();
+  } catch (e) {
+    console.error("Erro ao carregar clima:", e);
     clima.innerText = "☁️ Clima indisponível";
-    return;
   }
 
-  const c = CFG.clima;
-  const url = `https://api.open-meteo.com/v1/forecast?latitude=${c.latitude}&longitude=${c.longitude}&current_weather=true&hourly=precipitation_probability&timezone=${c.timezone}`;
-  const d = await (await fetch(url)).json();
-
-  let texto = c.textos?.sem_chuva || "Sem previsão de chuva.";
-  const agora = new Date();
-
-  for(let i=0;i<d.hourly.time.length;i++){
-    const h = new Date(d.hourly.time[i]);
-    const min = (h - agora)/60000;
-    if(min>0 && min<=c.janela_previsao_minutos && d.hourly.precipitation_probability[i]>=c.limite_chuva_percentual){
-      texto = `${c.textos?.chuva_em || "Chuva em"} ${Math.round(min)} minutos.`;
-      break;
-    }
+  try {
+    await loadAlertas();
+  } catch (e) {
+    console.error("Erro ao carregar alertas:", e);
   }
 
-  clima.innerHTML = `☀️ ${c.cidade || ""} • ${Math.round(d.current_weather.temperature)}°C<br>${texto}`;
-}
-
-/* ALERTAS */
-async function loadAlertas(){
-  const s = await db.collection("lembretes").get();
-  alertaRapido.className = s.size ? "alerta-rapido alerta-on" : "alerta-rapido alerta-ok";
-  alertaRapido.innerText = s.size ? `🔔 ${s.size} itens pendentes` : "🔔 Nenhum alerta no momento";
-}
-
-/* INDEX */
-async function loadIndex(){
-  try{
-    conteudo.innerHTML = "";
-
-    const animais = (await db.collection("animais").get()).docs.map(d=>({_id:d.id,...d.data()}));
-    const eventos = (await db.collection("eventos").get()).docs.map(d=>d.data());
-    const vacinas = (await db.collection("vacinas").get()).docs.map(d=>d.data());
-
-    conteudo.innerHTML += "<h2>🐄 Vacas a Criar</h2>";
-
-    eventos
-      .filter(e=>e.tipo_evento==="cobertura")
-      .map(c=>{
-        const base = parse(c.data_evento);
-        if(!base) return null;
-        const prev = addM(base, Number(CFG.vacas.gestacao_meses||9));
-        const dias = diff(hojeZ, prev);
-        if(dias===null) return null;
-        return { animal: animais.find(a=>a._id===c.id_animal), prev, dias };
-      })
-      .filter(v=>v && v.animal)
-      .sort((a,b)=>a.dias-b.dias)
-      .forEach(v=>{
-        conteudo.innerHTML += `
-          <div class="card ${v.dias<0?"atrasada":"ok"}">
-            <strong>🐄 ${v.animal.nome.toUpperCase()}</strong>
-            <p class="dias">${v.dias<0?`Atrasado ${Math.abs(v.dias)} dias`:`Faltam ${v.dias} dias`}</p>
-            <p class="data">📅 ${v.prev.toLocaleDateString("pt-BR")}</p>
-          </div>`;
-      });
-
-    conteudo.innerHTML += "<h2>💉 Vacinas pendentes</h2>";
-
-    vacinas.forEach(v=>{
-      const reap = parse(v.data_aplicacao);
-      if(!reap) return;
-      reap.setDate(reap.getDate()+Number(v.repeticao_dias||0));
-      const dias = diff(hojeZ,reap);
-      conteudo.innerHTML += `
-        <div class="card ${dias<0?"atrasada":"pendente"}">
-          💉 ${v.nome_vacina}
-          <p class="dias">${dias<0?`Atrasada ${Math.abs(dias)} dias`:`Pendente em ${dias} dias`}</p>
-          <p class="data">📅 ${reap.toLocaleDateString("pt-BR")}</p>
-        </div>`;
-    });
-
-  }catch(e){
-    console.error(e);
-    conteudo.innerHTML = `
-      <div class="card alerta">
-        ⚠️ Erro ao carregar painel inicial.
-      </div>`;
+  try {
+    await loadIndex();
+  } catch (e) {
+    console.error("Erro ao carregar index:", e);
+    conteudo.innerHTML =
+      "<p style='text-align:center;font-weight:700'>Erro ao carregar dados</p>";
   }
-}
-
-(async()=>{
-  await loadConfigs();
-  await loadClima();
-  await loadAlertas();
-  await loadIndex();
 })();
-</script>
 
-<script src="../login/logout.js"></script>
-
-</body>
+</script>  
+<script src="../login/logout.js"></script>  </body>  
 </html>
