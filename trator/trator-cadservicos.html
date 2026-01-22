@@ -159,9 +159,15 @@ hr{margin:25px 0;}
 </select>
 
 <label>Forma de cobrança</label>
+
 <div class="radio-group">
-  <label><input type="radio" name="cobranca" value="hora" checked> Por hora</label>
-  <label><input type="radio" name="cobranca" value="fechado"> Valor fechado</label>
+  <label class="radio-item">
+    <input type="radio" name="cobranca" value="hora" checked><span>Por hora</span>
+  </label>
+
+  <label class="radio-item">
+    <input type="radio" name="cobranca" value="fechado"><span>Valor fechado</span>
+  </label>
 </div>
 
 <div id="porHora">
