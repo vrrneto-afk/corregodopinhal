@@ -7,7 +7,6 @@
 
 <link rel="manifest" href="../manifest.json">
 <meta name="theme-color" content="#7b3f2a">
-
 <link rel="stylesheet" href="../menu/menu.css">
 
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
@@ -25,10 +24,7 @@ if (!firebase.apps.length) {
 </script>
 
 <script>
-window.PERMISSAO_PAGINA = {
-  area: "trator",
-  chave: "trator-caddespesas"
-};
+window.PERMISSAO_PAGINA = { area:"trator", chave:"trator-caddespesas" };
 </script>
 
 <script src="../login/auth-guard.js"></script>
@@ -38,245 +34,232 @@ window.PERMISSAO_PAGINA = {
   --marrom:#7b3f2a;
   --bege:#f6efe7;
   --logo:#D0B485;
-  --erro:#c0392b;
   --ok:#2f6b2f;
+  --erro:#c0392b;
 }
-
 *{box-sizing:border-box;font-family:Inter,system-ui,Arial;}
-body{margin:0;background:var(--bege);color:#333;}
-
+body{margin:0;background:var(--bege);}
 header{background:var(--logo);padding:15px;text-align:center;}
 header img{max-width:260px;width:100%;}
-
 .container{max-width:900px;margin:20px auto;padding:0 15px;}
-
-.card{background:#fff;border-radius:14px;padding:16px;box-shadow:0 2px 6px rgba(0,0,0,.06);margin-bottom:20px;}
-
-label{display:block;font-weight:600;margin-top:12px;}
-
-input,select{
-  width:100%;padding:10px;border-radius:10px;
-  border:1px solid #ccc;margin-top:4px;font-size:15px;
-}
-
-button{
-  margin-top:16px;width:100%;padding:12px;
-  border-radius:12px;font-size:16px;font-weight:700;
-}
-
-.btn-primary{
-  border:none;background:var(--marrom);color:#fff;
-}
-
-.btn-outline{
-  background:#fff;color:var(--marrom);
-  border:2px solid var(--marrom);
-}
-
-.msg{margin-top:12px;font-weight:700;}
+.card{background:#fff;border-radius:14px;padding:16px;margin-bottom:20px;}
+label{font-weight:600;display:block;margin-top:12px;}
+input,select{width:100%;padding:10px;border-radius:10px;border:1px solid #ccc;margin-top:4px;}
+button{width:100%;padding:12px;border-radius:12px;font-weight:700;margin-top:16px;}
+.btn-outline{background:#fff;border:2px solid var(--marrom);color:var(--marrom);}
+.btn-primary{background:var(--marrom);border:none;color:#fff;}
+.btn-danger{background:var(--erro);border:none;color:#fff;}
+.msg{margin-top:10px;font-weight:700;}
 .msg.ok{color:var(--ok);}
 .msg.erro{color:var(--erro);}
-
-.btn-delete{
-  background:var(--erro);color:#fff;border:none;
-}
-
-.footer-space{height:60px;}
 </style>
 </head>
 
 <body style="display:none">
 
-<header>
-  <img src="../logo.png" alt="Sítio Córrego do Pinhal">
-</header>
-
+<header><img src="../logo.png"></header>
 <div id="menu"></div>
 
 <div class="container">
 
-<!-- 🔙 BOTÃO VOLTAR (PADRÃO VISUAL CORRETO) -->
 <button class="btn-outline" onclick="location.href='../trator/trator-inicio.html'">
-  ← Voltar para Trator
+← Voltar para Trator
 </button>
 
 <h2>🧾 Cadastro de Despesas</h2>
 
 <div class="card">
 
-  <label>Data da despesa</label>
-  <input type="date" id="data">
+<label>Data da despesa</label>
+<input type="date" id="dataDespesa">
 
-  <label>Tipo da despesa</label>
-  <input type="text" id="tipo">
+<label>Tipo da despesa</label>
+<select id="tipoDespesa">
+  <option value="">Selecione</option>
+  <option>PEÇAS</option>
+  <option>COMBUSTIVEL</option>
+  <option>ÓLEO LUBRIFICANTE</option>
+  <option>OUTROS</option>
+</select>
 
-  <label>Descrição (opcional)</label>
-  <input type="text" id="descricao">
+<label>Nome da despesa</label>
+<input type="text" id="nomeDespesa">
 
-  <label>Valor</label>
-  <input type="text" id="valor">
+<label>Fornecedor</label>
+<input type="text" id="fornecedor">
 
-  <button id="salvar" class="btn-primary">💾 Salvar Despesa</button>
-  <div id="msg" class="msg"></div>
+<label>Situação</label>
+<select id="situacao">
+  <option value="PAGA">PAGA</option>
+  <option value="PENDENTE">PENDENTE</option>
+</select>
+
+<div id="boxVencimento" style="display:none">
+  <label>Data de vencimento</label>
+  <input type="date" id="dataVencimento">
+</div>
+
+<label>Valor da despesa</label>
+<input type="text" id="valor">
+
+<div id="msg" class="msg"></div>
 
 </div>
 
 <h2>📊 Despesas do Mês</h2>
 
 <div style="display:flex;gap:10px;margin-bottom:10px">
-  <select id="mes"></select>
-  <select id="ano"></select>
+<select id="mes"></select>
+<select id="ano"></select>
 </div>
 
 <div class="card">
 <table width="100%">
 <thead>
 <tr>
-  <th>Data</th>
-  <th>Tipo</th>
-  <th>Descrição</th>
-  <th>Valor</th>
-  <th>Ações</th>
+<th>Data despesa</th>
+<th>Data vencimento</th>
+<th>Despesa</th>
+<th>Fornecedor</th>
+<th>Ações</th>
 </tr>
 </thead>
 <tbody id="lista"></tbody>
-<tfoot>
-<tr>
-  <th colspan="3">Total do mês</th>
-  <th id="totalMes">R$ 0,00</th>
-  <th></th>
-</tr>
-</tfoot>
 </table>
 </div>
 
-<div class="footer-space"></div>
+<!-- BOTÕES FINAIS -->
+<div class="card">
+
+<button id="btnExcluir" class="btn-danger" style="display:none">🗑 Excluir Despesa</button>
+
+<button id="salvar" class="btn-primary">💾 Salvar Despesa</button>
 
 </div>
 
-<!-- MENU -->
+</div>
+
 <script>
-fetch("../menu/menu.html")
-  .then(r=>r.text())
-  .then(html=>{
-    document.getElementById("menu").innerHTML=html;
-
-    document.querySelectorAll("#menu a").forEach(a=>{
-      if(a.getAttribute("href")==="../trator/trator-inicio.html"){
-        a.classList.add("ativo");
-      }
-    });
-
-    const s=document.createElement("script");
-    s.src="../menu/menu-permissoes.js";
-    document.body.appendChild(s);
-
-    document.body.style.display="block";
+fetch("../menu/menu.html").then(r=>r.text()).then(html=>{
+  menu.innerHTML=html;
+  document.querySelectorAll("#menu a").forEach(a=>{
+    if(a.getAttribute("href")==="../trator/trator-inicio.html") a.classList.add("ativo");
   });
+  const s=document.createElement("script");
+  s.src="../menu/menu-permissoes.js";
+  document.body.appendChild(s);
+  document.body.style.display="block";
+});
 </script>
 
 <script>
 const db=firebase.firestore();
 const auth=firebase.auth();
-
 let editId=null;
 let isAdmin=false;
 
-auth.onAuthStateChanged(async user=>{
-  if(user){
-    const u=await db.collection("usuarios").doc(user.uid).get();
-    isAdmin = u.exists && u.data().papel==="admin";
-    carregarTabela();
-  }
-});
-
-const meses=["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
-meses.forEach((m,i)=>mes.innerHTML+=`<option value="${i}">${m}</option>`);
-
-const anoAtual=new Date().getFullYear();
-for(let a=anoAtual-3;a<=anoAtual+5;a++) ano.innerHTML+=`<option>${a}</option>`;
-mes.value=new Date().getMonth();
-ano.value=anoAtual;
+situacao.onchange=()=>boxVencimento.style.display=
+  situacao.value==="PENDENTE"?"block":"none";
 
 function moeda(v){return "R$ "+Number(v).toFixed(2).replace(".",",");}
-function limparMoeda(v){return Number(v.replace(/[^\d]/g,""))/100;}
+function limpar(v){return Number(v.replace(/[^\d]/g,""))/100;}
+valor.oninput=()=>valor.value=moeda(limpar(valor.value));
 
-valor.oninput=()=>valor.value=moeda(limparMoeda(valor.value));
+auth.onAuthStateChanged(async u=>{
+  if(u){
+    const d=await db.collection("usuarios").doc(u.uid).get();
+    isAdmin=d.exists&&d.data().papel==="admin";
+    if(isAdmin) btnExcluir.style.display="block";
+    carregar();
+  }
+});
 
 salvar.onclick=async()=>{
   try{
     const user=auth.currentUser;
-    if(!user) throw "Usuário não autenticado";
-
-    const v=limparMoeda(valor.value);
-    if(v<=0) throw "Valor inválido";
-
     const dados={
-      data:firebase.firestore.Timestamp.fromDate(new Date(data.value)),
-      tipo:tipo.value,
-      descricao:descricao.value,
-      valor_total:v,
+      data_despesa:firebase.firestore.Timestamp.fromDate(new Date(dataDespesa.value)),
+      tipo_despesa:tipoDespesa.value,
+      nome_despesa:nomeDespesa.value,
+      fornecedor:fornecedor.value,
+      situacao:situacao.value,
+      data_vencimento:situacao.value==="PENDENTE"
+        ?firebase.firestore.Timestamp.fromDate(new Date(dataVencimento.value))
+        :null,
+      valor_despesa:limpar(valor.value),
       criado_por:user.uid
     };
 
-    if(editId){
-      await db.collection("trator_despesas").doc(editId).update(dados);
-      msg.textContent="Despesa editada com sucesso";
-    }else{
-      await db.collection("trator_despesas").add(dados);
-      msg.textContent="Despesa salva com sucesso";
-    }
+    editId
+      ?await db.collection("trator_despesas").doc(editId).update(dados)
+      :await db.collection("trator_despesas").add(dados);
 
+    msg.textContent=editId?"Despesa editada com sucesso":"Despesa salva com sucesso";
     msg.className="msg ok";
     editId=null;
-    carregarTabela();
+    carregar();
 
-  }catch(e){
-    msg.textContent=e;
-    msg.className="msg erro";
-  }
+  }catch(e){msg.textContent=e;msg.className="msg erro";}
 };
 
-function excluir(id){
-  if(!confirm("Deseja excluir esta despesa?")) return;
-  db.collection("trator_despesas").doc(id).delete().then(()=>{
+btnExcluir.onclick=()=>{
+  if(!confirm("Excluir despesa?"))return;
+  db.collection("trator_despesas").doc(editId).delete().then(()=>{
     msg.textContent="Despesa excluída com sucesso";
     msg.className="msg ok";
-    carregarTabela();
+    editId=null;
+    carregar();
   });
-}
+};
 
-function carregarTabela(){
-  lista.innerHTML="";let total=0;
+function carregar(){
+  lista.innerHTML="";
   const ini=new Date(ano.value,mes.value,1);
   const fim=new Date(ano.value,Number(mes.value)+1,0,23,59,59);
 
-  db.collection("trator_despesas")
-    .where("data",">=",ini)
-    .where("data","<=",fim)
-    .get()
-    .then(s=>{
-      s.forEach(d=>{
-        const v=d.data();total+=v.valor_total;
-        lista.innerHTML+=`
-        <tr>
-          <td>${v.data.toDate().toLocaleDateString("pt-BR")}</td>
-          <td>${v.tipo}</td>
-          <td>${v.descricao||""}</td>
-          <td>${moeda(v.valor_total)}</td>
-          <td>
-            ${isAdmin?`<button class="btn-delete" onclick="excluir('${d.id}')">Excluir</button>`:""}
-          </td>
-        </tr>`;
-      });
-      totalMes.textContent=moeda(total);
+  db.collection("trator_despesas").get().then(s=>{
+    s.forEach(d=>{
+      const v=d.data();
+      const dataRef=v.situacao==="PENDENTE"?v.data_vencimento:v.data_despesa;
+      if(!dataRef) return;
+      const dt=dataRef.toDate();
+      if(dt<ini||dt>fim) return;
+
+      lista.innerHTML+=`
+      <tr onclick="editar('${d.id}')">
+        <td>${v.data_despesa?.toDate().toLocaleDateString("pt-BR")||""}</td>
+        <td>${v.data_vencimento?.toDate().toLocaleDateString("pt-BR")||""}</td>
+        <td>${v.nome_despesa}</td>
+        <td>${v.fornecedor}</td>
+        <td>Editar</td>
+      </tr>`;
     });
+  });
 }
 
-mes.onchange=ano.onchange=carregarTabela;
+function editar(id){
+  db.collection("trator_despesas").doc(id).get().then(d=>{
+    const v=d.data();editId=id;
+    dataDespesa.value=v.data_despesa.toDate().toISOString().split("T")[0];
+    tipoDespesa.value=v.tipo_despesa;
+    nomeDespesa.value=v.nome_despesa;
+    fornecedor.value=v.fornecedor;
+    situacao.value=v.situacao;
+    boxVencimento.style.display=v.situacao==="PENDENTE"?"block":"none";
+    if(v.data_vencimento)
+      dataVencimento.value=v.data_vencimento.toDate().toISOString().split("T")[0];
+    valor.value=moeda(v.valor_despesa);
+  });
+}
+
+const meses=["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
+meses.forEach((m,i)=>mes.innerHTML+=`<option value="${i}">${m}</option>`);
+const anoAtual=new Date().getFullYear();
+for(let a=anoAtual-3;a<=anoAtual+10;a++) ano.innerHTML+=`<option>${a}</option>`;
+mes.value=new Date().getMonth();ano.value=anoAtual;
+mes.onchange=ano.onchange=carregar;
 </script>
 
 <script src="../login/logout.js"></script>
-
 </body>
 </html>
