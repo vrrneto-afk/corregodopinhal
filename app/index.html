@@ -1,5 +1,3 @@
-Index não tá funcionando
-
 <!DOCTYPE html>  <html lang="pt-BR">  
 <head>  
 <meta charset="UTF-8" />  
@@ -314,46 +312,60 @@ async function loadIndex() {
       `;  
     });  
   
-  /* VACINAS */  
-  conteudo.innerHTML += "<h2>💉 Vacinas pendentes</h2>";  
-  
-  vacinas  
-    .filter(v => v.status !== CFG.vacinas.status?.finalizada)  
-    .forEach(v => {  
-      const animal = animais.find(a => a._id === v.id_animal);  
-      const reap = parse(v.data_aplicacao);  
-  
-      reap.setDate(  
-        reap.getDate() + Number(v.repeticao_dias || 0)  
-      );  
-  
-      const dias = diff(hojeZ, reap);  
-  
-      conteudo.innerHTML += `  
-        <div class="card ${dias < 0 ? "atrasada" : "pendente"}">  
-          ${  
-            animal  
-              ? `<p><strong>🐄 ${animal.nome.toUpperCase()}</strong></p>`  
-              : ""  
-          }  
-  
-          💉 ${v.nome_vacina.toUpperCase()}  
-  
-          <p class="dias">  
-            ${  
-              dias < 0  
-                ? `Atrasada há ${Math.abs(dias)} dias`  
-                : `Pendente em ${dias} dias`  
-            }  
-          </p>  
-  
-          <p class="data">  
-            📅 ${reap.toLocaleDateString("pt-BR")}  
-          </p>  
-        </div>  
-      `;  
-    });  
-}  
+  /* VACINAS */
+conteudo.innerHTML += "<h2>💉 Vacinas pendentes</h2>";
+
+vacinas
+  /* mostra SOMENTE as pendentes reais */
+  .filter(v => v.status === CFG.vacinas.status?.pendente)
+  .forEach(v => {
+
+    const animal = animais.find(a => a._id === v.id_animal);
+
+    const reap = parse(v.data_aplicacao);
+    if (!reap) return;
+
+    reap.setDate(
+      reap.getDate() + Number(v.repeticao_dias || 0)
+    );
+
+    const dias = diff(hojeZ, reap);
+
+    /* ===== TEXTO VEM DO CONFIG ===== */
+    let classe = "pendente";
+    let texto = "";
+
+    if (dias < 0) {
+      classe = "atrasada";
+      texto = (CFG.vacinas.textos?.atrasada || "Atrasada {{dias}} dias")
+        .replace("{{dias}}", Math.abs(dias));
+    } else {
+      texto = (CFG.vacinas.textos?.pendente || "Pendente em {{dias}} dias")
+        .replace("{{dias}}", dias);
+    }
+
+    conteudo.innerHTML += `
+      <div class="card ${classe}">
+
+        ${
+          animal
+            ? `<p><strong>🐄 ${animal.nome.toUpperCase()}</strong></p>`
+            : ""
+        }
+
+        💉 ${v.nome_vacina.toUpperCase()}
+
+        <p class="dias">
+          ${texto}
+        </p>
+
+        <p class="data">
+          📅 ${reap.toLocaleDateString("pt-BR")}
+        </p>
+
+      </div>
+    `;
+  });
   
 (async () => {
   try {
