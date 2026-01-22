@@ -24,7 +24,10 @@ if (!firebase.apps.length) {
 </script>
 
 <script>
-window.PERMISSAO_PAGINA = { area:"trator", chave:"trator-caddespesas" };
+window.PERMISSAO_PAGINA = {
+  area: "trator",
+  chave: "trator-caddespesas"
+};
 </script>
 
 <script src="../login/auth-guard.js"></script>
@@ -45,10 +48,11 @@ header img{max-width:260px;width:100%;}
 .card{background:#fff;border-radius:14px;padding:16px;margin-bottom:20px;}
 label{font-weight:600;display:block;margin-top:12px;}
 input,select{width:100%;padding:10px;border-radius:10px;border:1px solid #ccc;margin-top:4px;}
-button{width:100%;padding:12px;border-radius:12px;font-weight:700;margin-top:16px;}
-.btn-outline{background:#fff;border:2px solid var(--marrom);color:var(--marrom);}
+.btn-row{display:flex;gap:10px;margin-top:16px;}
+button{flex:1;padding:12px;border-radius:12px;font-weight:700;}
 .btn-primary{background:var(--marrom);border:none;color:#fff;}
 .btn-danger{background:var(--erro);border:none;color:#fff;}
+.btn-outline{background:#fff;border:2px solid var(--marrom);color:var(--marrom);}
 .msg{margin-top:10px;font-weight:700;}
 .msg.ok{color:var(--ok);}
 .msg.erro{color:var(--erro);}
@@ -57,14 +61,13 @@ button{width:100%;padding:12px;border-radius:12px;font-weight:700;margin-top:16p
 
 <body style="display:none">
 
-<header><img src="../logo.png"></header>
+<header>
+  <img src="../logo.png">
+</header>
+
 <div id="menu"></div>
 
 <div class="container">
-
-<button class="btn-outline" onclick="location.href='../trator/trator-inicio.html'">
-← Voltar para Trator
-</button>
 
 <h2>🧾 Cadastro de Despesas</h2>
 
@@ -104,52 +107,54 @@ button{width:100%;padding:12px;border-radius:12px;font-weight:700;margin-top:16p
 
 <div id="msg" class="msg"></div>
 
+<div class="btn-row">
+  <button id="btnExcluir" class="btn-danger" style="display:none">🗑 Excluir</button>
+  <button id="salvar" class="btn-primary">💾 Salvar Despesa</button>
+</div>
+
 </div>
 
 <h2>📊 Despesas do Mês</h2>
 
 <div style="display:flex;gap:10px;margin-bottom:10px">
-<select id="mes"></select>
-<select id="ano"></select>
+  <select id="mes"></select>
+  <select id="ano"></select>
 </div>
 
 <div class="card">
 <table width="100%">
 <thead>
 <tr>
-<th>Data despesa</th>
-<th>Data vencimento</th>
-<th>Despesa</th>
-<th>Fornecedor</th>
-<th>Ações</th>
+  <th>Data despesa</th>
+  <th>Data vencimento</th>
+  <th>Despesa</th>
+  <th>Fornecedor</th>
+  <th>Ações</th>
 </tr>
 </thead>
 <tbody id="lista"></tbody>
 </table>
 </div>
 
-<!-- BOTÕES FINAIS -->
-<div class="card">
-
-<button id="btnExcluir" class="btn-danger" style="display:none">🗑 Excluir Despesa</button>
-
-<button id="salvar" class="btn-primary">💾 Salvar Despesa</button>
-
-</div>
+<button class="btn-outline" onclick="location.href='../trator/trator-inicio.html'">
+← Voltar para Trator
+</button>
 
 </div>
 
 <script>
-fetch("../menu/menu.html").then(r=>r.text()).then(html=>{
-  menu.innerHTML=html;
-  document.querySelectorAll("#menu a").forEach(a=>{
-    if(a.getAttribute("href")==="../trator/trator-inicio.html") a.classList.add("ativo");
+fetch("../menu/menu.html")
+  .then(r=>r.text())
+  .then(html=>{
+    menu.innerHTML=html;
+    document.querySelectorAll("#menu a").forEach(a=>{
+      if(a.getAttribute("href")==="../trator/trator-inicio.html") a.classList.add("ativo");
+    });
+    const s=document.createElement("script");
+    s.src="../menu/menu-permissoes.js";
+    document.body.appendChild(s);
+    document.body.style.display="block";
   });
-  const s=document.createElement("script");
-  s.src="../menu/menu-permissoes.js";
-  document.body.appendChild(s);
-  document.body.style.display="block";
-});
 </script>
 
 <script>
@@ -169,14 +174,12 @@ auth.onAuthStateChanged(async u=>{
   if(u){
     const d=await db.collection("usuarios").doc(u.uid).get();
     isAdmin=d.exists&&d.data().papel==="admin";
-    if(isAdmin) btnExcluir.style.display="block";
     carregar();
   }
 });
 
 salvar.onclick=async()=>{
   try{
-    const user=auth.currentUser;
     const dados={
       data_despesa:firebase.firestore.Timestamp.fromDate(new Date(dataDespesa.value)),
       tipo_despesa:tipoDespesa.value,
@@ -187,7 +190,7 @@ salvar.onclick=async()=>{
         ?firebase.firestore.Timestamp.fromDate(new Date(dataVencimento.value))
         :null,
       valor_despesa:limpar(valor.value),
-      criado_por:user.uid
+      criado_por:auth.currentUser.uid
     };
 
     editId
@@ -197,6 +200,7 @@ salvar.onclick=async()=>{
     msg.textContent=editId?"Despesa editada com sucesso":"Despesa salva com sucesso";
     msg.className="msg ok";
     editId=null;
+    btnExcluir.style.display="none";
     carregar();
 
   }catch(e){msg.textContent=e;msg.className="msg erro";}
@@ -208,6 +212,7 @@ btnExcluir.onclick=()=>{
     msg.textContent="Despesa excluída com sucesso";
     msg.className="msg ok";
     editId=null;
+    btnExcluir.style.display="none";
     carregar();
   });
 };
@@ -220,10 +225,10 @@ function carregar(){
   db.collection("trator_despesas").get().then(s=>{
     s.forEach(d=>{
       const v=d.data();
-      const dataRef=v.situacao==="PENDENTE"?v.data_vencimento:v.data_despesa;
-      if(!dataRef) return;
-      const dt=dataRef.toDate();
-      if(dt<ini||dt>fim) return;
+      const ref=v.situacao==="PENDENTE"?v.data_vencimento:v.data_despesa;
+      if(!ref)return;
+      const dt=ref.toDate();
+      if(dt<ini||dt>fim)return;
 
       lista.innerHTML+=`
       <tr onclick="editar('${d.id}')">
@@ -249,6 +254,7 @@ function editar(id){
     if(v.data_vencimento)
       dataVencimento.value=v.data_vencimento.toDate().toISOString().split("T")[0];
     valor.value=moeda(v.valor_despesa);
+    if(isAdmin) btnExcluir.style.display="block";
   });
 }
 
@@ -261,5 +267,6 @@ mes.onchange=ano.onchange=carregar;
 </script>
 
 <script src="../login/logout.js"></script>
+
 </body>
 </html>
