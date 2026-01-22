@@ -40,6 +40,17 @@
         }
       });
 
+/* ================= ATALHO ADM (ÍCONE) ================= */
+const adminIcon = document.getElementById("menu-admin-icon");
+
+if (
+  adminIcon &&
+  permissoes?.adm &&
+  Object.values(permissoes.adm).some(v => v === true)
+) {
+  adminIcon.style.display = "flex";
+}
+
       /* ================= LIBERA MENU ================= */
       const wrapper = document.querySelector(".menu-wrapper");
       if (wrapper) {
