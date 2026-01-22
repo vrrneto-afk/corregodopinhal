@@ -8,12 +8,15 @@
 <link rel="manifest" href="../manifest.json">
 <meta name="theme-color" content="#7b3f2a">
 
+<!-- MENU + FORMS (forms.css já vem dentro do menu.css) -->
 <link rel="stylesheet" href="../menu/menu.css">
 
+<!-- FIREBASE -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
+<!-- FIREBASE INIT -->
 <script>
 if (!firebase.apps.length) {
   firebase.initializeApp({
@@ -24,6 +27,7 @@ if (!firebase.apps.length) {
 }
 </script>
 
+<!-- IDENTIFICAÇÃO DA PÁGINA -->
 <script>
 window.PERMISSAO_PAGINA = {
   area: "trator",
@@ -31,6 +35,7 @@ window.PERMISSAO_PAGINA = {
 };
 </script>
 
+<!-- AUTH GUARD -->
 <script src="../login/auth-guard.js"></script>
 
 <style>
@@ -41,7 +46,10 @@ window.PERMISSAO_PAGINA = {
   --ok:#2f6b2f;
 }
 
-*{box-sizing:border-box;font-family:Inter,system-ui,Arial;}
+*{
+  box-sizing:border-box;
+  font-family:Inter,system-ui,Arial;
+}
 
 body{
   margin:0;
@@ -89,25 +97,6 @@ input, select{
   font-size:15px;
 }
 
-/* === RADIO (ALINHAMENTO DEFINITIVO) === */
-.radio-group{
-  margin-top:8px;
-  display:flex;
-  flex-direction:column;
-  gap:10px;
-}
-
-.radio-item{
-  display:flex;
-  align-items:center;
-  gap:10px;
-  font-weight:500;
-}
-
-.radio-item input{
-  margin:0;
-}
-
 button{
   padding:12px;
   border:none;
@@ -139,14 +128,14 @@ button{
   margin-top:12px;
   font-weight:600;
 }
-.msg.erro{color:var(--erro);}
-.msg.ok{color:var(--ok);}
+.msg.erro{ color:var(--erro); }
+.msg.ok{ color:var(--ok); }
 
 .valor-total{
   background:#f2f2f2;
 }
 
-hr{margin:25px 0;}
+hr{ margin:25px 0; }
 
 .voltar{
   display:block;
@@ -156,10 +145,8 @@ hr{margin:25px 0;}
   text-decoration:none;
 }
 
-/* === TABELA === */
-.table-wrapper{
-  overflow-x:auto;
-}
+/* ===== TABELA ===== */
+.table-wrapper{ overflow-x:auto; }
 
 .col-acoes{
   width:1%;
@@ -205,13 +192,14 @@ hr{margin:25px 0;}
 
 <label>Forma de cobrança</label>
 
+<!-- 🔒 PADRÃO OFICIAL forms.css -->
 <div class="radio-group">
-  <label class="radio-item">
+  <label class="radio-option">
     <input type="radio" name="cobranca" value="hora" checked>
     <span>Por hora</span>
   </label>
 
-  <label class="radio-item">
+  <label class="radio-option">
     <input type="radio" name="cobranca" value="fechado">
     <span>Valor fechado</span>
   </label>
@@ -277,111 +265,139 @@ hr{margin:25px 0;}
 
 </div>
 
+<!-- MENU + PERMISSÕES -->
 <script>
-fetch("../menu/menu.html").then(r=>r.text()).then(html=>{
-  document.getElementById("menu").innerHTML=html;
+fetch("../menu/menu.html")
+  .then(r => r.text())
+  .then(html => {
+    document.getElementById("menu").innerHTML = html;
 
-  document.querySelectorAll("#menu a").forEach(a=>{
-    if(a.getAttribute("href")==="../trator/trator-inicio.html") a.classList.add("ativo");
+    document.querySelectorAll("#menu a").forEach(a => {
+      if (a.getAttribute("href") === "../trator/trator-inicio.html") {
+        a.classList.add("ativo");
+      }
+    });
+
+    const s = document.createElement("script");
+    s.src = "../menu/menu-permissoes.js";
+    document.body.appendChild(s);
+
+    document.body.style.display = "block";
   });
-
-  const s=document.createElement("script");
-  s.src="../menu/menu-permissoes.js";
-  document.body.appendChild(s);
-  document.body.style.display="block";
-});
 </script>
 
 <script>
-const db=firebase.firestore();
-let editId=null;
+const db = firebase.firestore();
+let editId = null;
 
-function moeda(v){return "R$ "+Number(v).toFixed(2).replace(".",",");}
-function limparMoeda(v){return Number(v.replace(/[^\d]/g,""))/100;}
-
-function recalcular(){
-  valorTotal.value=moeda((Number(horas.value)||0)*limparMoeda(valorHora.value||"0"));
+function moeda(v){
+  return "R$ " + Number(v).toFixed(2).replace(".", ",");
+}
+function limparMoeda(v){
+  return Number(v.replace(/[^\d]/g, "")) / 100;
 }
 
-horas.oninput=recalcular;
-valorHora.oninput=()=>{valorHora.value=moeda(limparMoeda(valorHora.value));recalcular();};
-valorFechadoInput.oninput=()=>valorFechadoInput.value=moeda(limparMoeda(valorFechadoInput.value));
+function recalcular(){
+  valorTotal.value = moeda(
+    (Number(horas.value) || 0) * limparMoeda(valorHora.value || "0")
+  );
+}
 
-document.querySelectorAll("input[name='cobranca']").forEach(r=>{
-  r.onchange=()=>{
-    porHora.style.display=r.value==="hora"?"block":"none";
-    valorFechado.style.display=r.value==="fechado"?"block":"none";
+horas.oninput = recalcular;
+valorHora.oninput = () => {
+  valorHora.value = moeda(limparMoeda(valorHora.value));
+  recalcular();
+};
+valorFechadoInput.oninput = () =>
+  valorFechadoInput.value = moeda(limparMoeda(valorFechadoInput.value));
+
+document.querySelectorAll("input[name='cobranca']").forEach(r => {
+  r.onchange = () => {
+    porHora.style.display = r.value === "hora" ? "block" : "none";
+    valorFechado.style.display = r.value === "fechado" ? "block" : "none";
   };
 });
 
 db.collection("motoristas").orderBy("nome_motorista").get().then(s=>{
   s.forEach(d=>{
-    const m=d.data();
-    motorista.innerHTML+=`<option value="${m.id_motorista}">${m.nome_motorista}</option>`;
+    const m = d.data();
+    motorista.innerHTML +=
+      `<option value="${m.id_motorista}">${m.nome_motorista}</option>`;
   });
 });
 
-salvar.onclick=async()=>{
+salvar.onclick = async () => {
   try{
-    if(!data.value||!cliente.value||!tipo.value||!motorista.value)
+    if(!data.value || !cliente.value || !tipo.value || !motorista.value)
       throw "Preencha todos os campos obrigatórios";
 
-    const porHoraSel=document.querySelector("input[name='cobranca']:checked").value==="hora";
-    const valor=porHoraSel?limparMoeda(valorTotal.value):limparMoeda(valorFechadoInput.value);
-    if(valor<=0) throw "Valor inválido";
+    const porHoraSel =
+      document.querySelector("input[name='cobranca']:checked").value === "hora";
 
-    const nomeMotorista=motorista.options[motorista.selectedIndex].text;
+    const valor = porHoraSel
+      ? limparMoeda(valorTotal.value)
+      : limparMoeda(valorFechadoInput.value);
 
-    const dados={
-      data:firebase.firestore.Timestamp.fromDate(new Date(data.value)),
-      cliente:cliente.value,
-      tipo:tipo.value,
-      motorista_id:motorista.value,
-      motorista_nome:nomeMotorista,
-      valor_total:valor
+    if(valor <= 0) throw "Valor inválido";
+
+    const nomeMotorista =
+      motorista.options[motorista.selectedIndex].text;
+
+    const dados = {
+      data: firebase.firestore.Timestamp.fromDate(new Date(data.value)),
+      cliente: cliente.value,
+      tipo: tipo.value,
+      motorista_id: motorista.value,
+      motorista_nome: nomeMotorista,
+      valor_total: valor
     };
 
     editId
       ? await db.collection("trator_servicos").doc(editId).update(dados)
       : await db.collection("trator_servicos").add(dados);
 
-    msg.textContent="Serviço salvo com sucesso";
-    msg.className="msg ok";
+    msg.textContent = "Serviço salvo com sucesso";
+    msg.className = "msg ok";
     carregarTabela();
   }catch(e){
-    msg.textContent=e;
-    msg.className="msg erro";
+    msg.textContent = e;
+    msg.className = "msg erro";
   }
 };
 
-excluir.onclick=async()=>{
+excluir.onclick = async () => {
   if(!editId) return;
   if(!confirm("Deseja excluir este serviço?")) return;
   await db.collection("trator_servicos").doc(editId).delete();
   location.reload();
 };
 
-const meses=["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
-meses.forEach((m,i)=>mes.innerHTML+=`<option value="${i}">${m}</option>`);
+const meses = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho",
+               "Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
+meses.forEach((m,i)=> mes.innerHTML += `<option value="${i}">${m}</option>`);
 
-const anoAtual=new Date().getFullYear();
-for(let a=anoAtual-3;a<=anoAtual+10;a++) ano.innerHTML+=`<option>${a}</option>`;
-mes.value=new Date().getMonth();
-ano.value=anoAtual;
+const anoAtual = new Date().getFullYear();
+for(let a = anoAtual - 3; a <= anoAtual + 10; a++)
+  ano.innerHTML += `<option>${a}</option>`;
+mes.value = new Date().getMonth();
+ano.value = anoAtual;
 
 function carregarTabela(){
-  lista.innerHTML="";let total=0;
-  const ini=new Date(ano.value,mes.value,1);
-  const fim=new Date(ano.value,Number(mes.value)+1,0,23,59,59);
+  lista.innerHTML = "";
+  let total = 0;
+
+  const ini = new Date(ano.value, mes.value, 1);
+  const fim = new Date(ano.value, Number(mes.value) + 1, 0, 23, 59, 59);
 
   db.collection("trator_servicos")
-    .where("data",">=",ini)
-    .where("data","<=",fim)
+    .where("data", ">=", ini)
+    .where("data", "<=", fim)
     .get()
     .then(s=>{
       s.forEach(d=>{
-        const v=d.data();total+=v.valor_total;
-        lista.innerHTML+=`
+        const v = d.data();
+        total += v.valor_total;
+        lista.innerHTML += `
         <tr>
           <td>${v.data.toDate().toLocaleDateString("pt-BR")}</td>
           <td>${v.cliente}</td>
@@ -392,26 +408,29 @@ function carregarTabela(){
           </td>
         </tr>`;
       });
-      totalMes.textContent=moeda(total);
+      totalMes.textContent = moeda(total);
     });
 }
 
 function editar(id){
   db.collection("trator_servicos").doc(id).get().then(d=>{
-    const v=d.data();editId=id;
-    data.value=v.data.toDate().toISOString().split("T")[0];
-    cliente.value=v.cliente;
-    tipo.value=v.tipo;
-    motorista.value=v.motorista_id;
-    valorFechadoInput.value=moeda(v.valor_total);
-    document.querySelector("input[value='fechado']").checked=true;
-    porHora.style.display="none";
-    valorFechado.style.display="block";
-    excluir.disabled=false;
+    const v = d.data();
+    editId = id;
+
+    data.value = v.data.toDate().toISOString().split("T")[0];
+    cliente.value = v.cliente;
+    tipo.value = v.tipo;
+    motorista.value = v.motorista_id;
+    valorFechadoInput.value = moeda(v.valor_total);
+
+    document.querySelector("input[value='fechado']").checked = true;
+    porHora.style.display = "none";
+    valorFechado.style.display = "block";
+    excluir.disabled = false;
   });
 }
 
-mes.onchange=ano.onchange=carregarTabela;
+mes.onchange = ano.onchange = carregarTabela;
 carregarTabela();
 </script>
 
