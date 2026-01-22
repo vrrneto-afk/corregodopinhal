@@ -1,0 +1,84 @@
+/* =========================================
+   FORMS.CSS – PADRÃO DEFINITIVO DE FORMULÁRIOS
+   ========================================= */
+
+/* -------- BASE -------- */
+.form,
+.form-group{
+  display:block;
+  width:100%;
+}
+
+/* -------- LABEL -------- */
+label{
+  display:block;
+  font-weight:600;
+  margin-top:12px;
+  text-align:left;
+}
+
+/* -------- INPUTS -------- */
+input,
+select,
+textarea{
+  width:100%;
+  padding:10px;
+  border-radius:10px;
+  border:1px solid #ccc;
+  margin-top:4px;
+  font-size:15px;
+}
+
+/* -------- RADIO / CHECKBOX (BLINDADO) -------- */
+.radio-group,
+.checkbox-group{
+  display:flex;
+  flex-direction:column;
+  align-items:flex-start;
+  gap:8px;
+  margin-top:6px;
+}
+
+/* cada opção é uma linha */
+.radio-option,
+.checkbox-option{
+  display:flex;
+  align-items:center;
+  justify-content:flex-start;
+  gap:8px;
+  width:100%;
+  text-align:left;
+
+  /* BLINDAGEM CONTRA MENU / CARD */
+  position:relative;
+}
+
+/* input NÃO pode crescer nem ser empurrado */
+.radio-option input,
+.checkbox-option input{
+  margin:0;
+  flex-shrink:0;
+}
+
+/* texto colado no input */
+.radio-option span,
+.checkbox-option span{
+  display:inline;
+  font-weight:500;
+  white-space:normal;
+  text-align:left;
+}
+
+/* -------- VALORES CALCULADOS -------- */
+.input-readonly,
+.valor-total{
+  background:#f2f2f2;
+}
+
+/* -------- MENSAGENS -------- */
+.msg{
+  margin-top:10px;
+  font-weight:600;
+}
+.msg.ok{ color:var(--ok); }
+.msg.erro{ color:var(--erro); }
