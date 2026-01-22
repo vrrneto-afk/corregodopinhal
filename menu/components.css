@@ -1,0 +1,49 @@
+/* =========================================
+   COMPONENTS.CSS – COMPONENTES REUTILIZÁVEIS
+   ========================================= */
+
+/* -------- BOTÕES -------- */
+button,
+.btn{
+  border:none;
+  border-radius:12px;
+  padding:12px;
+  font-size:16px;
+  font-weight:700;
+  cursor:pointer;
+}
+
+.btn-primary{
+  background:var(--marrom);
+  color:#fff;
+}
+
+.btn-danger{
+  background:#c0392b;
+  color:#fff;
+}
+
+.btn-small{
+  padding:6px 10px;
+  font-size:13px;
+  border-radius:8px;
+}
+
+button:disabled{
+  opacity:.6;
+  cursor:not-allowed;
+}
+
+/* -------- BADGES -------- */
+.badge{
+  display:inline-block;
+  padding:4px 10px;
+  font-size:12px;
+  font-weight:700;
+  color:#fff;
+  border-radius:8px;
+}
+
+.badge.ok{ background:var(--verde); }
+.badge.warn{ background:var(--amarelo); }
+.badge.err{ background:var(--vermelho); }
