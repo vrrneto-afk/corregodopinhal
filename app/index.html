@@ -220,29 +220,44 @@ eventos
   });
 
   /* ===== VACINAS ===== */
-  conteudo.innerHTML += "<h2>💉 Vacinas pendentes</h2>";
+conteudo.innerHTML += "<h2>💉 Vacinas pendentes</h2>";
 
-  vacinas
-    .filter(v=>v.data_aplicacao && Number(v.repeticao_dias)>0)
-    .map(v=>{
-      const reap = parseData(v.data_aplicacao);
-      reap.setDate(reap.getDate()+Number(v.repeticao_dias));
-      return {...v,reap,dias:diffDias(hojeZ,reap)};
-    })
-    .sort((a,b)=>a.dias-b.dias)
-    .forEach(v=>{
-      const animal = animais.find(a=>a._id===v.id_animal);
-      const status = v.dias<0 ? "atrasada" : "pendente";
+vacinas
+  .filter(v =>
+    v.data_aplicacao &&
+    Number(v.repeticao_dias) > 0 &&
+    v.status !== "Finalizada"
+  )
+  .map(v => {
+    const reap = parseData(v.data_aplicacao);
+    reap.setDate(reap.getDate() + Number(v.repeticao_dias));
+    return {
+      ...v,
+      reap,
+      dias: diffDias(hojeZ, reap)
+    };
+  })
+  .sort((a, b) => a.dias - b.dias) // mais próxima primeiro
+  .forEach(v => {
 
-      conteudo.innerHTML += `
-        <div class="card ${status}">
-          <strong>💉 ${v.nome_vacina}</strong>
-          <p class="dias">${cfgVacinas.status?.[status]} ${Math.abs(v.dias)} dias</p>
-          <p class="data">🐄 ${(animal?.nome||"-").toUpperCase()}</p>
-          <p class="data">📅 ${v.reap.toLocaleDateString("pt-BR")}</p>
-        </div>`;
-    });
-}
+    const animal = animais.find(a => a._id === v.id_animal);
+
+    const status = v.dias < 0
+      ? "atrasada"
+      : "pendente";
+
+    conteudo.innerHTML += `
+      <div class="card ${status}">
+        <strong>💉 ${v.nome_vacina}</strong>
+        <p class="dias">
+          ${cfgVacinas.status?.[status]}
+          ${Math.abs(v.dias)} dias
+        </p>
+        <p class="data">🐄 ${(animal?.nome || "-").toUpperCase()}</p>
+        <p class="data">📅 ${v.reap.toLocaleDateString("pt-BR")}</p>
+      </div>
+    `;
+  });
 
 loadClima();
 loadAlertas();
