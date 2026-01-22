@@ -189,7 +189,38 @@ async function loadConfigs(){
 }
 
 /* CLIMA */
-async function loadClima(){ /* exatamente igual ao seu */ }
+async function loadClima() {
+  if (!CFG.clima.latitude || !CFG.clima.longitude) {
+    clima.innerText = "☁️ Clima indisponível";
+    return;
+  }
+
+  const c = CFG.clima;
+  const url = `https://api.open-meteo.com/v1/forecast?latitude=${c.latitude}&longitude=${c.longitude}&current_weather=true&hourly=precipitation_probability&timezone=${c.timezone}`;
+
+  const d = await (await fetch(url)).json();
+
+  let texto = c.textos?.sem_chuva || "Sem previsão de chuva.";
+  const agora = new Date();
+
+  for (let i = 0; i < d.hourly.time.length; i++) {
+    const h = new Date(d.hourly.time[i]);
+    const min = (h - agora) / 60000;
+
+    if (
+      min > 0 &&
+      min <= c.janela_previsao_minutos &&
+      d.hourly.precipitation_probability[i] >= c.limite_chuva_percentual
+    ) {
+      texto = `${c.textos?.chuva_em || "Chuva em"} ${Math.round(min)} minutos.`;
+      break;
+    }
+  }
+
+  clima.innerHTML = `☀️ ${c.cidade || ""} • ${Math.round(
+    d.current_weather.temperature
+  )}°C<br>${texto}`;
+}
 
 /* ALERTAS */
 async function loadAlertas(){
@@ -211,34 +242,131 @@ async function loadIndex(){
   const vacinas = (await db.collection("vacinas").get()).docs.map(d=>d.data());
 
   /* VACAS A CRIAR */
-  conteudo.innerHTML += "<h2>🐄 Vacas a Criar</h2>";
-  eventos.filter(e=>e.tipo_evento==="cobertura").map(c=>{
-    const prev=addM(parse(c.data_evento),Number(CFG.vacas.gestacao_meses||9));
-    return { animal:animais.find(a=>a._id===c.id_animal), prev, dias:diff(hojeZ,prev) };
-  }).filter(v=>v.animal).forEach(v=>{
-    const msg=mensagemPrenhez(v.dias);
-    conteudo.innerHTML+=`
-      <div class="card ${regraPrenhez(v.dias).classe}">
+conteudo.innerHTML += "<h2>🐄 Vacas a Criar</h2>";
+
+let encontrouVacas = false;
+
+eventos
+  .filter(e => e.tipo_evento === "cobertura")
+  .map(c => {
+    const prev = addM(
+      parse(c.data_evento),
+      Number(CFG.vacas.gestacao_meses || 9)
+    );
+
+    const dias = diff(hojeZ, prev);
+
+    return {
+      animal: animais.find(a => a._id === c.id_animal),
+      prev,
+      dias
+    };
+  })
+  .filter(v => v.animal)
+  .sort((a, b) => a.dias - b.dias)
+  .forEach(v => {
+    encontrouVacas = true;
+
+    const regra = regraPrenhez(v.dias);
+    const msg = mensagemPrenhez(v.dias);
+
+    conteudo.innerHTML += `
+      <div class="card ${regra.classe}">
         <strong>🐄 ${v.animal.nome.toUpperCase()}</strong>
-        ${msg?`<p class="msg">${msg}</p>`:`<p class="dias">${v.dias<0?`Atrasado ${Math.abs(v.dias)} dias`:`Faltam ${v.dias} dias`}</p>`}
-        <p class="data">🪧 Parto previsto para: ${v.prev.toLocaleDateString("pt-BR")}</p>
-      </div>`;
+
+        ${
+          msg
+            ? `<p class="msg">${msg}</p>`
+            : `<p class="dias">
+                ${
+                  v.dias >= 0
+                    ? `⏳ Faltam ${v.dias} dias`
+                    : `⏰ Atrasado ${Math.abs(v.dias)} dias`
+                }
+              </p>`
+        }
+
+        <p class="data">
+          🪧 Parto previsto para:
+          ${v.prev.toLocaleDateString("pt-BR")}
+        </p>
+      </div>
+    `;
   });
 
+if (!encontrouVacas) {
+  conteudo.innerHTML += `
+    <div class="card ok">
+      <strong>🐄 Nenhuma vaca em acompanhamento</strong>
+      <p class="data">Sem partos previstos no momento</p>
+    </div>
+  `;
+}
+
   /* VACINAS */
-  conteudo.innerHTML += "<h2>💉 Vacinas pendentes</h2>";
-  vacinas.filter(v=>v.status===CFG.vacinas.status?.pendente).forEach(v=>{
-    const reap=parse(v.data_aplicacao);
-    reap.setDate(reap.getDate()+Number(v.repeticao_dias||0));
-    const dias=diff(hojeZ,reap);
-    const texto=(dias<0?CFG.vacinas.textos.atrasada:CFG.vacinas.textos.pendente).replace("{{dias}}",Math.abs(dias));
-    conteudo.innerHTML+=`
-      <div class="card ${dias<0?"atrasada":"pendente"}">
+conteudo.innerHTML += "<h2>💉 Vacinas pendentes</h2>";
+
+let encontrouVacinas = false;
+
+vacinas
+  /* SOMENTE vacinas realmente pendentes */
+  .filter(v => v.status === CFG.vacinas.status?.pendente)
+  .forEach(v => {
+    const animal = animais.find(a => a._id === v.id_animal);
+
+    const reap = parse(v.data_aplicacao);
+    if (!reap) return;
+
+    reap.setDate(
+      reap.getDate() + Number(v.repeticao_dias || 0)
+    );
+
+    const dias = diff(hojeZ, reap);
+
+    encontrouVacinas = true;
+
+    let classe = "pendente";
+    let texto = "";
+
+    if (dias < 0) {
+      classe = "atrasada";
+      texto = (CFG.vacinas.textos?.atrasada || "Atrasada {{dias}} dias")
+        .replace("{{dias}}", Math.abs(dias));
+    } else {
+      texto = (CFG.vacinas.textos?.pendente || "Pendente em {{dias}} dias")
+        .replace("{{dias}}", dias);
+    }
+
+    conteudo.innerHTML += `
+      <div class="card ${classe}">
+
+        ${
+          animal
+            ? `<p><strong>🐄 ${animal.nome.toUpperCase()}</strong></p>`
+            : ""
+        }
+
         💉 ${v.nome_vacina.toUpperCase()}
-        <p class="dias">${texto}</p>
-        <p class="data">📅 ${reap.toLocaleDateString("pt-BR")}</p>
-      </div>`;
+
+        <p class="dias">
+          ${texto}
+        </p>
+
+        <p class="data">
+          📅 ${reap.toLocaleDateString("pt-BR")}
+        </p>
+
+      </div>
+    `;
   });
+
+if (!encontrouVacinas) {
+  conteudo.innerHTML += `
+    <div class="card ok">
+      <strong>💉 Nenhuma vacina pendente</strong>
+      <p class="data">Todas as vacinas estão em dia</p>
+    </div>
+  `;
 }
 
 (async()=>{
