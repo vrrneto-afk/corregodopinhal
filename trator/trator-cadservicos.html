@@ -49,6 +49,17 @@ body{
   color:#333;
 }
 
+header{
+  background:#D0B485;
+  padding:15px;
+  text-align:center;
+}
+
+header img{
+  max-width:260px;
+  width:100%;
+}
+
 .container{
   max-width:900px;
   margin:20px auto;
@@ -78,10 +89,23 @@ input, select{
   font-size:15px;
 }
 
+/* === RADIO (ALINHAMENTO DEFINITIVO) === */
 .radio-group{
   margin-top:8px;
   display:flex;
-  gap:20px;
+  flex-direction:column;
+  gap:10px;
+}
+
+.radio-item{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  font-weight:500;
+}
+
+.radio-item input{
+  margin:0;
 }
 
 button{
@@ -131,6 +155,23 @@ hr{margin:25px 0;}
   color:var(--marrom);
   text-decoration:none;
 }
+
+/* === TABELA === */
+.table-wrapper{
+  overflow-x:auto;
+}
+
+.col-acoes{
+  width:1%;
+  white-space:nowrap;
+  text-align:center;
+}
+
+.col-acoes button{
+  padding:6px 10px;
+  font-size:13px;
+  border-radius:8px;
+}
 </style>
 </head>
 
@@ -166,11 +207,13 @@ hr{margin:25px 0;}
 
 <div class="radio-group">
   <label class="radio-item">
-    <input type="radio" name="cobranca" value="hora" checked><span>Por hora</span>
+    <input type="radio" name="cobranca" value="hora" checked>
+    <span>Por hora</span>
   </label>
 
   <label class="radio-item">
-    <input type="radio" name="cobranca" value="fechado"><span>Valor fechado</span>
+    <input type="radio" name="cobranca" value="fechado">
+    <span>Valor fechado</span>
   </label>
 </div>
 
@@ -215,7 +258,6 @@ hr{margin:25px 0;}
   <th>Data</th>
   <th>Cliente</th>
   <th>Tipo</th>
-  <th>Motorista</th>
   <th>Valor</th>
   <th>Ações</th>
 </tr>
@@ -223,7 +265,7 @@ hr{margin:25px 0;}
 <tbody id="lista"></tbody>
 <tfoot>
 <tr>
-  <td colspan="4">Total do mês</td>
+  <td colspan="3">Total do mês</td>
   <td id="totalMes">R$ 0,00</td>
   <td></td>
 </tr>
@@ -252,7 +294,6 @@ fetch("../menu/menu.html").then(r=>r.text()).then(html=>{
 
 <script>
 const db=firebase.firestore();
-const auth=firebase.auth();
 let editId=null;
 
 function moeda(v){return "R$ "+Number(v).toFixed(2).replace(".",",");}
@@ -345,9 +386,10 @@ function carregarTabela(){
           <td>${v.data.toDate().toLocaleDateString("pt-BR")}</td>
           <td>${v.cliente}</td>
           <td>${v.tipo}</td>
-          <td>${v.motorista_nome||"-"}</td>
           <td>${moeda(v.valor_total)}</td>
-          <td><button onclick="editar('${d.id}')">Editar</button></td>
+          <td class="col-acoes">
+            <button onclick="editar('${d.id}')">Editar</button>
+          </td>
         </tr>`;
       });
       totalMes.textContent=moeda(total);
