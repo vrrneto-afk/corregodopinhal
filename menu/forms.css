@@ -95,8 +95,15 @@ form,
   display:block;
 }
 
-/* RADIO / CHECKBOX – ISOLAMENTO TOTAL */
-.radio-group{
+/* =========================================
+   RADIO / CHECKBOX – PADRÃO DEFINITIVO
+   Texto grudado, alinhado à esquerda
+   Android / Desktop safe
+   ========================================= */
+
+/* Grupo */
+.radio-group,
+.checkbox-group{
   display:flex !important;
   flex-direction:column !important;
   align-items:flex-start !important;
@@ -105,6 +112,7 @@ form,
   width:100%;
 }
 
+/* Cada opção (label) */
 .radio-option,
 .checkbox-option{
   display:flex;
@@ -112,27 +120,27 @@ form,
   justify-content:flex-start;
   gap:8px;
 
-  /* 🔒 correção */
-  width:auto;
+  width:100%;
   max-width:100%;
+
+  /* 🔒 FIX ANDROID */
+  text-align:left !important;
 }
 
-.radio-option span,
-.checkbox-option span{
-  display:inline-block;
-  white-space:normal;
-  text-align:left;
-}
-
-/* input sempre fixo à esquerda */
-.radio-option input{
+/* Input sempre colado à esquerda */
+.radio-option input,
+.checkbox-option input{
   margin:0 !important;
+  padding:0 !important;
   flex:0 0 auto !important;
 }
 
-/* texto colado no rádio */
-.radio-option span{
+/* Texto colado no input */
+.radio-option span,
+.checkbox-option span{
   display:inline-block !important;
+  white-space:normal !important;
   text-align:left !important;
-  white-space:normal;
+  line-height:1.25;
+  font-weight:500;
 }
