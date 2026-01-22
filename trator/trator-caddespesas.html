@@ -5,19 +5,14 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Cadastro de Despesas – Trator</title>
 
-<!-- MANIFEST -->
 <link rel="manifest" href="../manifest.json">
 <meta name="theme-color" content="#7b3f2a">
-
-<!-- MENU GLOBAL -->
 <link rel="stylesheet" href="../menu/menu.css">
 
-<!-- FIREBASE -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
-<!-- FIREBASE INIT -->
 <script>
 if (!firebase.apps.length) {
   firebase.initializeApp({
@@ -28,18 +23,12 @@ if (!firebase.apps.length) {
 }
 </script>
 
-<!-- IDENTIFICAÇÃO DA PÁGINA -->
 <script>
-window.PERMISSAO_PAGINA = {
-  area: "trator",
-  chave: "trator-caddespesas"
-};
+window.PERMISSAO_PAGINA = { area:"trator", chave:"trator-caddespesas" };
 </script>
 
-<!-- AUTH GUARD -->
 <script src="../login/auth-guard.js"></script>
 
-<!-- ESTILO PADRÃO (IGUAL AO CADSERVICOS) -->
 <style>
 :root{
   --marrom:#7b3f2a;
@@ -48,25 +37,91 @@ window.PERMISSAO_PAGINA = {
   --ok:#2f6b2f;
   --erro:#c0392b;
 }
+
 *{box-sizing:border-box;font-family:Inter,system-ui,Arial;}
 body{margin:0;background:var(--bege);color:#333;}
+
 header{background:var(--logo);padding:15px;text-align:center;}
 header img{max-width:260px;width:100%;}
+
 .container{max-width:900px;margin:20px auto;padding:0 15px;}
-.card{background:#fff;border-radius:14px;padding:16px;box-shadow:0 2px 6px rgba(0,0,0,.06);margin-bottom:20px;}
+
+.card{
+  background:#fff;
+  border-radius:14px;
+  padding:16px;
+  box-shadow:0 2px 6px rgba(0,0,0,.06);
+  margin-bottom:20px;
+}
+
 label{display:block;font-weight:600;margin-top:12px;}
-input,select{width:100%;padding:10px;border-radius:10px;border:1px solid #ccc;margin-top:4px;font-size:15px;}
-button{padding:12px;border-radius:12px;font-weight:700;font-size:15px;}
+
+input,select{
+  width:100%;
+  padding:10px;
+  border-radius:10px;
+  border:1px solid #ccc;
+  margin-top:4px;
+  font-size:15px;
+}
+
+button{
+  padding:12px;
+  border-radius:12px;
+  font-weight:700;
+  font-size:15px;
+}
+
 .btn-row{display:flex;gap:10px;margin-top:16px;}
+
 .btn-primary{background:var(--marrom);border:none;color:#fff;flex:1;}
 .btn-danger{background:var(--erro);border:none;color:#fff;flex:1;}
-.btn-outline{background:#fff;border:2px solid var(--marrom);color:var(--marrom);width:100%;margin-top:20px;}
+.btn-outline{
+  background:#fff;
+  border:2px solid var(--marrom);
+  color:var(--marrom);
+  width:100%;
+  margin-top:20px;
+}
+
 .msg{margin-top:10px;font-weight:700;}
 .msg.ok{color:var(--ok);}
 .msg.erro{color:var(--erro);}
-table{width:100%;border-collapse:collapse;}
-thead{background:#efe3d3;}
-th,td{padding:10px;text-align:left;}
+
+/* ===== TABELA ===== */
+.table-wrapper{
+  overflow-x:auto;
+  padding:4px;
+}
+
+table{
+  width:100%;
+  border-collapse:separate;
+  border-spacing:0;
+}
+
+thead{
+  background:#efe3d3;
+}
+
+th,td{
+  padding:12px;
+  text-align:left;
+  white-space:nowrap;
+}
+
+tbody tr{
+  border-bottom:1px solid #eee;
+}
+
+/* Botão editar com área clicável confortável */
+.btn-edit{
+  padding:10px 16px;
+  border-radius:10px;
+  background:#eee;
+  border:none;
+  font-weight:700;
+}
 </style>
 </head>
 
@@ -82,51 +137,49 @@ th,td{padding:10px;text-align:left;}
 
 <h2>🧾 Cadastro de Despesas</h2>
 
-<!-- FORMULÁRIO -->
 <div class="card">
 
-  <label>Data da despesa</label>
-  <input type="date" id="dataDespesa">
+<label>Data da despesa</label>
+<input type="date" id="dataDespesa">
 
-  <label>Tipo da despesa</label>
-  <select id="tipoDespesa">
-    <option value="">Selecione</option>
-    <option>PEÇAS</option>
-    <option>COMBUSTIVEL</option>
-    <option>ÓLEO LUBRIFICANTE</option>
-    <option>OUTROS</option>
-  </select>
+<label>Tipo da despesa</label>
+<select id="tipoDespesa">
+  <option value="">Selecione</option>
+  <option>PEÇAS</option>
+  <option>COMBUSTIVEL</option>
+  <option>ÓLEO LUBRIFICANTE</option>
+  <option>OUTROS</option>
+</select>
 
-  <label>Nome da despesa</label>
-  <input type="text" id="nomeDespesa">
+<label>Nome da despesa</label>
+<input type="text" id="nomeDespesa">
 
-  <label>Fornecedor</label>
-  <input type="text" id="fornecedor">
+<label>Fornecedor</label>
+<input type="text" id="fornecedor">
 
-  <label>Situação</label>
-  <select id="situacao">
-    <option value="PAGA">PAGA</option>
-    <option value="PENDENTE">PENDENTE</option>
-  </select>
+<label>Situação</label>
+<select id="situacao">
+  <option value="PAGA">PAGA</option>
+  <option value="PENDENTE">PENDENTE</option>
+</select>
 
-  <div id="boxVencimento" style="display:none">
-    <label>Data de vencimento</label>
-    <input type="date" id="dataVencimento">
-  </div>
+<div id="boxVencimento" style="display:none">
+  <label>Data de vencimento</label>
+  <input type="date" id="dataVencimento">
+</div>
 
-  <label>Valor da despesa</label>
-  <input type="text" id="valor">
+<label>Valor da despesa</label>
+<input type="text" id="valor">
 
-  <div id="msg" class="msg"></div>
+<div id="msg" class="msg"></div>
 
-  <div class="btn-row">
-    <button id="btnExcluir" class="btn-danger" style="display:none">🗑 Excluir</button>
-    <button id="salvar" class="btn-primary">💾 Salvar Despesa</button>
-  </div>
+<div class="btn-row">
+  <button id="btnExcluir" class="btn-danger" style="display:none">🗑 Excluir</button>
+  <button id="salvar" class="btn-primary">💾 Salvar Despesa</button>
+</div>
 
 </div>
 
-<!-- FILTRO -->
 <h2>📊 Despesas do Mês</h2>
 
 <div style="display:flex;gap:10px;margin-bottom:10px">
@@ -134,13 +187,11 @@ th,td{padding:10px;text-align:left;}
   <select id="ano"></select>
 </div>
 
-<!-- TABELA -->
-<div class="card">
+<div class="card table-wrapper">
 <table>
 <thead>
 <tr>
   <th>Data despesa</th>
-  <th>Data vencimento</th>
   <th>Despesa</th>
   <th>Fornecedor</th>
   <th>Ações</th>
@@ -150,186 +201,161 @@ th,td{padding:10px;text-align:left;}
 </table>
 </div>
 
-<!-- VOLTAR -->
 <button class="btn-outline" onclick="location.href='../trator/trator-inicio.html'">
 ← Voltar para Trator
 </button>
 
 </div>
 
-<!-- MENU + PERMISSÕES -->
+<!-- MENU -->
 <script>
 fetch("../menu/menu.html")
-  .then(r => r.text())
-  .then(html => {
-    document.getElementById("menu").innerHTML = html;
-
-    document.querySelectorAll("#menu a").forEach(a => {
-      if (a.getAttribute("href") === "../trator/trator-inicio.html") {
+  .then(r=>r.text())
+  .then(html=>{
+    menu.innerHTML=html;
+    document.querySelectorAll("#menu a").forEach(a=>{
+      if(a.getAttribute("href")==="../trator/trator-inicio.html"){
         a.classList.add("ativo");
       }
     });
-
-    const s = document.createElement("script");
-    s.src = "../menu/menu-permissoes.js";
+    const s=document.createElement("script");
+    s.src="../menu/menu-permissoes.js";
     document.body.appendChild(s);
-
-    document.body.style.display = "block";
+    document.body.style.display="block";
   });
 </script>
 
 <script>
-const db = firebase.firestore();
-const auth = firebase.auth();
-let editId = null;
-let isAdmin = false;
+const db=firebase.firestore();
+const auth=firebase.auth();
+let editId=null;
+let isAdmin=false;
 
-/* ===== UTIL DATA (SEM BUG DE FUSO) ===== */
+/* ===== util data ===== */
 function dateFromInput(value){
   if(!value) return null;
-  const [y,m,d] = value.split("-");
-  return new Date(Number(y), Number(m)-1, Number(d), 12, 0, 0);
+  const [y,m,d]=value.split("-");
+  return new Date(Number(y),Number(m)-1,Number(d),12,0,0);
 }
 
-/* ===== MOEDA ===== */
-function moeda(v){ return "R$ " + Number(v).toFixed(2).replace(".",","); }
-function limpar(v){ return Number(v.replace(/[^\d]/g,""))/100; }
-valor.oninput = () => valor.value = moeda(limpar(valor.value));
+/* ===== moeda ===== */
+function moeda(v){return "R$ "+Number(v).toFixed(2).replace(".",",");}
+function limpar(v){return Number(v.replace(/[^\d]/g,""))/100;}
+valor.oninput=()=>valor.value=moeda(limpar(valor.value));
 
-situacao.onchange = () => {
-  boxVencimento.style.display = situacao.value === "PENDENTE" ? "block" : "none";
+situacao.onchange=()=>{
+  boxVencimento.style.display=situacao.value==="PENDENTE"?"block":"none";
 };
 
-/* ===== AUTH ===== */
 auth.onAuthStateChanged(async u=>{
   if(u){
-    const d = await db.collection("usuarios").doc(u.uid).get();
-    isAdmin = d.exists && d.data().papel === "admin";
+    const d=await db.collection("usuarios").doc(u.uid).get();
+    isAdmin=d.exists&&d.data().papel==="admin";
     carregar();
   }
 });
 
-/* ===== SALVAR ===== */
-salvar.onclick = async () => {
+salvar.onclick=async()=>{
   try{
-    const dados = {
-      data_despesa: firebase.firestore.Timestamp.fromDate(
-        dateFromInput(dataDespesa.value)
-      ),
-      tipo_despesa: tipoDespesa.value,
-      nome_despesa: nomeDespesa.value,
-      fornecedor: fornecedor.value,
-      situacao: situacao.value,
-      data_vencimento: situacao.value === "PENDENTE"
-        ? firebase.firestore.Timestamp.fromDate(
-            dateFromInput(dataVencimento.value)
-          )
-        : null,
-      valor_despesa: limpar(valor.value),
-      criado_por: auth.currentUser.uid
+    const situ=situacao.value;
+    const dataDesp=dateFromInput(dataDespesa.value);
+    const dataVenc=situ==="PENDENTE"
+      ? dateFromInput(dataVencimento.value)
+      : dataDesp; // <-- REGRA NOVA
+
+    const dados={
+      data_despesa:firebase.firestore.Timestamp.fromDate(dataDesp),
+      data_vencimento:firebase.firestore.Timestamp.fromDate(dataVenc),
+      tipo_despesa:tipoDespesa.value,
+      nome_despesa:nomeDespesa.value,
+      fornecedor:fornecedor.value,
+      situacao:situ,
+      valor_despesa:limpar(valor.value),
+      criado_por:auth.currentUser.uid
     };
 
     editId
-      ? await db.collection("trator_despesas").doc(editId).update(dados)
-      : await db.collection("trator_despesas").add(dados);
+      ?await db.collection("trator_despesas").doc(editId).update(dados)
+      :await db.collection("trator_despesas").add(dados);
 
-    msg.textContent = editId
-      ? "Despesa editada com sucesso"
-      : "Despesa salva com sucesso";
-
-    msg.className = "msg ok";
-    editId = null;
-    btnExcluir.style.display = "none";
+    msg.textContent=editId?"Despesa editada com sucesso":"Despesa salva com sucesso";
+    msg.className="msg ok";
+    editId=null;
+    btnExcluir.style.display="none";
     carregar();
 
   }catch(e){
-    msg.textContent = e;
-    msg.className = "msg erro";
+    msg.textContent=e;
+    msg.className="msg erro";
   }
 };
 
-/* ===== EXCLUIR ===== */
-btnExcluir.onclick = () => {
-  if(!confirm("Excluir despesa?")) return;
+btnExcluir.onclick=()=>{
+  if(!confirm("Excluir despesa?"))return;
   db.collection("trator_despesas").doc(editId).delete().then(()=>{
-    msg.textContent = "Despesa excluída com sucesso";
-    msg.className = "msg ok";
-    editId = null;
-    btnExcluir.style.display = "none";
+    msg.textContent="Despesa excluída com sucesso";
+    msg.className="msg ok";
+    editId=null;
+    btnExcluir.style.display="none";
     carregar();
   });
 };
 
-/* ===== LISTAR ===== */
 function carregar(){
-  lista.innerHTML = "";
-
-  const ini = new Date(ano.value, mes.value, 1);
-  const fim = new Date(ano.value, Number(mes.value)+1, 0, 23,59,59);
+  lista.innerHTML="";
+  const ini=new Date(ano.value,mes.value,1);
+  const fim=new Date(ano.value,Number(mes.value)+1,0,23,59,59);
 
   db.collection("trator_despesas").get().then(s=>{
     s.forEach(d=>{
-      const v = d.data();
-      const ref = v.situacao === "PENDENTE"
-        ? v.data_vencimento
-        : v.data_despesa;
+      const v=d.data();
+      const ref=v.situacao==="PENDENTE"?v.data_vencimento:v.data_despesa;
+      if(!ref)return;
+      const dt=ref.toDate();
+      if(dt<ini||dt>fim)return;
 
-      if(!ref) return;
-
-      const dt = ref.toDate();
-      if(dt < ini || dt > fim) return;
-
-      lista.innerHTML += `
+      lista.innerHTML+=`
         <tr>
-          <td>${v.data_despesa?.toDate().toLocaleDateString("pt-BR") || ""}</td>
-          <td>${v.data_vencimento?.toDate().toLocaleDateString("pt-BR") || ""}</td>
+          <td>${v.data_despesa.toDate().toLocaleDateString("pt-BR")}</td>
           <td>${v.nome_despesa}</td>
           <td>${v.fornecedor}</td>
           <td>
-            <button onclick="editar('${d.id}')">Editar</button>
+            <button class="btn-edit" onclick="editar('${d.id}')">Editar</button>
           </td>
-        </tr>
-      `;
+        </tr>`;
     });
   });
 }
 
-/* ===== EDITAR ===== */
 function editar(id){
   db.collection("trator_despesas").doc(id).get().then(d=>{
-    const v = d.data();
-    editId = id;
+    const v=d.data();
+    editId=id;
 
-    dataDespesa.value = v.data_despesa.toDate().toISOString().split("T")[0];
-    tipoDespesa.value = v.tipo_despesa;
-    nomeDespesa.value = v.nome_despesa;
-    fornecedor.value = v.fornecedor;
-    situacao.value = v.situacao;
+    dataDespesa.value=v.data_despesa.toDate().toISOString().split("T")[0];
+    tipoDespesa.value=v.tipo_despesa;
+    nomeDespesa.value=v.nome_despesa;
+    fornecedor.value=v.fornecedor;
+    situacao.value=v.situacao;
 
-    boxVencimento.style.display =
-      v.situacao === "PENDENTE" ? "block" : "none";
-
-    if(v.data_vencimento){
-      dataVencimento.value =
-        v.data_vencimento.toDate().toISOString().split("T")[0];
+    boxVencimento.style.display=v.situacao==="PENDENTE"?"block":"none";
+    if(v.situacao==="PENDENTE"){
+      dataVencimento.value=v.data_vencimento.toDate().toISOString().split("T")[0];
     }
 
-    valor.value = moeda(v.valor_despesa);
+    valor.value=moeda(v.valor_despesa);
 
-    if(isAdmin){
-      btnExcluir.style.display = "block";
-    }
+    if(isAdmin) btnExcluir.style.display="block";
   });
 }
 
-/* ===== MESES / ANOS ===== */
-const meses = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
+const meses=["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
 meses.forEach((m,i)=>mes.innerHTML+=`<option value="${i}">${m}</option>`);
-const anoAtual = new Date().getFullYear();
+const anoAtual=new Date().getFullYear();
 for(let a=anoAtual-3;a<=anoAtual+10;a++) ano.innerHTML+=`<option>${a}</option>`;
 mes.value=new Date().getMonth();
 ano.value=anoAtual;
-mes.onchange = ano.onchange = carregar;
+mes.onchange=ano.onchange=carregar;
 </script>
 
 <script src="../login/logout.js"></script>
