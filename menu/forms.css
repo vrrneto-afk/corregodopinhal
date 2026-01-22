@@ -82,3 +82,53 @@ textarea{
 }
 .msg.ok{ color:var(--ok); }
 .msg.erro{ color:var(--erro); }
+
+/* =========================================
+   RESET FORTE DE FORMULÁRIOS
+   (ISOLA DO MENU)
+   ========================================= */
+
+form,
+.form,
+.card form,
+.card{
+  display:block;
+}
+
+/* RADIO / CHECKBOX – ISOLAMENTO TOTAL */
+.radio-group{
+  display:flex !important;
+  flex-direction:column !important;
+  align-items:flex-start !important;
+  justify-content:flex-start !important;
+  gap:8px;
+  width:100%;
+}
+
+.radio-option{
+  display:flex !important;
+  flex-direction:row !important;
+  align-items:center !important;
+  justify-content:flex-start !important;
+  gap:8px;
+  width:100%;
+  text-align:left !important;
+}
+
+/* impede herança de flex */
+.radio-option *{
+  display:initial;
+}
+
+/* input sempre fixo à esquerda */
+.radio-option input{
+  margin:0 !important;
+  flex:0 0 auto !important;
+}
+
+/* texto colado no rádio */
+.radio-option span{
+  display:inline-block !important;
+  text-align:left !important;
+  white-space:normal;
+}
