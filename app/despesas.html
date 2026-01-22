@@ -139,30 +139,6 @@ select{
 
 .pos{color:var(--verde)}
 .neg{color:var(--vermelho)}
-
-table{
-  width:100%;
-  border-collapse:collapse;
-  background:#fff;
-  border-radius:14px;
-  overflow:hidden;
-}
-
-th,td{
-  padding:10px;
-  text-align:center;
-  border-bottom:1px solid #eee;
-  font-size:14px;
-}
-
-th{
-  background:#efe3d3;
-}
-
-tfoot td{
-  font-weight:800;
-  background:#efe3d3;
-}
 </style>
 </head>
 
@@ -214,13 +190,14 @@ tfoot td{
   </div>
 </div>
 
+<div class="table-wrapper">
 <table>
 <thead>
 <tr>
-  <th>Vencimento</th>
-  <th>Tipo</th>
-  <th>Fornecedor</th>
-  <th>Valor</th>
+  <th class="col-data">Vencimento</th>
+  <th class="col-tipo">Tipo</th>
+  <th class="col-fornecedor">Fornecedor</th>
+  <th class="col-valor">Valor</th>
 </tr>
 </thead>
 <tbody id="tbody"></tbody>
@@ -231,6 +208,7 @@ tfoot td{
 </tr>
 </tfoot>
 </table>
+</div>
 
 </div>
 
@@ -360,10 +338,10 @@ function render(){
   atual.sort((a,b)=>a.vencimento-b.vencimento).forEach(r=>{
     tbody.innerHTML += `
     <tr>
-      <td>${r.vencimento.toLocaleDateString("pt-BR")}</td>
-      <td>${r.tipo_despesa}</td>
-      <td>${r.fornecedor}</td>
-      <td>${moeda(r.valor_total)}</td>
+      <td class="col-data">${r.vencimento.toLocaleDateString("pt-BR")}</td>
+      <td class="col-tipo">${r.tipo_despesa}</td>
+      <td class="col-fornecedor">${r.fornecedor}</td>
+      <td class="col-valor">${moeda(r.valor_total)}</td>
     </tr>`;
   });
 
