@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cadastro de Despesas – Trator</title>
+
+<!-- MANIFEST -->
+<link rel="manifest" href="../manifest.json">
+<meta name="theme-color" content="#7b3f2a">
+
+<!-- CSS GLOBAL -->
+<link rel="stylesheet" href="../menu/menu.css">
+<link rel="stylesheet" href="../menu/components.css">
+<link rel="stylesheet" href="../menu/forms.css">
+<link rel="stylesheet" href="../menu/tables.css">
+
+<!-- FIREBASE -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+<!-- FIREBASE INIT -->
+<script>
+if (!firebase.apps.length) {
+  firebase.initializeApp({
+    apiKey: "AIzaSyCW-CuFDrOLO-dteckl_GrPTocmyS-IrzY",
+    authDomain: "sitio-corrego-do-pinhal.firebaseapp.com",
+    projectId: "sitio-corrego-do-pinhal"
+  });
+}
+</script>
+
+<!-- IDENTIFICAÇÃO DA PÁGINA -->
+<script>
+window.PERMISSAO_PAGINA = {
+  area: "trator",
+  chave: "trator-caddespesas"
+};
+</script>
+
+<!-- AUTH GUARD -->
+<script src="../login/auth-guard.js"></script>
+</head>
+
+<body style="display:none">
+
+<div id="menu"></div>
+
+<main>
+
+<h1>🧾 Cadastro de Despesas – Trator</h1>
+
+<div class="card">
+
+  <div class="form-group">
+    <label>Data</label>
+    <input type="date" id="data">
+  </div>
+
+  <div class="form-group">
+    <label>Tipo da despesa</label>
+    <input type="text" id="tipo" placeholder="Ex: Diesel, Manutenção, Peça">
+  </div>
+
+  <div class="form-group">
+    <label>Descrição (opcional)</label>
+    <input type="text" id="descricao">
+  </div>
+
+  <div class="form-group">
+    <label>Valor</label>
+    <input type="text" id="valor">
+  </div>
+
+  <button class="btn btn-primary" id="salvar">💾 Salvar Despesa</button>
+  <div id="msg" class="text-muted"></div>
+
+</div>
+
+<h2>📊 Despesas do Mês</h2>
+
+<div style="display:flex;gap:10px;margin-bottom:12px">
+  <select id="mes"></select>
+  <select id="ano"></select>
+</div>
+
+<div class="card">
+<table class="table">
+  <thead>
+    <tr>
+      <th>Data</th>
+      <th>Tipo</th>
+      <th>Descrição</th>
+      <th>Valor</th>
+      <th>Ações</th>
+    </tr>
+  </thead>
+  <tbody id="lista"></tbody>
+  <tfoot>
+    <tr>
+      <th colspan="3">Total do mês</th>
+      <th id="totalMes">R$ 0,00</th>
+      <th></th>
+    </tr>
+  </tfoot>
+</table>
+</div>
+
+</main>
+
+<!-- MENU + PERMISSÕES -->
+<script>
+fetch("../menu/menu.html")
+  .then(r => r.text())
+  .then(html => {
+    document.getElementById("menu").innerHTML = html;
+
+    document.querySelectorAll("#menu a").forEach(a => {
+      if (a.getAttribute("href") === "../trator/trator-inicio.html") {
+        a.classList.add("ativo");
+      }
+    });
+
+    const s = document.createElement("script");
+    s.src = "../menu/menu-permissoes.js";
+    document.body.appendChild(s);
+
+    document.body.style.display = "block";
+  });
+</script>
+
+<script>
+const db = firebase.firestore();
+const auth = firebase.auth();
+let editId = null;
+
+const meses = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
+meses.forEach((m,i)=>mes.innerHTML+=`<option value="${i}">${m}</option>`);
+
+const anoAtual = new Date().getFullYear();
+for(let a=anoAtual-3;a<=anoAtual+10;a++) ano.innerHTML+=`<option>${a}</option>`;
+mes.value=new Date().getMonth();
+ano.value=anoAtual;
+
+function moeda(v){
+  return "R$ "+Number(v).toFixed(2).replace(".",",");
+}
+function limparMoeda(v){
+  return Number(v.replace(/[^\d]/g,""))/100;
+}
+
+valor.oninput=()=>{
+  valor.value = moeda(limparMoeda(valor.value));
+};
+
+salvar.onclick = async () => {
+  try{
+    const user = auth.currentUser;
+    if(!user) throw "Usuário não autenticado";
+
+    const v = limparMoeda(valor.value);
+    if(v <= 0) throw "Valor inválido";
+
+    const dados = {
+      data: firebase.firestore.Timestamp.fromDate(new Date(data.value)),
+      tipo: tipo.value,
+      descricao: descricao.value,
+      valor: v,
+      criado_por: user.uid
+    };
+
+    editId
+      ? await db.collection("trator_despesas").doc(editId).update(dados)
+      : await db.collection("trator_despesas").add(dados);
+
+    msg.textContent = "Despesa salva com sucesso";
+    msg.className = "text-success";
+    carregarTabela();
+
+  }catch(e){
+    msg.textContent = e;
+    msg.className = "text-danger";
+  }
+};
+
+function carregarTabela(){
+  lista.innerHTML = "";
+  let total = 0;
+
+  const ini = new Date(ano.value, mes.value, 1);
+  const fim = new Date(ano.value, Number(mes.value)+1, 0, 23,59,59);
+
+  db.collection("trator_despesas")
+    .where("data", ">=", ini)
+    .where("data", "<=", fim)
+    .get()
+    .then(snap=>{
+      snap.forEach(d=>{
+        const v = d.data();
+        total += v.valor;
+
+        lista.innerHTML += `
+          <tr>
+            <td>${v.data.toDate().toLocaleDateString("pt-BR")}</td>
+            <td>${v.tipo}</td>
+            <td>${v.descricao || ""}</td>
+            <td>${moeda(v.valor)}</td>
+            <td>
+              <button class="btn btn-secondary" onclick="editar('${d.id}')">Editar</button>
+            </td>
+          </tr>
+        `;
+      });
+      totalMes.textContent = moeda(total);
+    });
+}
+
+function editar(id){
+  db.collection("trator_despesas").doc(id).get().then(d=>{
+    const v = d.data();
+    editId = id;
+    data.value = v.data.toDate().toISOString().split("T")[0];
+    tipo.value = v.tipo;
+    descricao.value = v.descricao || "";
+    valor.value = moeda(v.valor);
+  });
+}
+
+mes.onchange = ano.onchange = carregarTabela;
+carregarTabela();
+</script>
+
+<script src="../login/logout.js"></script>
+
+</body>
+</html>
