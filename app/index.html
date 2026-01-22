@@ -68,9 +68,11 @@ h2{margin:28px 0 12px;color:var(--marrom)}
 
 <div class="container">
   <div id="clima" class="clima-bar">⏳ Carregando clima...</div>
+
   <a id="alertaRapido" href="../app/lembretes.html" class="alerta-rapido alerta-ok">
     🔔 Nenhum alerta no momento
   </a>
+
   <div id="conteudo"></div>
 </div>
 
@@ -83,7 +85,6 @@ const menu = document.getElementById("menu");
 const clima = document.getElementById("clima");
 const conteudo = document.getElementById("conteudo");
 const alertaRapido = document.getElementById("alertaRapido");
-const modalClima = document.getElementById("modalClima");
 
 /* ================= MENU ================= */
 fetch("../menu/menu.html")
@@ -102,40 +103,23 @@ fetch("../menu/menu.html")
     document.body.appendChild(s);
   });
 
-clima.onclick = () => modalClima.style.display = "flex";
-modalClima.onclick = e => {
-  if (e.target === modalClima) modalClima.style.display = "none";
-};
-
 /* ================= DATAS ================= */
 const hoje = new Date();
-const hojeZ = new Date(
-  hoje.getFullYear(),
-  hoje.getMonth(),
-  hoje.getDate()
-);
+const hojeZ = new Date(hoje.getFullYear(), hoje.getMonth(), hoje.getDate());
 
-function parse(d) {
-  if (!d) return null;
-  if (d.seconds) return new Date(d.seconds * 1000);
+function parse(d){
+  if(!d) return null;
+  if(d.seconds) return new Date(d.seconds * 1000);
   const p = d.split("-");
-  return new Date(p[0], p[1] - 1, p[2]);
+  return new Date(p[0], p[1]-1, p[2]);
 }
-
-function addM(d, m) {
-  const x = new Date(d);
-  x.setMonth(x.getMonth() + m);
-  return x;
-}
-
-function diff(a, b) {
-  return Math.floor((b - a) / 86400000);
-}
+function addM(d,m){ const x=new Date(d); x.setMonth(x.getMonth()+m); return x; }
+function diff(a,b){ return Math.floor((b-a)/86400000); }
 
 /* ================= CONFIG ================= */
 let CFG = {};
 
-async function loadConfigs() {
+async function loadConfigs(){
   const c1 = await db.collection("config").doc("clima").get();
   const c2 = await db.collection("config").doc("vacas").get();
   const c3 = await db.collection("config").doc("vacinas").get();
@@ -150,8 +134,8 @@ async function loadConfigs() {
 }
 
 /* ================= CLIMA ================= */
-async function loadClima() {
-  if (!CFG.clima.latitude) {
+async function loadClima(){
+  if(!CFG.clima.latitude){
     clima.innerText = "☁️ Clima indisponível";
     return;
   }
@@ -163,27 +147,25 @@ async function loadClima() {
   let texto = c.textos?.sem_chuva || "Sem previsão de chuva.";
   const agora = new Date();
 
-  for (let i = 0; i < d.hourly.time.length; i++) {
+  for(let i=0;i<d.hourly.time.length;i++){
     const h = new Date(d.hourly.time[i]);
     const min = (h - agora) / 60000;
 
-    if (
+    if(
       min > 0 &&
       min <= c.janela_previsao_minutos &&
       d.hourly.precipitation_probability[i] >= c.limite_chuva_percentual
-    ) {
+    ){
       texto = `${c.textos?.chuva_em || "Chuva em"} ${Math.round(min)} minutos.`;
       break;
     }
   }
 
-  clima.innerHTML = `☀️ ${c.cidade || ""} • ${Math.round(
-    d.current_weather.temperature
-  )}°C<br>${texto}`;
+  clima.innerHTML = `☀️ ${c.cidade || ""} • ${Math.round(d.current_weather.temperature)}°C<br>${texto}`;
 }
 
 /* ================= ALERTAS ================= */
-async function loadAlertas() {
+async function loadAlertas(){
   const s = await db.collection("lembretes").get();
 
   alertaRapido.className = s.size
@@ -196,8 +178,8 @@ async function loadAlertas() {
 }
 
 /* ================= PRENHEZ ================= */
-function obterRegraPrenhez(dias) {
-  if (dias <= 0) return null;
+function obterRegraPrenhez(dias){
+  if(dias <= 0) return null;
 
   return CFG.vacas.prenhez_intervalos
     .filter(r =>
@@ -205,70 +187,62 @@ function obterRegraPrenhez(dias) {
       dias >= r.dias_de &&
       dias <= r.dias_ate
     )
-    .sort((a, b) => a.dias_de - b.dias_de)[0] || null;
+    .sort((a,b)=>a.dias_de-b.dias_de)[0] || null;
 }
 
-function textoPrenhez(dias) {
+function textoPrenhez(dias){
   const t = CFG.vacas.prenhez_textos || {};
 
-  if (dias === 0 && t.parto_hoje) return t.parto_hoje;
-  if (dias < 0 && t.parto_atrasado)
+  if(dias === 0 && t.parto_hoje) return t.parto_hoje;
+  if(dias < 0 && t.parto_atrasado)
     return t.parto_atrasado.replace("{{dias}}", Math.abs(dias));
-  if (dias > 0 && t.antes_parto)
+  if(dias > 0 && t.antes_parto)
     return t.antes_parto.replace("{{dias}}", dias);
 
-  return "";
+  return null;
 }
 
 /* ================= INDEX ================= */
-async function loadIndex() {
+async function loadIndex(){
   conteudo.innerHTML = "";
 
-  const animais = (await db.collection("animais").get()).docs.map(d => ({
-    _id: d.id,
-    ...d.data()
-  }));
+  const animais = (await db.collection("animais").get()).docs.map(d=>({_id:d.id,...d.data()}));
+  const eventos = (await db.collection("eventos").get()).docs.map(d=>d.data());
+  const vacinas = (await db.collection("vacinas").get()).docs.map(d=>d.data());
 
-  const eventos = (await db.collection("eventos").get()).docs.map(d => d.data());
-  const vacinas = (await db.collection("vacinas").get()).docs.map(d => d.data());
-
-  /* ===== VACAS A CRIAR ===== */
+  /* ===== VACAS ===== */
   conteudo.innerHTML += "<h2>🐄 Vacas a Criar</h2>";
 
   eventos
-    .filter(e => e.tipo_evento === "cobertura")
-    .map(c => {
-      const animal = animais.find(a => a._id === c.id_animal);
-      if (!animal) return null;
+    .filter(e=>e.tipo_evento==="cobertura")
+    .map(c=>{
+      const animal = animais.find(a=>a._id===c.id_animal);
+      if(!animal) return null;
 
-      const prev = addM(
-        parse(c.data_evento),
-        Number(CFG.vacas.gestacao_meses || 9)
-      );
-
+      const prev = addM(parse(c.data_evento), Number(CFG.vacas.gestacao_meses || 9));
       const dias = diff(hojeZ, prev);
 
-      return { animal, prev, dias };
+      return {animal, prev, dias};
     })
     .filter(Boolean)
-    .sort((a, b) => a.dias - b.dias) // 🔥 MAIS PRÓXIMO PRIMEIRO
-    .forEach(v => {
+    .sort((a,b)=>a.dias-b.dias)
+    .forEach(v=>{
       const regra = obterRegraPrenhez(v.dias);
       const classe = regra?.classe || "ok";
       const msgAux = regra?.mensagem || "";
-      const texto = textoPrenhez(v.dias);
+
+      const texto =
+        textoPrenhez(v.dias) ||
+        (v.dias >= 0
+          ? `⏳ Faltam ${v.dias} dias`
+          : `🚨 Parto atrasado em ${Math.abs(v.dias)} dias`);
 
       conteudo.innerHTML += `
         <div class="card ${classe}">
           <strong>🐄 ${v.animal.nome.toUpperCase()}</strong>
-
           <p class="dias">${texto}</p>
-
           ${msgAux ? `<p class="msg">${msgAux}</p>` : ""}
-
-          <p class="data">
-            📅 ${v.prev.toLocaleDateString("pt-BR")}
-          </p>
+          <p class="data">📅 ${v.prev.toLocaleDateString("pt-BR")}</p>
         </div>
       `;
     });
@@ -279,46 +253,43 @@ async function loadIndex() {
   const prioridade = CFG.vacinas.prioridades || {};
 
   vacinas
-    .filter(v => v.status === "Pendente")
-    .map(v => {
+    .filter(v=>v.status==="Pendente")
+    .map(v=>{
       const reap = parse(v.data_aplicacao);
-      if (!reap) return null;
+      if(!reap) return null;
 
-      reap.setDate(reap.getDate() + Number(v.repeticao_dias || 0));
+      reap.setDate(reap.getDate()+Number(v.repeticao_dias||0));
       const dias = diff(hojeZ, reap);
 
-      return { ...v, reap, dias };
+      return {...v,reap,dias};
     })
     .filter(Boolean)
-    .sort((a, b) => {
-      const pa = prioridade[a.dias < 0 ? "atrasada" : "pendente"] ?? 99;
-      const pb = prioridade[b.dias < 0 ? "atrasada" : "pendente"] ?? 99;
-      return pa - pb;
+    .sort((a,b)=>{
+      const pa = prioridade[a.dias<0?"atrasada":"pendente"] ?? 99;
+      const pb = prioridade[b.dias<0?"atrasada":"pendente"] ?? 99;
+      return pa-pb;
     })
-    .forEach(v => {
-      const texto =
+    .forEach(v=>{
+      const textoBase =
         v.dias < 0
           ? CFG.vacinas.status?.atrasada
           : CFG.vacinas.status?.pendente;
 
+      const textoFinal = (textoBase || "Reaplicar em {{dias}} dias")
+        .replace("{{dias}}", Math.abs(v.dias));
+
       conteudo.innerHTML += `
-        <div class="card ${v.dias < 0 ? "atrasada" : "pendente"}">
+        <div class="card ${v.dias<0?"atrasada":"pendente"}">
           <strong>💉 ${v.nome_vacina}</strong>
-
-          <p class="dias">
-            ${texto.replace("{{dias}}", Math.abs(v.dias))}
-          </p>
-
-          <p class="data">
-            📅 ${v.reap.toLocaleDateString("pt-BR")}
-          </p>
+          <p class="dias">${textoFinal}</p>
+          <p class="data">📅 ${v.reap.toLocaleDateString("pt-BR")}</p>
         </div>
       `;
     });
 }
 
 /* ================= START ================= */
-(async () => {
+(async()=>{
   await loadConfigs();
   await loadClima();
   await loadAlertas();
