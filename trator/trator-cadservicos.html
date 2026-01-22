@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -9,7 +10,7 @@
 <link rel="manifest" href="../manifest.json">
 <meta name="theme-color" content="#7b3f2a">
 
-<!-- MENU GLOBAL (forms.css + tables.css + components.css) -->
+<!-- MENU GLOBAL -->
 <link rel="stylesheet" href="../menu/menu.css">
 
 <!-- FIREBASE -->
@@ -76,6 +77,14 @@ header img{
   padding:0 15px;
 }
 
+.voltar{
+  display:inline-block;
+  margin-bottom:15px;
+  font-weight:600;
+  color:var(--marrom);
+  text-decoration:none;
+}
+
 .card{
   background:#fff;
   border-radius:14px;
@@ -90,8 +99,7 @@ label{
   margin-top:12px;
 }
 
-input,
-select{
+input, select{
   width:100%;
   padding:10px;
   border-radius:10px;
@@ -137,6 +145,8 @@ button:disabled{ opacity:.6; }
 
 <div class="container">
 
+<a href="../trator/trator-inicio.html" class="voltar">⬅ Voltar para Trator</a>
+
 <h2>🚜 Cadastro de Serviços</h2>
 
 <div class="card">
@@ -152,18 +162,14 @@ button:disabled{ opacity:.6; }
 
 <label>Forma de cobrança</label>
 
-<div class="radio-block">
-  <div class="radio-group">
-    <label class="radio-option">
-      <input type="radio" name="cobranca" value="hora" checked>
-      <span>Por hora</span>
-    </label>
-
-    <label class="radio-option">
-      <input type="radio" name="cobranca" value="fechado">
-      <span>Valor fechado</span>
-    </label>
-  </div>
+<div class="radio-group">
+  <label>
+    <input type="radio" name="cobranca" value="hora" checked> Por hora
+  </label>
+  <label>
+    <input type="radio" name="cobranca" value="fechado"> Valor fechado
+  </label>
+</div>
 
 <div id="porHora">
   <label>Horas trabalhadas</label>
@@ -197,11 +203,11 @@ button:disabled{ opacity:.6; }
 <table>
 <thead>
 <tr>
-  <th class="col-data">Data</th>
-  <th class="col-tipo">Tipo</th>
-  <th class="col-cliente">Cliente</th>
-  <th class="col-valor">Valor</th>
-  <th class="col-acoes">Ações</th>
+  <th>Data</th>
+  <th>Tipo</th>
+  <th>Cliente</th>
+  <th>Valor</th>
+  <th>Ações</th>
 </tr>
 </thead>
 <tbody id="lista"></tbody>
@@ -313,11 +319,11 @@ function carregarTabela(){
         const v=d.data();total+=v.valor_total;
         lista.innerHTML+=`
         <tr>
-          <td class="col-data">${v.data.toDate().toLocaleDateString("pt-BR",{day:"2-digit",month:"2-digit"})}</td>
-          <td class="col-tipo">${v.tipo}</td>
-          <td class="col-cliente">${v.cliente}</td>
-          <td class="col-valor">${moeda(v.valor_total)}</td>
-          <td class="col-acoes"><button onclick="editar('${d.id}')">Editar</button></td>
+          <td>${v.data.toDate().toLocaleDateString("pt-BR")}</td>
+          <td>${v.tipo}</td>
+          <td>${v.cliente}</td>
+          <td>${moeda(v.valor_total)}</td>
+          <td><button onclick="editar('${d.id}')">Editar</button></td>
         </tr>`;
       });
       totalMes.textContent=moeda(total);
