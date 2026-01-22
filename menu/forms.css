@@ -124,11 +124,6 @@ form,
   text-align:left;
 }
 
-/* impede herança de flex */
-.radio-option *{
-  display:initial;
-}
-
 /* input sempre fixo à esquerda */
 .radio-option input{
   margin:0 !important;
