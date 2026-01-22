@@ -8,9 +8,11 @@
   <link rel="manifest" href="../manifest.json">
   <meta name="theme-color" content="#7b3f2a">
 
+  <!-- CSS GLOBAL -->
   <link rel="stylesheet" href="../menu/menu.css">
   <link rel="stylesheet" href="./config.css">
 
+  <!-- FIREBASE -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
@@ -25,23 +27,16 @@
     }
   </script>
 
+  <!-- IDENTIFICAÇÃO DA PÁGINA -->
   <script>
     window.PERMISSAO_PAGINA = { area: "config", chave: "config-vacas" };
   </script>
 
+  <!-- AUTH GUARD -->
   <script src="../login/auth-guard.js"></script>
 
+  <!-- ESTILOS LOCAIS (SEM RADIO/CHECKBOX) -->
   <style>
-    .label-check{
-      display:flex;
-      align-items:center;
-      justify-content:flex-start;
-      gap:6px;
-      font-weight:600;
-      margin-top:12px;
-      width:100%;
-    }
-    .label-check input{margin:0}
     .regra-card span{font-size:13px;font-weight:500}
     .range{display:flex;align-items:center;gap:8px}
     .info{font-size:13px;opacity:.75;margin:10px 0 14px}
@@ -118,10 +113,13 @@
     <label>Mensagem auxiliar</label>
     <input type="text" id="mensagem">
 
-    <label class="label-check">
-      <input type="checkbox" id="ativa">
-      <span>Regra ativa</span>
-    </label>
+    <!-- CHECKBOX PADRÃO GLOBAL -->
+    <div class="checkbox-group">
+      <label class="checkbox-option">
+        <input type="checkbox" id="ativa">
+        <span>Regra ativa</span>
+      </label>
+    </div>
 
   </fieldset>
 
@@ -141,6 +139,12 @@ fetch("../menu/menu-adm.html")
   .then(html => {
     document.getElementById("menu-adm").innerHTML = html;
 
+     document.querySelectorAll(".menu-link").forEach(a=>{
+      if(a.getAttribute("href")?.includes("config.html")){
+        a.classList.add("ativo");
+      }
+    });
+    
     const s = document.createElement("script");
     s.src = "../menu/menu-permissoes.js";
 
