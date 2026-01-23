@@ -259,6 +259,11 @@ fetch("../menu/menu.html")
   .then(r=>r.text())
   .then(html=>{
     menu.innerHTML=html;
+    document.querySelectorAll("#menu a").forEach(a=>{
+      if(a.getAttribute("href")==="../trator/trator-inicio.html"){
+        a.classList.add("ativo");
+      }
+    });
     const s=document.createElement("script");
     s.src="../menu/menu-permissoes.js";
     document.body.appendChild(s);
