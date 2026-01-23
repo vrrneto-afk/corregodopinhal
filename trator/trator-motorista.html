@@ -226,11 +226,22 @@ function moeda(v){
 }
 
 async function carregarMotoristas(){
-  const snap = await db.collection("motoristas").where("ativo","==",true).get();
+  MOTORISTAS = {};
+  filtroMotorista.innerHTML = `<option value="todos">Todos os motoristas</option>`;
+
+  const snap = await db
+    .collection("trator_motoristas")
+    .where("ativo","==",true)
+    .get();
+
   snap.forEach(d=>{
     MOTORISTAS[d.id] = d.data();
-    filtroMotorista.innerHTML +=
-      `<option value="${d.id}">${d.data().nome_motorista}</option>`;
+
+    filtroMotorista.innerHTML += `
+      <option value="${d.id}">
+        ${d.data().nome_motorista}
+      </option>
+    `;
   });
 }
 
