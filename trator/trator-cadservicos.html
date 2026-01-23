@@ -1,349 +1,503 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Serviços do Trator</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<link rel="manifest" href="../manifest.json">
-<meta name="theme-color" content="#7b3f2a">
+  <title>Cadastro de Serviços – Trator</title>
 
-<link rel="stylesheet" href="../menu/menu.css">
+  <link rel="manifest" href="../manifest.json">
+  <meta name="theme-color" content="#7b3f2a">
 
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <!-- MENU + FORMS -->
+  <link rel="stylesheet" href="../menu/menu.css">
 
-<script>
-if (!firebase.apps.length) {
-  firebase.initializeApp({
-    apiKey: "AIzaSyCW-CuFDrOLO-dteckl_GrPTocmyS-IrzY",
-    authDomain: "sitio-corrego-do-pinhal.firebaseapp.com",
-    projectId: "sitio-corrego-do-pinhal"
-  });
-}
-</script>
+  <!-- FIREBASE -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
-<script>
-window.PERMISSAO_PAGINA = {
-  area: "trator",
-  chave: "trator-servicos"
-};
-</script>
+  <!-- DATE UTILS -->
+  <script src="../utils/date-utils.js"></script>
 
-<script src="../login/auth-guard.js"></script>
+  <script>
+    if (!firebase.apps.length) {
+      firebase.initializeApp({
+        apiKey: "AIzaSyCW-CuFDrOLO-dteckl_GrPTocmyS-IrzY",
+        authDomain: "sitio-corrego-do-pinhal.firebaseapp.com",
+        projectId: "sitio-corrego-do-pinhal"
+      });
+    }
+  </script>
 
-<style>
-/* ===== MESMO PADRÃO DO CADSERVICOS ===== */
-:root{
-  --marrom:#7b3f2a;
-  --bege:#f6efe7;
-  --logo:#D0B485;
-}
+  <script>
+    window.PERMISSAO_PAGINA = {
+      area: "trator",
+      chave: "trator-cadservicos"
+    };
+  </script>
 
-*{
-  box-sizing:border-box;
-  font-family:Inter,system-ui,Arial;
-}
+  <script src="../login/auth-guard.js"></script>
 
-body{
-  margin:0;
-  background:var(--bege);
-  color:#333;
-}
+  <style>
+    :root{
+      --marrom:#7b3f2a;
+      --bege:#f6efe7;
+      --logo:#D0B485;
+      --ok:#2f6b2f;
+      --erro:#c0392b;
+    }
 
-header{
-  background:var(--logo);
-  padding:15px;
-  text-align:center;
-}
+    *{
+      box-sizing:border-box;
+      font-family:Inter,system-ui,Arial;
+    }
 
-header img{
-  max-width:260px;
-  width:100%;
-}
+    body{
+      margin:0;
+      background:var(--bege);
+      color:#333;
+    }
 
-.container{
-  max-width:900px;
-  margin:20px auto;
-  padding:0 15px;
-}
+    /* HEADER */
+    header{
+      background:var(--logo);
+      padding:15px;
+      text-align:center;
+    }
 
-.card{
-  background:#fff;
-  border-radius:14px;
-  padding:16px;
-  box-shadow:0 2px 6px rgba(0,0,0,.06);
-  margin-bottom:20px;
-}
+    header img{
+      max-width:260px;
+      width:100%;
+    }
 
-h2{
-  margin:24px 0 14px;
-  color:var(--marrom);
-  display:flex;
-  align-items:center;
-  gap:8px;
-}
+    /* CONTAINER */
+    .container{
+      max-width:900px;
+      margin:20px auto;
+      padding:0 15px;
+    }
 
-select{
-  width:100%;
-  padding:10px;
-  border-radius:10px;
-  border:1px solid #ccc;
-  font-size:15px;
-}
+    /* CARD */
+    .card{
+      background:#fff;
+      border-radius:14px;
+      padding:16px;
+      box-shadow:0 2px 6px rgba(0,0,0,.06);
+      margin-bottom:20px;
+    }
 
-.btn-outline{
-  background:transparent;
-  border:2px solid var(--marrom);
-  color:var(--marrom);
-  width:100%;
-  padding:14px;
-  border-radius:14px;
-  font-weight:700;
-  cursor:pointer;
-}
+    h2{
+      margin:24px 0 14px;
+      color:var(--marrom);
+      display:flex;
+      align-items:center;
+      gap:8px;
+    }
 
-.table-wrapper{
-  overflow-x:auto;
-}
+    label{
+      display:block;
+      font-weight:600;
+      margin-top:12px;
+    }
 
-table{
-  width:100%;
-  border-collapse:separate;
-  border-spacing:0;
-}
+    input,
+    select{
+      width:100%;
+      padding:10px;
+      border-radius:10px;
+      border:1px solid #ccc;
+      margin-top:4px;
+      font-size:15px;
+    }
 
-thead{
-  background:#efe3d3;
-}
+    .msg{
+      margin-top:10px;
+      font-weight:700;
+    }
 
-th, td{
-  padding:12px;
-  text-align:left;
-  white-space:nowrap;
-}
+    .msg.ok{ color:var(--ok); }
+    .msg.erro{ color:var(--erro); }
 
-.btn-edit{
-  padding:10px 16px;
-  border-radius:10px;
-  background:#eee;
-  border:none;
-  font-weight:700;
-}
-</style>
+    .btn-row{
+      display:flex;
+      gap:10px;
+      margin-top:16px;
+    }
+
+    .btn-primary{
+      background:var(--marrom);
+      color:#fff;
+      border:none;
+      border-radius:12px;
+      padding:12px;
+      font-weight:700;
+      flex:1;
+    }
+
+    .btn-warning{
+      background:#e0a800;
+      color:#000;
+      border:none;
+      border-radius:12px;
+      padding:12px;
+      font-weight:700;
+      flex:1;
+    }
+
+    .btn-outline{
+      background:transparent;
+      border:2px solid var(--marrom);
+      color:var(--marrom);
+      width:100%;
+      padding:14px;
+      border-radius:14px;
+      font-weight:700;
+      margin-top:20px;
+      cursor:pointer;
+    }
+
+    /* TABELA */
+    .table-wrapper{
+      overflow-x:auto;
+    }
+
+    table{
+      width:100%;
+      border-collapse:separate;
+      border-spacing:0;
+    }
+
+    thead{
+      background:#efe3d3;
+    }
+
+    th,
+    td{
+      padding:12px;
+      text-align:left;
+      white-space:nowrap;
+    }
+
+    .btn-edit{
+      padding:10px 16px;
+      border-radius:10px;
+      background:#eee;
+      border:none;
+      font-weight:700;
+    }
+  </style>
 </head>
 
 <body style="display:none">
 
-<header>
-  <img src="../logo.png">
-</header>
+  <header>
+    <img src="../logo.png">
+  </header>
 
-<div id="menu"></div>
+  <div id="menu"></div>
 
-<div class="container">
+  <div class="container">
 
-<h2>📊 Serviços do Trator</h2>
+    <h2>🚜 Cadastro de Serviços</h2>
 
-<!-- FILTROS -->
-<div class="card">
-  <div class="btn-row" style="gap:10px">
-    <select id="filtroCliente"><option value="">Cliente (todos)</option></select>
-    <select id="filtroServico"><option value="">Serviço (todos)</option></select>
+    <div class="card">
+      <label>Data do serviço</label>
+      <input type="date" id="data">
+
+      <label>Cliente</label>
+      <input type="text" id="cliente">
+
+      <label>Tipo de serviço</label>
+      <input type="text" id="tipo">
+
+      <label>Motorista</label>
+      <select id="motorista">
+        <option value="">Selecione o motorista</option>
+      </select>
+
+      <label>Forma de cobrança</label>
+      <div class="radio-group">
+        <label class="radio-option">
+          <input type="radio" name="cobranca" value="hora" checked>
+          <span>Por hora</span>
+        </label>
+
+        <label class="radio-option">
+          <input type="radio" name="cobranca" value="fechado">
+          <span>Valor fechado</span>
+        </label>
+      </div>
+
+      <div id="porHora">
+        <label>Horas trabalhadas</label>
+        <input type="number" id="horas" step="0.1">
+
+        <label>Valor hora trator</label>
+        <input type="text" id="valorHora">
+
+        <label>Valor total</label>
+        <input type="text" id="valorTotal" readonly>
+      </div>
+
+      <div id="valorFechado" style="display:none">
+        <label>Valor total</label>
+        <input type="text" id="valorFechadoInput">
+      </div>
+
+      <div id="msg" class="msg"></div>
+
+      <div class="btn-row">
+        <button id="excluir" class="btn-warning" disabled>🗑 Excluir</button>
+        <button id="salvar" class="btn-primary">💾 Salvar Serviço</button>
+      </div>
+    </div>
+
+    <h2>📊 Serviços do mês</h2>
+
+    <div class="card">
+      <div class="btn-row">
+        <select id="mes"></select>
+        <select id="ano"></select>
+      </div>
+    </div>
+
+    <div class="card table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Data</th>
+            <th>Cliente</th>
+            <th>Tipo</th>
+            <th>Valor</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+
+        <tbody id="lista"></tbody>
+
+        <tfoot>
+          <tr>
+            <td colspan="3"><strong>Total do mês</strong></td>
+            <td id="totalMes">R$ 0,00</td>
+            <td></td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+
+    <button
+      class="btn-outline"
+      onclick="location.href='../trator/trator-inicio.html'">
+      ← Voltar para Trator
+    </button>
+
   </div>
 
-  <div class="btn-row" style="gap:10px;margin-top:10px">
-    <select id="mes"></select>
-    <select id="ano"></select>
-  </div>
-</div>
+  <!-- MENU -->
+  <script>
+    fetch("../menu/menu.html")
+      .then(r => r.text())
+      .then(html => {
+        menu.innerHTML = html;
 
-<!-- RESUMO -->
-<div class="card">
-  <strong>Total de serviços:</strong> <span id="qtd">0</span><br>
-  <strong>Receita total:</strong> <span id="receita">R$ 0,00</span><br>
-  <strong>Ticket médio:</strong> <span id="ticket">R$ 0,00</span>
-</div>
+        document.querySelectorAll("#menu a").forEach(a => {
+          if (a.getAttribute("href") === "../trator/trator-inicio.html") {
+            a.classList.add("ativo");
+          }
+        });
 
-<!-- TABELA -->
-<div class="card table-wrapper">
-<table>
-<thead>
-<tr>
-  <th>Data</th>
-  <th>Cliente</th>
-  <th>Serviço</th>
-  <th>Valor</th>
-  <th>Ações</th>
-</tr>
-</thead>
-<tbody id="lista"></tbody>
-<tfoot>
-<tr>
-  <td colspan="3"><strong>Total</strong></td>
-  <td id="totalTabela">R$ 0,00</td>
-  <td></td>
-</tr>
-</tfoot>
-</table>
-</div>
+        const s = document.createElement("script");
+        s.src = "../menu/menu-permissoes.js";
+        document.body.appendChild(s);
 
-<button class="btn-outline" onclick="location.href='../trator/trator-inicio.html'">
-← Voltar para Trator
-</button>
+        document.body.style.display = "block";
+      });
+  </script>
 
-</div>
+  <script>
+    const db = firebase.firestore();
+    let editId = null;
 
-<!-- MENU -->
-<script>
-fetch("../menu/menu.html")
-  .then(r=>r.text())
-  .then(html=>{
-    menu.innerHTML = html;
-    document.querySelectorAll("#menu a").forEach(a=>{
-      if(a.getAttribute("href")==="../trator/trator-inicio.html"){
-        a.classList.add("ativo");
-      }
-    });
-    const s=document.createElement("script");
-    s.src="../menu/menu-permissoes.js";
-    document.body.appendChild(s);
-    document.body.style.display="block";
-  });
-</script>
+    function moeda(v){
+      return "R$ " + Number(v).toFixed(2).replace(".", ",");
+    }
 
-<script>
-const db=firebase.firestore();
-let editId=null;
+    function limparMoeda(v){
+      return Number(v.replace(/[^\d]/g, "")) / 100;
+    }
 
-function moeda(v){return "R$ "+Number(v).toFixed(2).replace(".",",");}
-function limparMoeda(v){return Number(v.replace(/[^\d]/g,""))/100;}
+    function recalcular(){
+      valorTotal.value = moeda(
+        (Number(horas.value) || 0) * limparMoeda(valorHora.value || "0")
+      );
+    }
 
-function recalcular(){
-  valorTotal.value=moeda((Number(horas.value)||0)*limparMoeda(valorHora.value||"0"));
-}
+    horas.oninput = recalcular;
 
-horas.oninput=recalcular;
-valorHora.oninput=()=>{valorHora.value=moeda(limparMoeda(valorHora.value));recalcular();};
-valorFechadoInput.oninput=()=>valorFechadoInput.value=moeda(limparMoeda(valorFechadoInput.value));
-
-document.querySelectorAll("input[name='cobranca']").forEach(r=>{
-  r.onchange=()=>{
-    porHora.style.display=r.value==="hora"?"block":"none";
-    valorFechado.style.display=r.value==="fechado"?"block":"none";
-  };
-});
-
-db.collection("trator_motoristas").where("ativo","==",true).get().then(s=>{
-  const arr=[];
-  s.forEach(d=>arr.push({id:d.id,...d.data()}));
-  arr.sort((a,b)=>a.nome_motorista.localeCompare(b.nome_motorista));
-  arr.forEach(m=>{
-    motorista.innerHTML+=`<option value="${m.id}">${m.nome_motorista}</option>`;
-  });
-});
-
-salvar.onclick=async()=>{
-  try{
-    if(!data.value||!cliente.value||!tipo.value||!motorista.value) throw "Preencha todos os campos obrigatórios";
-    const porHoraSel=document.querySelector("input[name='cobranca']:checked").value==="hora";
-    const valor=porHoraSel?limparMoeda(valorTotal.value):limparMoeda(valorFechadoInput.value);
-    if(valor<=0) throw "Valor inválido";
-
-    const dados={
-      data:DateUtils.toTimestampFromInput(data.value),
-      cliente:cliente.value,
-      tipo:tipo.value,
-      motorista_id:motorista.value,
-      motorista_nome:motorista.options[motorista.selectedIndex].text,
-      valor_total:valor
+    valorHora.oninput = () => {
+      valorHora.value = moeda(limparMoeda(valorHora.value));
+      recalcular();
     };
 
-    editId
-      ?await db.collection("trator_servicos").doc(editId).update(dados)
-      :await db.collection("trator_servicos").add(dados);
+    valorFechadoInput.oninput = () =>
+      valorFechadoInput.value = moeda(limparMoeda(valorFechadoInput.value));
 
-    msg.textContent="Serviço salvo com sucesso";
-    msg.className="msg ok";
-    limpar();
-    carregar();
-  }catch(e){
-    msg.textContent=e;
-    msg.className="msg erro";
-  }
-};
-
-function editar(id){
-  db.collection("trator_servicos").doc(id).get().then(d=>{
-    const v=d.data();
-    editId=id;
-    data.value=v.data.toDate().toISOString().split("T")[0];
-    cliente.value=v.cliente;
-    tipo.value=v.tipo;
-    motorista.value=v.motorista_id;
-    valorFechadoInput.value=moeda(v.valor_total);
-    document.querySelector("input[value='fechado']").checked=true;
-    porHora.style.display="none";
-    valorFechado.style.display="block";
-    excluir.disabled=false;
-  });
-}
-
-excluir.onclick=async()=>{
-  if(!editId) return;
-  if(!confirm("Deseja excluir este serviço?")) return;
-  await db.collection("trator_servicos").doc(editId).delete();
-  limpar();
-  carregar();
-};
-
-function limpar(){
-  editId=null;
-  data.value="";
-  cliente.value="";
-  tipo.value="";
-  motorista.value="";
-  horas.value="";
-  valorHora.value="";
-  valorTotal.value="";
-  valorFechadoInput.value="";
-  excluir.disabled=true;
-}
-
-const meses=["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
-meses.forEach((m,i)=>mes.innerHTML+=`<option value="${i}">${m}</option>`);
-const anoAtual=new Date().getFullYear();
-for(let a=anoAtual-3;a<=anoAtual+10;a++) ano.innerHTML+=`<option>${a}</option>`;
-mes.value=new Date().getMonth();
-ano.value=anoAtual;
-
-function carregar(){
-  lista.innerHTML="";
-  let total=0;
-  const ini=new Date(ano.value,mes.value,1,12,0,0);
-  const fim=new Date(ano.value,Number(mes.value)+1,0,23,59,59);
-  db.collection("trator_servicos").where("data",">=",ini).where("data","<=",fim).get().then(s=>{
-    s.forEach(d=>{
-      const v=d.data();
-      total+=v.valor_total;
-      lista.innerHTML+=`
-        <tr>
-          <td>${v.data.toDate().toLocaleDateString("pt-BR")}</td>
-          <td>${v.cliente}</td>
-          <td>${v.tipo}</td>
-          <td>${moeda(v.valor_total)}</td>
-          <td><button class="btn-edit" onclick="editar('${d.id}')">Editar</button></td>
-        </tr>`;
+    document.querySelectorAll("input[name='cobranca']").forEach(r => {
+      r.onchange = () => {
+        porHora.style.display = r.value === "hora" ? "block" : "none";
+        valorFechado.style.display = r.value === "fechado" ? "block" : "none";
+      };
     });
-    totalMes.textContent=moeda(total);
-  });
-}
 
-mes.onchange=ano.onchange=carregar;
-carregar();
-</script>
+    db.collection("trator_motoristas")
+      .where("ativo", "==", true)
+      .get()
+      .then(s => {
+        const arr = [];
+        s.forEach(d => arr.push({ id: d.id, ...d.data() }));
+        arr.sort((a, b) => a.nome_motorista.localeCompare(b.nome_motorista));
+        arr.forEach(m => {
+          motorista.innerHTML += `<option value="${m.id}">${m.nome_motorista}</option>`;
+        });
+      });
 
-<script src="../login/logout.js"></script>
+    salvar.onclick = async () => {
+      try{
+        if (!data.value || !cliente.value || !tipo.value || !motorista.value)
+          throw "Preencha todos os campos obrigatórios";
+
+        const porHoraSel =
+          document.querySelector("input[name='cobranca']:checked").value === "hora";
+
+        const valor = porHoraSel
+          ? limparMoeda(valorTotal.value)
+          : limparMoeda(valorFechadoInput.value);
+
+        if (valor <= 0) throw "Valor inválido";
+
+        const dados = {
+          data: DateUtils.toTimestampFromInput(data.value),
+          cliente: cliente.value,
+          tipo: tipo.value,
+          motorista_id: motorista.value,
+          motorista_nome: motorista.options[motorista.selectedIndex].text,
+          valor_total: valor
+        };
+
+        editId
+          ? await db.collection("trator_servicos").doc(editId).update(dados)
+          : await db.collection("trator_servicos").add(dados);
+
+        msg.textContent = "Serviço salvo com sucesso";
+        msg.className = "msg ok";
+
+        limpar();
+        carregar();
+
+      } catch (e) {
+        msg.textContent = e;
+        msg.className = "msg erro";
+      }
+    };
+
+    function editar(id){
+      db.collection("trator_servicos").doc(id).get().then(d => {
+        const v = d.data();
+        editId = id;
+
+        data.value = v.data.toDate().toISOString().split("T")[0];
+        cliente.value = v.cliente;
+        tipo.value = v.tipo;
+        motorista.value = v.motorista_id;
+
+        valorFechadoInput.value = moeda(v.valor_total);
+        document.querySelector("input[value='fechado']").checked = true;
+
+        porHora.style.display = "none";
+        valorFechado.style.display = "block";
+
+        excluir.disabled = false;
+      });
+    }
+
+    excluir.onclick = async () => {
+      if (!editId) return;
+      if (!confirm("Deseja excluir este serviço?")) return;
+
+      await db.collection("trator_servicos").doc(editId).delete();
+      limpar();
+      carregar();
+    };
+
+    function limpar(){
+      editId = null;
+      data.value = "";
+      cliente.value = "";
+      tipo.value = "";
+      motorista.value = "";
+      horas.value = "";
+      valorHora.value = "";
+      valorTotal.value = "";
+      valorFechadoInput.value = "";
+      excluir.disabled = true;
+    }
+
+    const meses = [
+      "Janeiro","Fevereiro","Março","Abril","Maio","Junho",
+      "Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"
+    ];
+
+    meses.forEach((m, i) => {
+      mes.innerHTML += `<option value="${i}">${m}</option>`;
+    });
+
+    const anoAtual = new Date().getFullYear();
+    for (let a = anoAtual - 3; a <= anoAtual + 10; a++) {
+      ano.innerHTML += `<option>${a}</option>`;
+    }
+
+    mes.value = new Date().getMonth();
+    ano.value = anoAtual;
+
+    function carregar(){
+      lista.innerHTML = "";
+      let total = 0;
+
+      const ini = new Date(ano.value, mes.value, 1, 12, 0, 0);
+      const fim = new Date(ano.value, Number(mes.value) + 1, 0, 23, 59, 59);
+
+      db.collection("trator_servicos")
+        .where("data", ">=", ini)
+        .where("data", "<=", fim)
+        .get()
+        .then(s => {
+          s.forEach(d => {
+            const v = d.data();
+            total += v.valor_total;
+
+            lista.innerHTML += `
+              <tr>
+                <td>${v.data.toDate().toLocaleDateString("pt-BR")}</td>
+                <td>${v.cliente}</td>
+                <td>${v.tipo}</td>
+                <td>${moeda(v.valor_total)}</td>
+                <td>
+                  <button class="btn-edit" onclick="editar('${d.id}')">Editar</button>
+                </td>
+              </tr>
+            `;
+          });
+
+          totalMes.textContent = moeda(total);
+        });
+    }
+
+    mes.onchange = ano.onchange = carregar;
+    carregar();
+  </script>
+
+  <script src="../login/logout.js"></script>
+
 </body>
 </html>
