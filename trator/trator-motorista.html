@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Motorista – Produção</title>
+
+<link rel="manifest" href="../manifest.json">
+<meta name="theme-color" content="#7b3f2a">
+
+<link rel="stylesheet" href="../menu/menu.css">
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+<script>
+if (!firebase.apps.length) {
+  firebase.initializeApp({
+    apiKey: "AIzaSyCW-CuFDrOLO-dteckl_GrPTocmyS-IrzY",
+    authDomain: "sitio-corrego-do-pinhal.firebaseapp.com",
+    projectId: "sitio-corrego-do-pinhal"
+  });
+}
+</script>
+
+<script>
+window.PERMISSAO_PAGINA = {
+  area: "trator",
+  chave: "trator-motorista"
+};
+</script>
+
+<script src="../login/auth-guard.js"></script>
+
+<style>
+.container{
+  max-width:900px;
+  margin:20px auto;
+  padding:0 15px;
+}
+
+.card{
+  background:#fff;
+  border-radius:14px;
+  padding:16px;
+  box-shadow:0 2px 6px rgba(0,0,0,.06);
+  margin-bottom:20px;
+}
+
+.filters{
+  display:flex;
+  flex-wrap:wrap;
+  gap:10px;
+}
+
+.filters select{
+  flex:1;
+  min-width:140px;
+}
+
+.servico-card{
+  border:1px solid #eee;
+  border-radius:12px;
+  padding:14px;
+  margin-bottom:12px;
+  background:#fafafa;
+}
+
+.servico-card strong{
+  display:block;
+  margin-bottom:6px;
+}
+
+.totalizador{
+  background:#f6efe7;
+  border-radius:14px;
+  padding:16px;
+  font-weight:700;
+}
+
+.voltar{
+  display:block;
+  margin-top:25px;
+  font-weight:600;
+  color:#7b3f2a;
+  text-decoration:none;
+}
+</style>
+</head>
+
+<body style="display:none">
+
+<div id="menu"></div>
+
+<div class="container">
+
+<h2>👨‍🌾 Motorista – Produção</h2>
+
+<div class="card">
+  <div class="filters">
+    <select id="filtroMotorista">
+      <option value="">Todos os motoristas</option>
+    </select>
+
+    <select id="mes"></select>
+    <select id="ano"></select>
+  </div>
+</div>
+
+<div id="listaServicos"></div>
+
+<div id="totalizador" class="totalizador" style="display:none"></div>
+
+<a href="../trator/trator-inicio.html" class="voltar">⬅ Voltar para Trator</a>
+
+</div>
+
+<script>
+fetch("../menu/menu.html")
+  .then(r=>r.text())
+  .then(html=>{
+    document.getElementById("menu").innerHTML = html;
+
+    document.querySelectorAll("#menu a").forEach(a=>{
+      if(a.getAttribute("href")==="../trator/trator-motorista.html"){
+        a.classList.add("ativo");
+      }
+    });
+
+    const s=document.createElement("script");
+    s.src="../menu/menu-permissoes.js";
+    document.body.appendChild(s);
+    document.body.style.display="block";
+  });
+</script>
+
+<script>
+const db = firebase.firestore();
+
+const listaServicos = document.getElementById("listaServicos");
+const totalizador = document.getElementById("totalizador");
+
+function moeda(v){
+  return "R$ " + Number(v).toFixed(2).replace(".",",");
+}
+
+/* === MOTORISTAS === */
+db.collection("motoristas").orderBy("nome_motorista").get().then(s=>{
+  s.forEach(d=>{
+    const m = d.data();
+    filtroMotorista.innerHTML +=
+      `<option value="${m.id_motorista}">${m.nome_motorista}</option>`;
+  });
+});
+
+/* === MÊS / ANO === */
+const meses = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
+meses.forEach((m,i)=>mes.innerHTML+=`<option value="${i}">${m}</option>`);
+
+const anoAtual = new Date().getFullYear();
+for(let a=anoAtual-3;a<=anoAtual+10;a++) ano.innerHTML+=`<option>${a}</option>`;
+mes.value=new Date().getMonth();
+ano.value=anoAtual;
+
+/* === CARREGAR PRODUÇÃO === */
+function carregar(){
+  listaServicos.innerHTML="";
+  totalizador.style.display="none";
+
+  let totalServicos=0;
+  let totalValor=0;
+  let totalMotorista=0;
+
+  const ini = new Date(ano.value, mes.value, 1);
+  const fim = new Date(ano.value, Number(mes.value)+1, 0, 23,59,59);
+
+  db.collection("trator_servicos")
+    .where("data",">=",ini)
+    .where("data","<=",fim)
+    .get()
+    .then(s=>{
+      s.forEach(d=>{
+        const v=d.data();
+
+        if(filtroMotorista.value && v.motorista_id !== filtroMotorista.value)
+          return;
+
+        const horas = v.horas_trabalhadas || 0;
+        const valorHora = v.valor_hora_trator || 0;
+        const brutoMotorista = horas * valorHora * 0.10;
+
+        totalServicos++;
+        totalValor += v.valor_total;
+        totalMotorista += brutoMotorista;
+
+        listaServicos.innerHTML += `
+        <div class="servico-card">
+          <strong>Cliente:</strong> ${v.cliente}
+          <strong>Serviço:</strong> ${v.tipo}
+
+          Horas trabalhadas: ${horas}<br>
+          Valor hora trator: ${moeda(valorHora)}<br>
+          Valor total serviço: ${moeda(v.valor_total)}<br><br>
+
+          <strong>Motorista:</strong> ${v.motorista_nome}<br>
+          Valor bruto motorista: ${moeda(brutoMotorista)}
+        </div>`;
+      });
+
+      totalizador.innerHTML = `
+        Total de serviços: ${totalServicos}<br>
+        Valor total dos serviços: ${moeda(totalValor)}<br>
+        Valor bruto do motorista: ${moeda(totalMotorista)}
+      `;
+      totalizador.style.display="block";
+    });
+}
+
+filtroMotorista.onchange = carregar;
+mes.onchange = carregar;
+ano.onchange = carregar;
+
+carregar();
+</script>
+
+<script src="../login/logout.js"></script>
+
+</body>
+</html>
