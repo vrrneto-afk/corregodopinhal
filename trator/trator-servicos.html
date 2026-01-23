@@ -295,9 +295,9 @@ function carregar(){
         lista.innerHTML+=`
         <div class="mini-card">
           <div>📅 <b>${v.data.toDate().toLocaleDateString("pt-BR")}</b></div>
-          <div>👤 ${v.cliente}</div>
-          <div>🚜 ${v.tipo}</div>
-          <div>💰 <b>${moeda(v.valor_total)}</b></div>
+          <div>Cliente: ${v.cliente}</div>
+          <div>Serviço: ${v.tipo}</div>
+          <div>Valor: <b>${moeda(v.valor_total)}</b></div>
         </div>`;
       });
 
