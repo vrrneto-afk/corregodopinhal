@@ -3,21 +3,16 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Cadastro de Serviços – Trator</title>
+<title>Serviços do Trator</title>
 
 <link rel="manifest" href="../manifest.json">
 <meta name="theme-color" content="#7b3f2a">
 
-<!-- MENU + FORMS -->
 <link rel="stylesheet" href="../menu/menu.css">
 
-<!-- FIREBASE -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-
-<!-- DATE UTILS -->
-<script src="../utils/date-utils.js"></script>
 
 <script>
 if (!firebase.apps.length) {
@@ -32,19 +27,18 @@ if (!firebase.apps.length) {
 <script>
 window.PERMISSAO_PAGINA = {
   area: "trator",
-  chave: "trator-cadservicos"
+  chave: "trator-servicos"
 };
 </script>
 
 <script src="../login/auth-guard.js"></script>
 
 <style>
+/* ===== MESMO PADRÃO DO CADSERVICOS ===== */
 :root{
   --marrom:#7b3f2a;
   --bege:#f6efe7;
   --logo:#D0B485;
-  --ok:#2f6b2f;
-  --erro:#c0392b;
 }
 
 *{
@@ -58,25 +52,23 @@ body{
   color:#333;
 }
 
-/* HEADER */
 header{
   background:var(--logo);
   padding:15px;
   text-align:center;
 }
+
 header img{
   max-width:260px;
   width:100%;
 }
 
-/* CONTAINER */
 .container{
   max-width:900px;
   margin:20px auto;
   padding:0 15px;
 }
 
-/* CARD */
 .card{
   background:#fff;
   border-radius:14px;
@@ -93,52 +85,12 @@ h2{
   gap:8px;
 }
 
-label{
-  display:block;
-  font-weight:600;
-  margin-top:12px;
-}
-
-input, select{
+select{
   width:100%;
   padding:10px;
   border-radius:10px;
   border:1px solid #ccc;
-  margin-top:4px;
   font-size:15px;
-}
-
-.msg{
-  margin-top:10px;
-  font-weight:700;
-}
-.msg.ok{ color:var(--ok); }
-.msg.erro{ color:var(--erro); }
-
-.btn-row{
-  display:flex;
-  gap:10px;
-  margin-top:16px;
-}
-
-.btn-primary{
-  background:var(--marrom);
-  color:#fff;
-  border:none;
-  border-radius:12px;
-  padding:12px;
-  font-weight:700;
-  flex:1;
-}
-
-.btn-warning{
-  background:#e0a800;
-  color:#000;
-  border:none;
-  border-radius:12px;
-  padding:12px;
-  font-weight:700;
-  flex:1;
 }
 
 .btn-outline{
@@ -149,11 +101,9 @@ input, select{
   padding:14px;
   border-radius:14px;
   font-weight:700;
-  margin-top:20px;
   cursor:pointer;
 }
 
-/* TABELA */
 .table-wrapper{
   overflow-x:auto;
 }
@@ -194,77 +144,36 @@ th, td{
 
 <div class="container">
 
-<h2>🚜 Cadastro de Serviços</h2>
+<h2>📊 Serviços do Trator</h2>
 
+<!-- FILTROS -->
 <div class="card">
+  <div class="btn-row" style="gap:10px">
+    <select id="filtroCliente"><option value="">Cliente (todos)</option></select>
+    <select id="filtroServico"><option value="">Serviço (todos)</option></select>
+  </div>
 
-<label>Data do serviço</label>
-<input type="date" id="data">
-
-<label>Cliente</label>
-<input type="text" id="cliente">
-
-<label>Tipo de serviço</label>
-<input type="text" id="tipo">
-
-<label>Motorista</label>
-<select id="motorista">
-  <option value="">Selecione o motorista</option>
-</select>
-
-<label>Forma de cobrança</label>
-<div class="radio-group">
-  <label class="radio-option">
-    <input type="radio" name="cobranca" value="hora" checked>
-    <span>Por hora</span>
-  </label>
-  <label class="radio-option">
-    <input type="radio" name="cobranca" value="fechado">
-    <span>Valor fechado</span>
-  </label>
-</div>
-
-<div id="porHora">
-  <label>Horas trabalhadas</label>
-  <input type="number" id="horas" step="0.1">
-
-  <label>Valor hora trator</label>
-  <input type="text" id="valorHora">
-
-  <label>Valor total</label>
-  <input type="text" id="valorTotal" readonly>
-</div>
-
-<div id="valorFechado" style="display:none">
-  <label>Valor total</label>
-  <input type="text" id="valorFechadoInput">
-</div>
-
-<div id="msg" class="msg"></div>
-
-<div class="btn-row">
-  <button id="excluir" class="btn-warning" disabled>🗑 Excluir</button>
-  <button id="salvar" class="btn-primary">💾 Salvar Serviço</button>
-</div>
-
-</div>
-
-<h2>📊 Serviços do mês</h2>
-
-<div class="card">
-  <div class="btn-row">
+  <div class="btn-row" style="gap:10px;margin-top:10px">
     <select id="mes"></select>
     <select id="ano"></select>
   </div>
 </div>
 
+<!-- RESUMO -->
+<div class="card">
+  <strong>Total de serviços:</strong> <span id="qtd">0</span><br>
+  <strong>Receita total:</strong> <span id="receita">R$ 0,00</span><br>
+  <strong>Ticket médio:</strong> <span id="ticket">R$ 0,00</span>
+</div>
+
+<!-- TABELA -->
 <div class="card table-wrapper">
 <table>
 <thead>
 <tr>
   <th>Data</th>
   <th>Cliente</th>
-  <th>Tipo</th>
+  <th>Serviço</th>
   <th>Valor</th>
   <th>Ações</th>
 </tr>
@@ -272,8 +181,8 @@ th, td{
 <tbody id="lista"></tbody>
 <tfoot>
 <tr>
-  <td colspan="3"><strong>Total do mês</strong></td>
-  <td id="totalMes">R$ 0,00</td>
+  <td colspan="3"><strong>Total</strong></td>
+  <td id="totalTabela">R$ 0,00</td>
   <td></td>
 </tr>
 </tfoot>
