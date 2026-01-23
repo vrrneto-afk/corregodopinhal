@@ -3,15 +3,16 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Motorista – Produção</title>
+<title>Motorista – Produção | Trator</title>
 
 <link rel="manifest" href="../manifest.json">
 <meta name="theme-color" content="#7b3f2a">
 <link rel="stylesheet" href="../menu/menu.css">
 
+<!-- FIREBASE -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
 <script>
 if (!firebase.apps.length) {
@@ -23,6 +24,7 @@ if (!firebase.apps.length) {
 }
 </script>
 
+<!-- IDENTIFICAÇÃO -->
 <script>
 window.PERMISSAO_PAGINA = { area:"trator", chave:"trator-motorista" };
 </script>
@@ -30,13 +32,57 @@ window.PERMISSAO_PAGINA = { area:"trator", chave:"trator-motorista" };
 <script src="../login/auth-guard.js"></script>
 
 <style>
-/* reaproveita exatamente o padrão do caddespesas */
-.card{ margin-bottom:20px; }
-.card strong{ display:block; margin-top:6px; }
-.card .linha{ margin-top:8px; }
+:root{
+  --marrom:#7b3f2a;
+  --bege:#f6efe7;
+  --logo:#D0B485;
+}
+
+*{box-sizing:border-box;font-family:Inter,system-ui,Arial;}
+body{margin:0;background:var(--bege);color:#333;}
+
+header{background:var(--logo);padding:15px;text-align:center;}
+header img{max-width:260px;width:100%;}
+
+.container{max-width:900px;margin:20px auto;padding:0 15px;}
+
+.card{
+  background:#fff;
+  border-radius:14px;
+  padding:16px;
+  box-shadow:0 2px 6px rgba(0,0,0,.06);
+  margin-bottom:20px;
+}
+
 .card-total{
   background:#efe3d3;
   font-weight:700;
+}
+
+label{display:block;font-weight:600;margin-top:12px;}
+
+select{
+  width:100%;
+  padding:10px;
+  border-radius:10px;
+  border:1px solid #ccc;
+  margin-top:4px;
+  font-size:15px;
+}
+
+.servico{
+  margin-bottom:12px;
+}
+
+.servico strong{
+  display:block;
+  margin-top:6px;
+}
+
+.voltar-wrapper{
+  margin:30px 0 10px;
+  display:flex;
+  justify-content:center;
 }
 </style>
 </head>
@@ -53,37 +99,39 @@ window.PERMISSAO_PAGINA = { area:"trator", chave:"trator-motorista" };
 
 <h2>👨‍🌾 Motorista – Produção</h2>
 
-<!-- 🔎 FILTROS -->
+<!-- FILTROS -->
 <div class="card">
+  <label>Motorista</label>
+  <select id="filtroMotorista">
+    <option value="">Todos os motoristas</option>
+  </select>
 
-<label>Motorista</label>
-<select id="filtroMotorista">
-  <option value="">Todos os motoristas</option>
-</select>
-
-<div style="display:flex;gap:10px;margin-top:12px">
-  <select id="mes"></select>
-  <select id="ano"></select>
+  <div style="display:flex;gap:10px;margin-top:12px">
+    <select id="mes"></select>
+    <select id="ano"></select>
+  </div>
 </div>
 
-</div>
-
-<!-- 📋 SERVIÇOS -->
+<!-- LISTA -->
 <div id="listaServicos"></div>
 
-<!-- 🔢 TOTAL -->
-<div class="card card-total" id="totalizador" style="display:none">
-  Total de serviços: <span id="qtd">0</span><br>
-  Valor total dos serviços: <span id="totalServ">R$ 0,00</span><br>
-  Valor bruto do motorista: <span id="totalMot">R$ 0,00</span>
+<!-- TOTAL -->
+<div class="card card-total" id="totais">
+  Total de serviços: 0<br>
+  Valor total dos serviços: R$ 0,00<br>
+  Valor bruto do motorista: R$ 0,00
 </div>
 
-<button class="btn-outline" onclick="location.href='../trator/trator-inicio.html'">
-← Voltar para Trator
-</button>
+<!-- VOLTAR -->
+<div class="voltar-wrapper">
+  <a href="../trator/trator-inicio.html" class="btn-voltar">
+    ← Voltar para Trator
+  </a>
+</div>
 
 </div>
 
+<!-- MENU -->
 <script>
 fetch("../menu/menu.html")
   .then(r=>r.text())
@@ -102,81 +150,76 @@ fetch("../menu/menu.html")
 </script>
 
 <script>
-const db=firebase.firestore();
+const db = firebase.firestore();
 
-function moeda(v){return "R$ "+v.toFixed(2).replace(".",",");}
-
-const meses=["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
+const meses = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho",
+               "Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
 meses.forEach((m,i)=>mes.innerHTML+=`<option value="${i}">${m}</option>`);
 
-const anoAtual=new Date().getFullYear();
+const anoAtual = new Date().getFullYear();
 for(let a=anoAtual-3;a<=anoAtual+10;a++) ano.innerHTML+=`<option>${a}</option>`;
 mes.value=new Date().getMonth();
 ano.value=anoAtual;
 
-/* MOTORISTAS */
+function moeda(v){
+  return "R$ "+Number(v).toFixed(2).replace(".",",");
+}
+
+/* carregar motoristas */
 db.collection("motoristas").orderBy("nome_motorista").get().then(s=>{
   s.forEach(d=>{
     const m=d.data();
-    filtroMotorista.innerHTML+=`<option value="${m.id_motorista}">${m.nome_motorista}</option>`;
+    filtroMotorista.innerHTML+=
+      `<option value="${m.id_motorista}">${m.nome_motorista}</option>`;
   });
 });
 
 function carregar(){
   listaServicos.innerHTML="";
-  totalizador.style.display="none";
-
-  let qtd=0,total=0,totalMot=0;
+  let totalServ=0;
+  let totalValor=0;
+  let totalMotorista=0;
 
   const ini=new Date(ano.value,mes.value,1);
   const fim=new Date(ano.value,Number(mes.value)+1,0,23,59,59);
 
-  let q=db.collection("trator_servicos")
-    .where("data",">=",ini)
-    .where("data","<=",fim);
-
-  if(filtroMotorista.value){
-    q=q.where("motorista_id","==",filtroMotorista.value);
-  }
-
-  q.get().then(s=>{
+  db.collection("trator_servicos").get().then(s=>{
     s.forEach(d=>{
       const v=d.data();
-      const bruto=v.valor_total*0.10;
+      const dt=v.data.toDate();
+      if(dt<ini||dt>fim)return;
+      if(filtroMotorista.value && v.motorista_id!==filtroMotorista.value)return;
 
-      qtd++;
-      total+=v.valor_total;
-      totalMot+=bruto;
+      totalServ++;
+      totalValor+=v.valor_total;
+      totalMotorista+=v.valor_total*0.10;
 
       listaServicos.innerHTML+=`
-        <div class="card">
-          <strong>Cliente:</strong> ${v.cliente}
-          <strong>Serviço:</strong> ${v.tipo}
-          <div class="linha">
-            Valor total serviço: ${moeda(v.valor_total)}
-          </div>
-          <div class="linha">
-            Motorista: ${v.motorista_nome||"-"}
-          </div>
-          <div class="linha">
-            Valor bruto motorista: ${moeda(bruto)}
-          </div>
-        </div>
-      `;
+        <div class="card servico">
+          <strong>Cliente</strong>
+          ${v.cliente}
+
+          <strong>Serviço</strong>
+          ${v.tipo}
+
+          <strong>Valor total do serviço</strong>
+          ${moeda(v.valor_total)}
+
+          <strong>Motorista</strong>
+          ${v.motorista_nome || "-"}
+
+          <strong>Valor bruto motorista</strong>
+          ${moeda(v.valor_total*0.10)}
+        </div>`;
     });
 
-    if(qtd){
-      qtdSpan.textContent=qtd;
-      totalServ.textContent=moeda(total);
-      totalMotSpan.textContent=moeda(totalMot);
-      totalizador.style.display="block";
-    }
+    totais.innerHTML=`
+      Total de serviços: ${totalServ}<br>
+      Valor total dos serviços: ${moeda(totalValor)}<br>
+      Valor bruto do motorista: ${moeda(totalMotorista)}
+    `;
   });
 }
-
-const qtdSpan=document.getElementById("qtd");
-const totalServ=document.getElementById("totalServ");
-const totalMotSpan=document.getElementById("totalMot");
 
 mes.onchange=ano.onchange=filtroMotorista.onchange=carregar;
 carregar();
