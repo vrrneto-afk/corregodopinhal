@@ -288,26 +288,26 @@ function carregar(){
   const fim=new Date(ano.value,Number(mes.value)+1,0,23,59,59);
 
   db.collection("trator_despesas")
-    .where("data",">=",ini)
-    .where("data","<=",fim)
-    .orderBy("data")
+    .where("data_despesa",">=",ini)
+    .where("data_despesa","<=",fim)
+    .orderBy("data_despesa")
     .get()
     .then(s=>{
       s.forEach(d=>{
         const v=d.data();
-        total+=v.valor;
+        total+=v.valor_despesa;
 
-        if(v.valor>maior){
-          maior=v.valor;
-          destaque=v.despesa;
+        if(v.valor_despesa>maior){
+          maior=v.valor_despesa;
+          destaque=v.nome_despesa;
         }
 
         lista.innerHTML+=`
         <div class="mini-card">
-          <div>📅 <b>${v.data.toDate().toLocaleDateString("pt-BR")}</b></div>
-          <div>Despesa: ${v.despesa}</div>
+          <div>📅 <b>${v.data_despesa.toDate().toLocaleDateString("pt-BR")}</b></div>
+          <div>Despesa: ${v.nome_despesa}</div>
           <div>Fornecedor: ${v.fornecedor}</div>
-          <div>Valor: <b>${moeda(v.valor)}</b></div>
+          <div>Valor: <b>${moeda(v.valor_despesa)}</b></div>
         </div>`;
       });
 
