@@ -307,6 +307,9 @@ fetch("../menu/menu.html")
 const db = firebase.firestore();
 let editId = null;
 
+/* =========================
+   UTILITÁRIOS
+========================= */
 function moeda(v){
   return "R$ " + Number(v).toFixed(2).replace(".", ",");
 }
@@ -314,6 +317,9 @@ function limparMoeda(v){
   return Number(v.replace(/[^\d]/g, "")) / 100;
 }
 
+/* =========================
+   CÁLCULO
+========================= */
 function recalcular(){
   valorTotal.value = moeda(
     (Number(horas.value)||0) * limparMoeda(valorHora.value||"0")
@@ -321,17 +327,24 @@ function recalcular(){
 }
 
 horas.oninput = recalcular;
-valorHora.oninput = ()=>{ valorHora.value = moeda(limparMoeda(valorHora.value)); recalcular(); };
-valorFechadoInput.oninput = ()=> valorFechadoInput.value = moeda(limparMoeda(valorFechadoInput.value));
+valorHora.oninput = ()=>{
+  valorHora.value = moeda(limparMoeda(valorHora.value));
+  recalcular();
+};
+valorFechadoInput.oninput = ()=>{
+  valorFechadoInput.value = moeda(limparMoeda(valorFechadoInput.value));
+};
 
 document.querySelectorAll("input[name='cobranca']").forEach(r=>{
-  r.onchange=()=>{
-    porHora.style.display = r.value==="hora"?"block":"none";
-    valorFechado.style.display = r.value==="fechado"?"block":"none";
+  r.onchange = ()=>{
+    porHora.style.display = r.value==="hora" ? "block" : "none";
+    valorFechado.style.display = r.value==="fechado" ? "block" : "none";
   };
 });
 
-/* 🔒 MOTORISTAS */
+/* =========================
+   MOTORISTAS
+========================= */
 db.collection("trator_motoristas")
   .where("ativo","==",true)
   .orderBy("nome_motorista")
@@ -346,7 +359,9 @@ db.collection("trator_motoristas")
     });
   });
 
-/* 🔒 SALVAR – DATA CORRIGIDA */
+/* =========================
+   SALVAR / ATUALIZAR
+========================= */
 salvar.onclick = async()=>{
   try{
     if(!data.value||!cliente.value||!tipo.value||!motorista.value)
@@ -370,20 +385,77 @@ salvar.onclick = async()=>{
       valor_total: valor
     };
 
-    editId
-      ? await db.collection("trator_servicos").doc(editId).update(dados)
-      : await db.collection("trator_servicos").add(dados);
+    if(editId){
+      await db.collection("trator_servicos").doc(editId).update(dados);
+    }else{
+      await db.collection("trator_servicos").add(dados);
+    }
 
-    msg.textContent="Serviço salvo com sucesso";
-    msg.className="msg ok";
+    msg.textContent = "Serviço salvo com sucesso";
+    msg.className = "msg ok";
+    limparFormulario();
     carregarTabela();
 
   }catch(e){
-    msg.textContent=e;
-    msg.className="msg erro";
+    msg.textContent = e;
+    msg.className = "msg erro";
   }
 };
 
+/* =========================
+   EDITAR (AGORA FUNCIONA)
+========================= */
+function editar(id){
+  db.collection("trator_servicos").doc(id).get().then(d=>{
+    const v = d.data();
+    editId = id;
+
+    data.value = v.data.toDate().toISOString().split("T")[0];
+    cliente.value = v.cliente;
+    tipo.value = v.tipo;
+    motorista.value = v.motorista_id;
+
+    valorFechadoInput.value = moeda(v.valor_total);
+
+    document.querySelector("input[value='fechado']").checked = true;
+    porHora.style.display = "none";
+    valorFechado.style.display = "block";
+
+    excluir.disabled = false;
+  });
+}
+
+/* =========================
+   EXCLUIR
+========================= */
+excluir.onclick = async()=>{
+  if(!editId) return;
+  if(!confirm("Deseja excluir este serviço?")) return;
+
+  await db.collection("trator_servicos").doc(editId).delete();
+  limparFormulario();
+  carregarTabela();
+};
+
+/* =========================
+   LIMPAR
+========================= */
+function limparFormulario(){
+  editId = null;
+  data.value="";
+  cliente.value="";
+  tipo.value="";
+  motorista.value="";
+  horas.value="";
+  valorHora.value="";
+  valorTotal.value="";
+  valorFechadoInput.value="";
+  excluir.disabled = true;
+}
+
+/* =========================
+   FILTROS
+========================= */
 const meses=["Janeiro","Fevereiro","Março","Abril","Maio","Junho",
              "Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
 meses.forEach((m,i)=>mes.innerHTML+=`<option value="${i}">${m}</option>`);
@@ -393,7 +465,9 @@ for(let a=anoAtual-3;a<=anoAtual+10;a++) ano.innerHTML+=`<option>${a}</option>`;
 mes.value=new Date().getMonth();
 ano.value=anoAtual;
 
-/* 🔒 FILTRO DE DATA SEM ERRO */
+/* =========================
+   TABELA
+========================= */
 function carregarTabela(){
   lista.innerHTML="";
   let total=0;
@@ -409,20 +483,23 @@ function carregarTabela(){
       s.forEach(d=>{
         const v=d.data();
         total+=v.valor_total;
+
         lista.innerHTML+=`
           <tr>
             <td>${v.data.toDate().toLocaleDateString("pt-BR")}</td>
             <td>${v.cliente}</td>
             <td>${v.tipo}</td>
             <td>${moeda(v.valor_total)}</td>
-            <td><button onclick="editar('${d.id}')">Editar</button></td>
+            <td>
+              <button class="btn-edit" onclick="editar('${d.id}')">Editar</button>
+            </td>
           </tr>`;
       });
       totalMes.textContent=moeda(total);
     });
 }
 
-mes.onchange=ano.onchange=carregarTabela;
+mes.onchange = ano.onchange = carregarTabela;
 carregarTabela();
 </script>
 
