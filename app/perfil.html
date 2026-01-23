@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Perfil – Sítio Córrego do Pinhal</title>
+
+<link rel="manifest" href="../manifest.json">
+<meta name="theme-color" content="#7b3f2a">
+
+<link rel="stylesheet" href="../menu/menu.css">
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+
+<script>
+if(!firebase.apps.length){
+  firebase.initializeApp({
+    apiKey: "AIzaSyCW-CuFDrOLO-dteckl_GrPTocmyS-IrzY",
+    authDomain: "sitio-corrego-do-pinhal.firebaseapp.com",
+    projectId: "sitio-corrego-do-pinhal"
+  });
+}
+</script>
+
+<script>
+window.PERMISSAO_PAGINA = {
+  area: "app",
+  chave: "perfil"
+};
+</script>
+
+<script src="../login/auth-guard.js"></script>
+
+<style>
+:root{
+  --marrom:#7b3f2a;
+  --bege:#f6efe7;
+  --verde:#2f6b2f;
+  --vermelho:#c0392b;
+  --cinza:#666;
+  --logo:#D0B485;
+}
+*{
+  box-sizing:border-box;
+  font-family:'Inter',system-ui,-apple-system,Arial;
+}
+body{
+  margin:0;
+  background:var(--bege);
+  color:#333;
+}
+header{
+  background:var(--logo);
+  padding:15px 10px;
+  text-align:center;
+}
+header img{
+  max-width:240px;
+}
+.container{
+  max-width:600px;
+  margin:20px auto;
+  padding:0 15px;
+}
+.card{
+  background:#fff;
+  border-radius:14px;
+  padding:16px;
+  margin-bottom:16px;
+  box-shadow:0 1px 4px rgba(0,0,0,.08);
+}
+.card h2{
+  margin:0 0 12px;
+  color:var(--marrom);
+}
+.info{
+  margin-bottom:10px;
+  font-weight:600;
+}
+.info span{
+  display:block;
+  font-size:13px;
+  color:var(--cinza);
+  font-weight:400;
+}
+button{
+  width:100%;
+  padding:12px;
+  border:none;
+  border-radius:10px;
+  font-size:15px;
+  font-weight:700;
+  cursor:pointer;
+}
+.btn-sec{
+  background:#eee;
+  margin-bottom:10px;
+}
+.btn-danger{
+  background:#fdecea;
+  color:var(--vermelho);
+}
+</style>
+</head>
+
+<body>
+
+<header>
+  <img src="../logo.png">
+</header>
+
+<div id="menu"></div>
+
+<div class="container">
+
+  <div class="card">
+    <h2>👤 Meu Perfil</h2>
+
+    <div class="info">
+      Nome
+      <span id="nome">—</span>
+    </div>
+
+    <div class="info">
+      Email
+      <span id="email">—</span>
+    </div>
+
+    <div class="info">
+      UID
+      <span id="uid">—</span>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>🔐 Segurança</h2>
+
+    <button class="btn-sec" id="btnSenha">
+      Enviar email para troca de senha
+    </button>
+
+    <button class="btn-danger" id="btnSair">
+      Sair da conta
+    </button>
+  </div>
+
+</div>
+
+<script>
+const menu = document.getElementById("menu");
+
+/* ===== MENU ===== */
+fetch("../menu/menu.html")
+  .then(r => r.text())
+  .then(h => {
+    menu.innerHTML = h;
+
+    document.querySelectorAll("#menu a").forEach(a => {
+      if (a.getAttribute("href") === "../app/perfil.html") {
+        a.classList.add("ativo");
+      }
+    });
+
+    const s = document.createElement("script");
+    s.src = "../menu/menu-permissoes.js";
+    document.body.appendChild(s);
+  });
+
+/* ===== PERFIL ===== */
+const auth = firebase.auth();
+
+auth.onAuthStateChanged(user => {
+  if(!user) return;
+
+  document.getElementById("nome").innerText = user.displayName || "Não informado";
+  document.getElementById("email").innerText = user.email;
+  document.getElementById("uid").innerText = user.uid;
+});
+
+/* ===== AÇÕES ===== */
+document.getElementById("btnSenha").onclick = async () => {
+  const user = auth.currentUser;
+  if(!user) return;
+
+  await auth.sendPasswordResetEmail(user.email);
+  alert("Email de redefinição de senha enviado.");
+};
+
+document.getElementById("btnSair").onclick = async () => {
+  await auth.signOut();
+  location.replace("../login/login.html");
+};
+</script>
+
+</body>
+</html>
