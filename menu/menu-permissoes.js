@@ -1,3 +1,10 @@
+// 🔒 CARREGA UTIL DE DATA GLOBAL
+(function(){
+  const s = document.createElement("script");
+  s.src = "../utils/date-utils.js";
+  document.head.appendChild(s);
+})();
+
 // 🔐 MENU PERMISSÕES – VERSÃO DEFINITIVA
 (async function () {
 
