@@ -318,13 +318,22 @@ document.querySelectorAll("input[name='cobranca']").forEach(r => {
   };
 });
 
-db.collection("motoristas").orderBy("nome_motorista").get().then(s=>{
-  s.forEach(d=>{
-    const m = d.data();
-    motorista.innerHTML +=
-      `<option value="${m.id_motorista}">${m.nome_motorista}</option>`;
+db.collection("trator_motoristas")
+  .where("ativo", "==", true)
+  .orderBy("nome_motorista")
+  .get()
+  .then(s=>{
+    s.forEach(d=>{
+      const m = d.data();
+      motorista.innerHTML += `
+        <option 
+          value="${d.id}"
+          data-percentual="${m.porcentagem_base}">
+          ${m.nome_motorista}
+        </option>`;
+    });
   });
-});
+
 
 salvar.onclick = async () => {
   try{
