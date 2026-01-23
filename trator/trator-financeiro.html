@@ -7,11 +7,8 @@
 
 <link rel="manifest" href="../manifest.json">
 <meta name="theme-color" content="#7b3f2a">
-
-<!-- MENU PADRÃO -->
 <link rel="stylesheet" href="../menu/menu.css">
 
-<!-- FIREBASE -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
@@ -27,10 +24,7 @@ if (!firebase.apps.length) {
 </script>
 
 <script>
-window.PERMISSAO_PAGINA = {
-  area: "trator",
-  chave: "trator-financeiro"
-};
+window.PERMISSAO_PAGINA = { area:"trator", chave:"trator-financeiro" };
 </script>
 
 <script src="../login/auth-guard.js"></script>
@@ -43,46 +37,15 @@ window.PERMISSAO_PAGINA = {
   --verde:#2f6b2f;
   --vermelho:#c0392b;
 }
+*{box-sizing:border-box;font-family:Inter,system-ui,Arial}
+body{margin:0;background:var(--bege);color:#333}
 
-*{
-  box-sizing:border-box;
-  font-family:Inter,system-ui,Arial;
-}
+header{background:var(--logo);padding:15px;text-align:center}
+header img{max-width:260px;width:100%}
 
-body{
-  margin:0;
-  background:var(--bege);
-  color:#333;
-}
+.container{max-width:900px;margin:20px auto;padding:0 15px}
+h2{color:var(--marrom);display:flex;gap:8px;align-items:center}
 
-/* HEADER */
-header{
-  background:var(--logo);
-  padding:15px;
-  text-align:center;
-}
-header img{
-  max-width:260px;
-  width:100%;
-}
-
-/* CONTAINER */
-.container{
-  max-width:900px;
-  margin:20px auto;
-  padding:0 15px;
-}
-
-/* TITULOS */
-h2{
-  color:var(--marrom);
-  display:flex;
-  align-items:center;
-  gap:8px;
-  margin:18px 0 12px;
-}
-
-/* CARD BASE */
 .card{
   background:#fff;
   border-radius:18px;
@@ -91,56 +54,45 @@ h2{
   margin-bottom:18px;
 }
 
-/* FILTROS */
 select{
   width:100%;
   padding:14px;
   border-radius:14px;
   border:1px solid #ccc;
-  font-size:15px;
   margin-bottom:10px;
 }
 
-/* GRID MÉTRICAS */
-.cards-grid{
+.grid-2x2{
   display:grid;
   grid-template-columns:1fr 1fr;
   gap:12px;
 }
 
-.card-metrica{
-  background:#fff;
-  border-radius:18px;
-  padding:16px;
-  box-shadow:0 2px 6px rgba(0,0,0,.06);
+.metric{
   display:flex;
   gap:10px;
   align-items:center;
 }
 
-.card-metrica .barra{
+.metric .bar{
   width:6px;
-  height:100%;
   border-radius:6px;
+  height:100%;
 }
 
-.barra.verde{ background:var(--verde); }
-.barra.vermelha{ background:var(--vermelho); }
+.metric strong{font-size:20px}
+.metric span{font-size:12px;opacity:.7}
 
-.card-metrica strong{
-  display:block;
-  font-size:20px;
-  font-weight:700;
+.explicativo div{
+  display:flex;
+  justify-content:space-between;
+  margin-bottom:6px;
 }
 
-.card-metrica span{
-  font-size:12px;
-  opacity:.7;
-}
-
-/* LISTAS */
-.lista{
-  margin-top:22px;
+.explicativo hr{
+  border:none;
+  border-top:1px solid #ddd;
+  margin:10px 0;
 }
 
 .mini-card{
@@ -151,28 +103,19 @@ select{
   margin-bottom:14px;
 }
 
-.mini-card div{
-  margin-bottom:6px;
-}
-
-/* TOTAL */
-.total-card{
+.final{
   background:#efe3d3;
-  border-radius:16px;
-  padding:16px;
   text-align:center;
-  font-size:18px;
+  font-size:20px;
   font-weight:800;
 }
 
-/* BOTÃO */
 .btn-voltar{
-  margin-top:20px;
   width:100%;
   padding:16px;
   border-radius:18px;
-  background:#fff;
   border:2px solid var(--marrom);
+  background:#fff;
   color:var(--marrom);
   font-weight:800;
 }
@@ -180,164 +123,112 @@ select{
 </head>
 
 <body style="display:none">
-
-<header>
-  <img src="../logo.png">
-</header>
-
+<header><img src="../logo.png"></header>
 <div id="menu"></div>
 
 <div class="container">
-
 <h2>📊 Financeiro do Trator</h2>
 
-<!-- CONTEXTO -->
 <div class="card">
   <select id="mes"></select>
   <select id="ano"></select>
 </div>
 
-<!-- MÉTRICAS PRINCIPAIS -->
-<div class="cards-grid">
-  <div class="card-metrica">
-    <div class="barra verde"></div>
-    <div>
-      <strong id="receita">R$ 0,00</strong>
-      <span>Receita de serviços</span>
-    </div>
-  </div>
-
-  <div class="card-metrica">
-    <div class="barra vermelha"></div>
-    <div>
-      <strong id="despesas">R$ 0,00</strong>
-      <span>Despesas do trator</span>
-    </div>
-  </div>
-
-  <div class="card-metrica">
-    <div class="barra vermelha"></div>
-    <div>
-      <strong id="motoristas">R$ 0,00</strong>
-      <span>Custo motoristas (configuração aplicada)</span>
-    </div>
-  </div>
-
-  <div class="card-metrica">
-    <div class="barra verde"></div>
-    <div>
-      <strong id="lucro">R$ 0,00</strong>
-      <span>Lucro do período</span>
-    </div>
-  </div>
+<div class="grid-2x2">
+  <div class="card metric"><div class="bar" style="background:var(--verde)"></div><div><strong id="recServ">R$ 0,00</strong><span>Receita de Serviços</span></div></div>
+  <div class="card metric"><div class="bar" style="background:var(--vermelho)"></div><div><strong id="despTrator">R$ 0,00</strong><span>Despesas do Trator</span></div></div>
+  <div class="card metric"><div class="bar" style="background:var(--vermelho)"></div><div><strong id="custoMot">R$ 0,00</strong><span>Custo Motoristas (configuração aplicada)</span></div></div>
+  <div class="card metric"><div class="bar" id="barLucro"></div><div><strong id="lucro">R$ 0,00</strong><span>Lucro do Período</span></div></div>
 </div>
 
-<!-- COMPOSIÇÃO -->
-<div class="card">
-  <h3>📐 Composição do Resultado</h3>
-  <div>Receita de serviços: <b id="cReceita">R$ 0,00</b></div>
-  <div>(-) Despesas do trator: <b id="cDespesa">R$ 0,00</b></div>
-  <div>(-) Motoristas: <b id="cMotorista">R$ 0,00</b></div>
+<div class="card explicativo">
+  <strong>📐 Composição do Resultado</strong>
+  <div><span>Receita de Serviços</span><span id="c1"></span></div>
+  <div><span>(-) Despesas do Trator</span><span id="c2"></span></div>
+  <div><span>(-) Motoristas</span><span id="c3"></span></div>
   <hr>
-  <div>Lucro líquido: <b id="cLucro">R$ 0,00</b></div>
+  <div><strong>Lucro Líquido</strong><strong id="c4"></strong></div>
 </div>
 
-<!-- SERVIÇOS -->
-<h2>📋 Serviços</h2>
-<div id="listaServicos" class="lista"></div>
+<h2>📋 Serviços do Período</h2>
+<div id="listaServicos"></div>
 
-<!-- DESPESAS -->
-<h2>💸 Despesas</h2>
-<div id="listaDespesas" class="lista"></div>
+<h2>💸 Despesas do Trator</h2>
+<div id="listaDespesas"></div>
 
-<div id="totalPeriodo" class="total-card">Resultado final: R$ 0,00</div>
+<div class="card final" id="resultadoFinal"></div>
 
-<button class="btn-voltar" onclick="location.href='../trator/trator-inicio.html'">
-← Voltar para Trator
-</button>
-
+<button class="btn-voltar" onclick="location.href='../trator/trator-inicio.html'">← Voltar para Trator</button>
 </div>
 
-<!-- MENU -->
 <script>
-fetch("../menu/menu.html")
-  .then(r=>r.text())
-  .then(html=>{
-    menu.innerHTML=html;
-    const s=document.createElement("script");
-    s.src="../menu/menu-permissoes.js";
-    document.body.appendChild(s);
-    document.body.style.display="block";
-  });
-</script>
+fetch("../menu/menu.html").then(r=>r.text()).then(h=>{
+  menu.innerHTML=h;
+  const s=document.createElement("script");
+  s.src="../menu/menu-permissoes.js";
+  document.body.appendChild(s);
+  document.body.style.display="block";
+});
 
-<script>
-const db = firebase.firestore();
-
-function moeda(v){
-  return "R$ " + v.toFixed(2).replace(".",",");
-}
-
+const db=firebase.firestore();
 const meses=["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
 meses.forEach((m,i)=>mes.innerHTML+=`<option value="${i}">${m}</option>`);
-
 const anoAtual=new Date().getFullYear();
-for(let a=anoAtual-3;a<=anoAtual+5;a++) ano.innerHTML+=`<option>${a}</option>`;
+for(let a=anoAtual-2;a<=anoAtual+5;a++) ano.innerHTML+=`<option>${a}</option>`;
+mes.value=new Date().getMonth(); ano.value=anoAtual;
 
-mes.value=new Date().getMonth();
-ano.value=anoAtual;
+function moeda(v){return "R$ "+v.toFixed(2).replace(".",",");}
 
 async function carregar(){
-  let receita=0, despesa=0, motorista=0;
+  listaServicos.innerHTML=""; listaDespesas.innerHTML="";
+  let receita=0, despesas=0, motoristas=0;
 
-  const ini=new Date(ano.value,mes.value,1,12);
+  const ini=new Date(ano.value,mes.value,1);
   const fim=new Date(ano.value,Number(mes.value)+1,0,23,59,59);
 
-  listaServicos.innerHTML="";
-  listaDespesas.innerHTML="";
-
-  const servicos=await db.collection("trator_servicos")
-    .where("data",">=",ini).where("data","<=",fim).get();
-
-  servicos.forEach(d=>{
+  const serv=await db.collection("trator_servicos").where("data",">=",ini).where("data","<=",fim).get();
+  serv.forEach(d=>{
     const v=d.data();
     receita+=v.valor_total;
+    const custo=v.valor_total*0.1;
+    motoristas+=custo;
     listaServicos.innerHTML+=`
       <div class="mini-card">
-        <div>📅 ${v.data.toDate().toLocaleDateString("pt-BR")}</div>
-        <div>Cliente: ${v.cliente}</div>
-        <div>Serviço: ${v.tipo}</div>
-        <div>Valor: <b>${moeda(v.valor_total)}</b></div>
+        📅 ${v.data.toDate().toLocaleDateString("pt-BR")}<br>
+        Cliente: ${v.cliente}<br>
+        Serviço: ${v.tipo}<br>
+        Motorista: ${v.motorista_nome||"-"}<br>
+        Valor: <b>${moeda(v.valor_total)}</b><br>
+        Custo motorista: ${moeda(custo)}<br>
+        Lucro estimado: ${moeda(v.valor_total-custo)}
       </div>`;
   });
 
-  const despesasSnap=await db.collection("trator_despesas")
-    .where("data",">=",ini).where("data","<=",fim).get();
-
-  despesasSnap.forEach(d=>{
+  const desp=await db.collection("trator_despesas").where("data_despesa",">=",ini).where("data_despesa","<=",fim).get();
+  desp.forEach(d=>{
     const v=d.data();
-    despesa+=v.valor_despesa;
+    despesas+=v.valor_despesa;
     listaDespesas.innerHTML+=`
       <div class="mini-card">
-        <div>📅 ${v.data_despesa.toDate().toLocaleDateString("pt-BR")}</div>
-        <div>Despesa: ${v.nome_despesa}</div>
-        <div>Fornecedor: ${v.fornecedor}</div>
-        <div>Valor: <b>${moeda(v.valor_despesa)}</b></div>
+        📅 ${v.data_despesa.toDate().toLocaleDateString("pt-BR")}<br>
+        Despesa: ${v.nome_despesa}<br>
+        Fornecedor: ${v.fornecedor}<br>
+        Valor: <b>${moeda(v.valor_despesa)}</b><br>
+        Situação: ${v.situacao}
       </div>`;
   });
 
-  const lucro = receita - despesa - motorista;
-
-  document.getElementById("receita").textContent=moeda(receita);
-  document.getElementById("despesas").textContent=moeda(despesa);
-  document.getElementById("motoristas").textContent=moeda(motorista);
-  document.getElementById("lucro").textContent=moeda(lucro);
-
-  cReceita.textContent=moeda(receita);
-  cDespesa.textContent=moeda(despesa);
-  cMotorista.textContent=moeda(motorista);
-  cLucro.textContent=moeda(lucro);
-  totalPeriodo.textContent="Resultado final: "+moeda(lucro);
+  const lucroFinal=receita-despesas-motoristas;
+  recServ.textContent=moeda(receita);
+  despTrator.textContent=moeda(despesas);
+  custoMot.textContent=moeda(motoristas);
+  lucro.textContent=moeda(lucroFinal);
+  barLucro.style.background=lucroFinal>=0?"var(--verde)":"var(--vermelho)";
+  c1.textContent=moeda(receita);
+  c2.textContent=moeda(despesas);
+  c3.textContent=moeda(motoristas);
+  c4.textContent=moeda(lucroFinal);
+  resultadoFinal.textContent="Resultado final do período: "+moeda(lucroFinal);
 }
 
 mes.onchange=ano.onchange=carregar;
