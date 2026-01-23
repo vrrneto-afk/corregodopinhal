@@ -8,7 +8,7 @@
 <link rel="manifest" href="../manifest.json">
 <meta name="theme-color" content="#7b3f2a">
 
-<!-- MENU + PADRÃO VISUAL -->
+<!-- MENU PADRÃO -->
 <link rel="stylesheet" href="../menu/menu.css">
 
 <!-- FIREBASE -->
@@ -40,6 +40,7 @@ window.PERMISSAO_PAGINA = {
   --marrom:#7b3f2a;
   --bege:#f6efe7;
   --logo:#D0B485;
+  --verde:#2f6b2f;
 }
 
 *{
@@ -71,16 +72,7 @@ header img{
   padding:0 15px;
 }
 
-/* CARD */
-.card{
-  background:#fff;
-  border-radius:18px;
-  padding:16px;
-  box-shadow:0 2px 6px rgba(0,0,0,.06);
-  margin-bottom:18px;
-}
-
-/* TITULOS */
+/* TITULO */
 h2{
   color:var(--marrom);
   display:flex;
@@ -89,86 +81,97 @@ h2{
   margin:18px 0 12px;
 }
 
-/* FORM */
+/* CARD BASE */
+.card{
+  background:#fff;
+  border-radius:18px;
+  padding:16px;
+  box-shadow:0 2px 6px rgba(0,0,0,.06);
+  margin-bottom:18px;
+}
+
+/* FILTROS */
 select{
   width:100%;
-  padding:12px;
-  border-radius:12px;
+  padding:14px;
+  border-radius:14px;
   border:1px solid #ccc;
   font-size:15px;
   margin-bottom:10px;
 }
 
-/* GRID CARDS */
+/* GRID CARDS GRANDES */
 .cards-grid{
   display:grid;
   grid-template-columns:1fr 1fr;
   gap:12px;
 }
 
-.card-resumo{
+.card-metrica{
+  background:#fff;
+  border-radius:18px;
+  padding:16px;
+  box-shadow:0 2px 6px rgba(0,0,0,.06);
+  display:flex;
+  gap:10px;
+  align-items:center;
+}
+
+.card-metrica .barra{
+  width:6px;
+  height:100%;
+  border-radius:6px;
+  background:var(--verde);
+}
+
+.card-metrica .conteudo{
+  flex:1;
+}
+
+.card-metrica strong{
+  display:block;
+  font-size:22px;
+  font-weight:800;
+}
+
+.card-metrica span{
+  font-size:14px;
+  opacity:.7;
+}
+
+/* MINI CARDS */
+.mini-card{
   background:#fff;
   border-radius:16px;
   padding:14px;
   box-shadow:0 2px 6px rgba(0,0,0,.06);
+  margin-bottom:12px;
 }
 
-.card-resumo strong{
-  display:block;
-  font-size:14px;
+.mini-card div{
   margin-bottom:6px;
 }
 
-.card-resumo span{
+.mini-card b{
+  color:var(--marrom);
+}
+
+/* TOTAL FINAL */
+.total-card{
+  background:#efe3d3;
+  border-radius:16px;
+  padding:16px;
+  text-align:center;
   font-size:18px;
   font-weight:800;
-}
-
-/* TABELA */
-.table-wrapper{
-  overflow:hidden;
-}
-
-table{
-  width:100%;
-  border-collapse:separate;
-  border-spacing:0;
-}
-
-thead{
-  background:#efe3d3;
-}
-
-th, td{
-  padding:12px;
-  text-align:left;
-  vertical-align:top;
-  word-break:break-word;
-}
-
-th{
-  font-weight:700;
-}
-
-td.cliente,
-td.servico{
-  white-space:normal;
-}
-
-.btn-edit{
-  background:#eee;
-  border:none;
-  padding:10px 16px;
-  border-radius:12px;
-  font-weight:700;
 }
 
 /* BOTAO VOLTAR */
 .btn-voltar{
   margin-top:20px;
   width:100%;
-  padding:14px;
-  border-radius:16px;
+  padding:16px;
+  border-radius:18px;
   background:#fff;
   border:2px solid var(--marrom);
   color:var(--marrom);
@@ -191,63 +194,49 @@ td.servico{
 
 <!-- FILTROS -->
 <div class="card">
-  <select id="filtroCliente">
-    <option value="">Cliente (todos)</option>
-  </select>
-
-  <select id="filtroServico">
-    <option value="">Serviço (todos)</option>
-  </select>
-
   <select id="mes"></select>
   <select id="ano"></select>
 </div>
 
-<!-- CARDS RESUMO -->
+<!-- CARDS GRANDES -->
 <div class="cards-grid">
-  <div class="card-resumo">
-    <strong>Total de serviços</strong>
-    <span id="totalServicos">0</span>
+  <div class="card-metrica">
+    <div class="barra"></div>
+    <div class="conteudo">
+      <strong id="totalServicos">0</strong>
+      <span>Serviços realizados</span>
+    </div>
   </div>
 
-  <div class="card-resumo">
-    <strong>Receita total</strong>
-    <span id="receitaTotal">R$ 0,00</span>
+  <div class="card-metrica">
+    <div class="barra"></div>
+    <div class="conteudo">
+      <strong id="receitaTotal">R$ 0,00</strong>
+      <span>Receita total</span>
+    </div>
   </div>
 
-  <div class="card-resumo">
-    <strong>Ticket médio</strong>
-    <span id="ticketMedio">R$ 0,00</span>
+  <div class="card-metrica">
+    <div class="barra"></div>
+    <div class="conteudo">
+      <strong id="ticketMedio">R$ 0,00</strong>
+      <span>Ticket médio</span>
+    </div>
   </div>
 
-  <div class="card-resumo">
-    <strong>Cliente destaque</strong>
-    <span id="clienteTop">—</span>
+  <div class="card-metrica">
+    <div class="barra"></div>
+    <div class="conteudo">
+      <strong id="clienteTop">—</strong>
+      <span>Cliente destaque</span>
+    </div>
   </div>
 </div>
 
-<!-- TABELA -->
-<div class="card table-wrapper">
-<table>
-<thead>
-<tr>
-  <th>Data</th>
-  <th>Cliente</th>
-  <th>Serviço</th>
-  <th>Valor</th>
-  <th>Ações</th>
-</tr>
-</thead>
-<tbody id="lista"></tbody>
-<tfoot>
-<tr>
-  <td colspan="3"><strong>Total</strong></td>
-  <td id="totalTabela">R$ 0,00</td>
-  <td></td>
-</tr>
-</tfoot>
-</table>
-</div>
+<!-- LISTA DE SERVIÇOS -->
+<div id="lista"></div>
+
+<div id="totalPeriodo" class="total-card">Total do período: R$ 0,00</div>
 
 <button class="btn-voltar" onclick="location.href='../trator/trator-inicio.html'">
 ← Voltar para Trator
@@ -255,17 +244,12 @@ td.servico{
 
 </div>
 
-<!-- MENU PADRÃO -->
+<!-- MENU -->
 <script>
 fetch("../menu/menu.html")
   .then(r=>r.text())
   .then(html=>{
     menu.innerHTML=html;
-    document.querySelectorAll("#menu a").forEach(a=>{
-      if(a.getAttribute("href")==="../trator/trator-inicio.html"){
-        a.classList.add("ativo");
-      }
-    });
     const s=document.createElement("script");
     s.src="../menu/menu-permissoes.js";
     document.body.appendChild(s);
@@ -274,17 +258,17 @@ fetch("../menu/menu.html")
 </script>
 
 <script>
-const db=firebase.firestore();
+const db = firebase.firestore();
 
 function moeda(v){
-  return "R$ "+v.toFixed(2).replace(".",",");
+  return "R$ " + v.toFixed(2).replace(".",",");
 }
 
 const meses=["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
 meses.forEach((m,i)=>mes.innerHTML+=`<option value="${i}">${m}</option>`);
 
 const anoAtual=new Date().getFullYear();
-for(let a=anoAtual-3;a<=anoAtual+10;a++) ano.innerHTML+=`<option>${a}</option>`;
+for(let a=anoAtual-3;a<=anoAtual+5;a++) ano.innerHTML+=`<option>${a}</option>`;
 
 mes.value=new Date().getMonth();
 ano.value=anoAtual;
@@ -300,6 +284,7 @@ function carregar(){
   db.collection("trator_servicos")
     .where("data",">=",ini)
     .where("data","<=",fim)
+    .orderBy("data")
     .get()
     .then(s=>{
       s.forEach(d=>{
@@ -308,19 +293,18 @@ function carregar(){
         clientes[v.cliente]=(clientes[v.cliente]||0)+v.valor_total;
 
         lista.innerHTML+=`
-        <tr>
-          <td>${v.data.toDate().toLocaleDateString("pt-BR")}</td>
-          <td class="cliente">${v.cliente}</td>
-          <td class="servico">${v.tipo}</td>
-          <td>${moeda(v.valor_total)}</td>
-          <td><button class="btn-edit" onclick="location.href='../trator/trator-cadservicos.html?id=${d.id}'">Editar</button></td>
-        </tr>`;
+        <div class="mini-card">
+          <div>📅 <b>${v.data.toDate().toLocaleDateString("pt-BR")}</b></div>
+          <div>👤 ${v.cliente}</div>
+          <div>🚜 ${v.tipo}</div>
+          <div>💰 <b>${moeda(v.valor_total)}</b></div>
+        </div>`;
       });
 
-      totalTabela.textContent=moeda(total);
       totalServicos.textContent=s.size;
       receitaTotal.textContent=moeda(total);
       ticketMedio.textContent=s.size?moeda(total/s.size):"R$ 0,00";
+      totalPeriodo.textContent="Total do período: "+moeda(total);
 
       let top="-", maior=0;
       Object.keys(clientes).forEach(c=>{
