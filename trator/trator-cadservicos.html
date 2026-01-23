@@ -16,6 +16,9 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
+<!-- 🔒 DATE UTILS (OBRIGATÓRIO) -->
+<script src="../utils/date-utils.js"></script>
+
 <script>
 if (!firebase.apps.length) {
   firebase.initializeApp({
@@ -55,7 +58,6 @@ body{
   color:#333;
 }
 
-/* HEADER */
 header{
   background:var(--logo);
   padding:15px;
@@ -66,14 +68,12 @@ header img{
   width:100%;
 }
 
-/* CONTAINER */
 .container{
   max-width:900px;
   margin:20px auto;
   padding:0 15px;
 }
 
-/* CARD */
 .card{
   background:#fff;
   border-radius:14px;
@@ -150,7 +150,6 @@ input, select{
   cursor:pointer;
 }
 
-/* TABELA */
 .table-wrapper{
   overflow-x:auto;
 }
@@ -194,80 +193,86 @@ th, td{
 <h2>🚜 Cadastro de Serviços</h2>
 
 <div class="card">
+  <label>Data do serviço</label>
+  <input type="date" id="data">
 
-<label>Data do serviço</label>
-<input type="date" id="data">
+  <label>Cliente</label>
+  <input type="text" id="cliente">
 
-<label>Cliente</label>
-<input type="text" id="cliente">
+  <label>Tipo de serviço</label>
+  <input type="text" id="tipo">
 
-<label>Tipo de serviço</label>
-<input type="text" id="tipo">
+  <label>Motorista</label>
+  <select id="motorista">
+    <option value="">Selecione o motorista</option>
+  </select>
 
-<label>Motorista</label>
-<select id="motorista">
-  <option value="">Selecione o motorista</option>
-</select>
+  <label>Forma de cobrança</label>
+  <div class="radio-group">
+    <label class="radio-option">
+      <input type="radio" name="cobranca" value="hora" checked>
+      <span>Por hora</span>
+    </label>
+    <label class="radio-option">
+      <input type="radio" name="cobranca" value="fechado">
+      <span>Valor fechado</span>
+    </label>
+  </div>
 
-<label>Forma de cobrança</label>
-<div class="radio-group">
-  <label class="radio-option">
-    <input type="radio" name="cobranca" value="hora" checked>
-    <span>Por hora</span>
-  </label>
-  <label class="radio-option">
-    <input type="radio" name="cobranca" value="fechado">
-    <span>Valor fechado</span>
-  </label>
-</div>
+  <div id="porHora">
+    <label>Horas trabalhadas</label>
+    <input type="number" id="horas" step="0.1">
 
-<div id="porHora">
-  <label>Horas trabalhadas</label>
-  <input type="number" id="horas" step="0.1">
+    <label>Valor hora trator</label>
+    <input type="text" id="valorHora">
 
-  <label>Valor hora trator</label>
-  <input type="text" id="valorHora">
+    <label>Valor total</label>
+    <input type="text" id="valorTotal" readonly>
+  </div>
 
-  <label>Valor total</label>
-  <input type="text" id="valorTotal" readonly>
-</div>
+  <div id="valorFechado" style="display:none">
+    <label>Valor total</label>
+    <input type="text" id="valorFechadoInput">
+  </div>
 
-<div id="valorFechado" style="display:none">
-  <label>Valor total</label>
-  <input type="text" id="valorFechadoInput">
-</div>
+  <div id="msg" class="msg"></div>
 
-<div id="msg" class="msg"></div>
-
-<div class="btn-row">
-  <button id="excluir" class="btn-secondary" disabled>🗑 Excluir</button>
-  <button id="salvar" class="btn-primary">💾 Salvar Serviço</button>
-</div>
-
+  <div class="btn-row">
+    <button id="excluir" class="btn-secondary" disabled>🗑 Excluir</button>
+    <button id="salvar" class="btn-primary">💾 Salvar Serviço</button>
+  </div>
 </div>
 
 <h2>📊 Serviços do mês</h2>
 
+<!-- 🔒 FILTROS QUE ESTAVAM FALTANDO -->
+<div class="card">
+  <div class="btn-row">
+    <select id="mes"></select>
+    <select id="ano"></select>
+  </div>
+</div>
+
 <div class="card table-wrapper">
-<table>
-<thead>
-<tr>
-  <th>Data</th>
-  <th>Cliente</th>
-  <th>Tipo</th>
-  <th>Valor</th>
-  <th>Ações</th>
-</tr>
-</thead>
-<tbody id="lista"></tbody>
-<tfoot>
-<tr>
-  <td colspan="3"><strong>Total do mês</strong></td>
-  <td id="totalMes">R$ 0,00</td>
-  <td></td>
-</tr>
-</tfoot>
-</table>
+  <table>
+    <thead>
+      <tr>
+        <th>Data</th>
+        <th>Cliente</th>
+        <th>Tipo</th>
+        <th>Valor</th>
+        <th>Ações</th>
+      </tr>
+    </thead>
+    <tbody id="lista"></tbody>
+    <tfoot>
+      <tr>
+        <td colspan="3"><strong>Total do mês</strong></td>
+        <td id="totalMes">R$ 0,00</td>
+        <td></td>
+      </tr>
+    </tfoot>
+  </table>
 </div>
 
 <button class="btn-outline" onclick="location.href='../trator/trator-inicio.html'">
