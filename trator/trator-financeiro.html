@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Financeiro do Trator</title>
+
+<link rel="manifest" href="../manifest.json">
+<meta name="theme-color" content="#7b3f2a">
+
+<!-- MENU PADRÃO -->
+<link rel="stylesheet" href="../menu/menu.css">
+
+<!-- FIREBASE -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+<script>
+if (!firebase.apps.length) {
+  firebase.initializeApp({
+    apiKey: "AIzaSyCW-CuFDrOLO-dteckl_GrPTocmyS-IrzY",
+    authDomain: "sitio-corrego-do-pinhal.firebaseapp.com",
+    projectId: "sitio-corrego-do-pinhal"
+  });
+}
+</script>
+
+<script>
+window.PERMISSAO_PAGINA = {
+  area: "trator",
+  chave: "trator-financeiro"
+};
+</script>
+
+<script src="../login/auth-guard.js"></script>
+
+<style>
+:root{
+  --marrom:#7b3f2a;
+  --bege:#f6efe7;
+  --logo:#D0B485;
+  --verde:#2f6b2f;
+  --vermelho:#c0392b;
+}
+
+*{
+  box-sizing:border-box;
+  font-family:Inter,system-ui,Arial;
+}
+
+body{
+  margin:0;
+  background:var(--bege);
+  color:#333;
+}
+
+/* HEADER */
+header{
+  background:var(--logo);
+  padding:15px;
+  text-align:center;
+}
+header img{
+  max-width:260px;
+  width:100%;
+}
+
+/* CONTAINER */
+.container{
+  max-width:900px;
+  margin:20px auto;
+  padding:0 15px;
+}
+
+/* TITULOS */
+h2{
+  color:var(--marrom);
+  display:flex;
+  align-items:center;
+  gap:8px;
+  margin:18px 0 12px;
+}
+
+/* CARD BASE */
+.card{
+  background:#fff;
+  border-radius:18px;
+  padding:16px;
+  box-shadow:0 2px 6px rgba(0,0,0,.06);
+  margin-bottom:18px;
+}
+
+/* FILTROS */
+select{
+  width:100%;
+  padding:14px;
+  border-radius:14px;
+  border:1px solid #ccc;
+  font-size:15px;
+  margin-bottom:10px;
+}
+
+/* GRID MÉTRICAS */
+.cards-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:12px;
+}
+
+.card-metrica{
+  background:#fff;
+  border-radius:18px;
+  padding:16px;
+  box-shadow:0 2px 6px rgba(0,0,0,.06);
+  display:flex;
+  gap:10px;
+  align-items:center;
+}
+
+.card-metrica .barra{
+  width:6px;
+  height:100%;
+  border-radius:6px;
+}
+
+.barra.verde{ background:var(--verde); }
+.barra.vermelha{ background:var(--vermelho); }
+
+.card-metrica strong{
+  display:block;
+  font-size:20px;
+  font-weight:700;
+}
+
+.card-metrica span{
+  font-size:12px;
+  opacity:.7;
+}
+
+/* LISTAS */
+.lista{
+  margin-top:22px;
+}
+
+.mini-card{
+  background:#fff;
+  border-radius:16px;
+  padding:14px;
+  box-shadow:0 2px 6px rgba(0,0,0,.06);
+  margin-bottom:14px;
+}
+
+.mini-card div{
+  margin-bottom:6px;
+}
+
+/* TOTAL */
+.total-card{
+  background:#efe3d3;
+  border-radius:16px;
+  padding:16px;
+  text-align:center;
+  font-size:18px;
+  font-weight:800;
+}
+
+/* BOTÃO */
+.btn-voltar{
+  margin-top:20px;
+  width:100%;
+  padding:16px;
+  border-radius:18px;
+  background:#fff;
+  border:2px solid var(--marrom);
+  color:var(--marrom);
+  font-weight:800;
+}
+</style>
+</head>
+
+<body style="display:none">
+
+<header>
+  <img src="../logo.png">
+</header>
+
+<div id="menu"></div>
+
+<div class="container">
+
+<h2>📊 Financeiro do Trator</h2>
+
+<!-- CONTEXTO -->
+<div class="card">
+  <select id="mes"></select>
+  <select id="ano"></select>
+</div>
+
+<!-- MÉTRICAS PRINCIPAIS -->
+<div class="cards-grid">
+  <div class="card-metrica">
+    <div class="barra verde"></div>
+    <div>
+      <strong id="receita">R$ 0,00</strong>
+      <span>Receita de serviços</span>
+    </div>
+  </div>
+
+  <div class="card-metrica">
+    <div class="barra vermelha"></div>
+    <div>
+      <strong id="despesas">R$ 0,00</strong>
+      <span>Despesas do trator</span>
+    </div>
+  </div>
+
+  <div class="card-metrica">
+    <div class="barra vermelha"></div>
+    <div>
+      <strong id="motoristas">R$ 0,00</strong>
+      <span>Custo motoristas (configuração aplicada)</span>
+    </div>
+  </div>
+
+  <div class="card-metrica">
+    <div class="barra verde"></div>
+    <div>
+      <strong id="lucro">R$ 0,00</strong>
+      <span>Lucro do período</span>
+    </div>
+  </div>
+</div>
+
+<!-- COMPOSIÇÃO -->
+<div class="card">
+  <h3>📐 Composição do Resultado</h3>
+  <div>Receita de serviços: <b id="cReceita">R$ 0,00</b></div>
+  <div>(-) Despesas do trator: <b id="cDespesa">R$ 0,00</b></div>
+  <div>(-) Motoristas: <b id="cMotorista">R$ 0,00</b></div>
+  <hr>
+  <div>Lucro líquido: <b id="cLucro">R$ 0,00</b></div>
+</div>
+
+<!-- SERVIÇOS -->
+<h2>📋 Serviços</h2>
+<div id="listaServicos" class="lista"></div>
+
+<!-- DESPESAS -->
+<h2>💸 Despesas</h2>
+<div id="listaDespesas" class="lista"></div>
+
+<div id="totalPeriodo" class="total-card">Resultado final: R$ 0,00</div>
+
+<button class="btn-voltar" onclick="location.href='../trator/trator-inicio.html'">
+← Voltar para Trator
+</button>
+
+</div>
+
+<!-- MENU -->
+<script>
+fetch("../menu/menu.html")
+  .then(r=>r.text())
+  .then(html=>{
+    menu.innerHTML=html;
+    const s=document.createElement("script");
+    s.src="../menu/menu-permissoes.js";
+    document.body.appendChild(s);
+    document.body.style.display="block";
+  });
+</script>
+
+<script>
+const db = firebase.firestore();
+
+function moeda(v){
+  return "R$ " + v.toFixed(2).replace(".",",");
+}
+
+const meses=["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
+meses.forEach((m,i)=>mes.innerHTML+=`<option value="${i}">${m}</option>`);
+
+const anoAtual=new Date().getFullYear();
+for(let a=anoAtual-3;a<=anoAtual+5;a++) ano.innerHTML+=`<option>${a}</option>`;
+
+mes.value=new Date().getMonth();
+ano.value=anoAtual;
+
+async function carregar(){
+  let receita=0, despesa=0, motorista=0;
+
+  const ini=new Date(ano.value,mes.value,1,12);
+  const fim=new Date(ano.value,Number(mes.value)+1,0,23,59,59);
+
+  listaServicos.innerHTML="";
+  listaDespesas.innerHTML="";
+
+  const servicos=await db.collection("trator_servicos")
+    .where("data",">=",ini).where("data","<=",fim).get();
+
+  servicos.forEach(d=>{
+    const v=d.data();
+    receita+=v.valor_total;
+    listaServicos.innerHTML+=`
+      <div class="mini-card">
+        <div>📅 ${v.data.toDate().toLocaleDateString("pt-BR")}</div>
+        <div>Cliente: ${v.cliente}</div>
+        <div>Serviço: ${v.tipo}</div>
+        <div>Valor: <b>${moeda(v.valor_total)}</b></div>
+      </div>`;
+  });
+
+  const despesasSnap=await db.collection("trator_despesas")
+    .where("data",">=",ini).where("data","<=",fim).get();
+
+  despesasSnap.forEach(d=>{
+    const v=d.data();
+    despesa+=v.valor_despesa;
+    listaDespesas.innerHTML+=`
+      <div class="mini-card">
+        <div>📅 ${v.data_despesa.toDate().toLocaleDateString("pt-BR")}</div>
+        <div>Despesa: ${v.nome_despesa}</div>
+        <div>Fornecedor: ${v.fornecedor}</div>
+        <div>Valor: <b>${moeda(v.valor_despesa)}</b></div>
+      </div>`;
+  });
+
+  const lucro = receita - despesa - motorista;
+
+  document.getElementById("receita").textContent=moeda(receita);
+  document.getElementById("despesas").textContent=moeda(despesa);
+  document.getElementById("motoristas").textContent=moeda(motorista);
+  document.getElementById("lucro").textContent=moeda(lucro);
+
+  cReceita.textContent=moeda(receita);
+  cDespesa.textContent=moeda(despesa);
+  cMotorista.textContent=moeda(motorista);
+  cLucro.textContent=moeda(lucro);
+  totalPeriodo.textContent="Resultado final: "+moeda(lucro);
+}
+
+mes.onchange=ano.onchange=carregar;
+carregar();
+</script>
+
+<script src="../login/logout.js"></script>
+</body>
+</html>
