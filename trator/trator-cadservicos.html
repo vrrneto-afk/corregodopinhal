@@ -319,21 +319,30 @@ document.querySelectorAll("input[name='cobranca']").forEach(r => {
 });
 
 db.collection("trator_motoristas")
-  .where("ativo", "==", true)
   .orderBy("nome_motorista")
   .get()
-  .then(s=>{
-    s.forEach(d=>{
-      const m = d.data();
+  .then(snapshot => {
+
+    snapshot.forEach(doc => {
+      const m = doc.data();
+
+      // 🔒 regra: só motoristas ativos aparecem
+      if (!m.ativo) return;
+
       motorista.innerHTML += `
-        <option 
-          value="${d.id}"
+        <option
+          value="${doc.id}"
+          data-id="${m.id_motorista}"
           data-percentual="${m.porcentagem_base}">
           ${m.nome_motorista}
-        </option>`;
+        </option>
+      `;
     });
-  });
 
+  })
+  .catch(err => {
+    console.error("Erro ao carregar motoristas:", err);
+  });
 
 salvar.onclick = async () => {
   try{
