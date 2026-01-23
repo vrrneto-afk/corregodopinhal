@@ -129,9 +129,9 @@ input, select{
   flex:1;
 }
 
-.btn-danger{
-  background:var(--erro);
-  color:#fff;
+.btn-warning{
+  background:#e0a800;
+  color:#000;
   border:none;
   border-radius:12px;
   padding:12px;
@@ -214,7 +214,7 @@ th, td{
 <div id="msg" class="msg"></div>
 
 <div class="btn-row">
-  <button id="excluir" class="btn-danger" style="display:none">🗑 Excluir</button>
+  <button id="btnStatus" class="btn-warning" style="display:none"></button>
   <button id="salvar" class="btn-primary">💾 Salvar Motorista</button>
 </div>
 
@@ -271,7 +271,7 @@ function limpar(){
   percentual.value="";
   ativo.value="true";
   editId=null;
-  excluir.style.display="none";
+  btnStatus.style.display="none";
 }
 
 function carregar(){
@@ -284,7 +284,7 @@ function carregar(){
           <td>${v.nome_motorista}</td>
           <td>${v.id_motorista}</td>
           <td>${v.porcentagem_base}%</td>
-          <td>${v.ativo?"Ativo":"Inativo"}</td>
+          <td>${v.ativo ? "Ativo" : "Inativo"}</td>
           <td>
             <button class="btn-edit" onclick="editar('${d.id}')">Editar</button>
           </td>
@@ -326,23 +326,32 @@ function editar(id){
   db.collection("trator_motoristas").doc(id).get().then(d=>{
     const v=d.data();
     editId=id;
+
     nome.value=v.nome_motorista;
     idMotorista.value=v.id_motorista;
     percentual.value=v.porcentagem_base;
     ativo.value=String(v.ativo);
-    excluir.style.display="block";
+
+    btnStatus.textContent = v.ativo ? "🚫 Inativar motorista" : "♻️ Reativar motorista";
+    btnStatus.style.display="block";
+    btnStatus.onclick=()=>toggleStatus(v.ativo);
   });
 }
 
-excluir.onclick=()=>{
-  if(!confirm("Excluir motorista?"))return;
-  db.collection("trator_motoristas").doc(editId).delete().then(()=>{
-    msg.textContent="Motorista excluído";
+function toggleStatus(statusAtual){
+  if(!editId) return;
+
+  db.collection("trator_motoristas").doc(editId).update({
+    ativo: !statusAtual
+  }).then(()=>{
+    msg.textContent = !statusAtual
+      ? "Motorista reativado com sucesso"
+      : "Motorista inativado com sucesso";
     msg.className="msg ok";
     limpar();
     carregar();
   });
-};
+}
 
 carregar();
 </script>
