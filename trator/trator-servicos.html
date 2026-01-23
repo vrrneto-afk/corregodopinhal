@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Serviços do Trator</title>
+
+<!-- MANIFEST -->
+<link rel="manifest" href="../manifest.json">
+<meta name="theme-color" content="#7b3f2a">
+
+<!-- MENU + PADRÃO VISUAL -->
+<link rel="stylesheet" href="../menu/menu.css">
+
+<!-- FIREBASE -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+<script>
+if (!firebase.apps.length) {
+  firebase.initializeApp({
+    apiKey: "AIzaSyCW-CuFDrOLO-dteckl_GrPTocmyS-IrzY",
+    authDomain: "sitio-corrego-do-pinhal.firebaseapp.com",
+    projectId: "sitio-corrego-do-pinhal"
+  });
+}
+</script>
+
+<!-- IDENTIFICAÇÃO -->
+<script>
+window.PERMISSAO_PAGINA = {
+  area: "trator",
+  chave: "trator-servicos"
+};
+</script>
+
+<script src="../login/auth-guard.js"></script>
+</head>
+
+<body style="display:none">
+
+<div id="menu"></div>
+
+<div class="container">
+
+<h2>🚜 Serviços do Trator</h2>
+<p style="margin-top:-10px;color:#666">
+Visualização e análise dos serviços prestados
+</p>
+
+<!-- FILTROS -->
+<div class="card" style="margin-top:15px">
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">
+    <select id="filtroCliente"><option value="">Cliente (todos)</option></select>
+    <select id="filtroServico"><option value="">Serviço (todos)</option></select>
+    <select id="filtroMotorista"><option value="">Motorista (todos)</option></select>
+  </div>
+
+  <div style="display:flex;gap:10px;margin-top:10px">
+    <select id="mes"></select>
+    <select id="ano"></select>
+    <button onclick="limparFiltros()">Limpar filtros</button>
+  </div>
+</div>
+
+<!-- CARDS DE RESUMO -->
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin:20px 0">
+
+  <div class="card">
+    <strong>Total de serviços</strong>
+    <h3 id="cardQtd">0</h3>
+  </div>
+
+  <div class="card">
+    <strong>Receita total</strong>
+    <h3 id="cardReceita">R$ 0,00</h3>
+  </div>
+
+  <div class="card">
+    <strong>Ticket médio</strong>
+    <h3 id="cardTicket">R$ 0,00</h3>
+  </div>
+
+  <div class="card">
+    <strong>Cliente destaque</strong>
+    <h3 id="cardCliente">—</h3>
+  </div>
+
+</div>
+
+<!-- TABELA -->
+<div class="card">
+  <h3>📊 Detalhamento</h3>
+
+  <div class="table-wrapper">
+    <table>
+      <thead>
+        <tr>
+          <th>Data</th>
+          <th>Serviço</th>
+          <th>Cliente</th>
+          <th>Valor</th>
+          <th>Ações</th>
+        </tr>
+      </thead>
+      <tbody id="lista"></tbody>
+      <tfoot>
+        <tr>
+          <td colspan="3"><strong>Total do período</strong></td>
+          <td id="totalTabela">R$ 0,00</td>
+          <td></td>
+        </tr>
+      </tfoot>
+    </table>
+  </div>
+</div>
+
+<!-- VOLTAR -->
+<div style="margin-top:20px">
+  <button onclick="location.href='../trator/trator-inicio.html'" class="btn-outline">
+    ← Voltar para Trator
+  </button>
+</div>
+
+</div>
+
+<!-- MENU PADRÃO -->
+<script>
+fetch("../menu/menu.html")
+  .then(r => r.text())
+  .then(html => {
+    document.getElementById("menu").innerHTML = html;
+
+    document.querySelectorAll("#menu a").forEach(a => {
+      if (a.getAttribute("href") === "../trator/trator-inicio.html") {
+        a.classList.add("ativo");
+      }
+    });
+
+    const s = document.createElement("script");
+    s.src = "../menu/menu-permissoes.js";
+    document.body.appendChild(s);
+
+    document.body.style.display = "block";
+  });
+</script>
+
+<script>
+const db = firebase.firestore();
+
+const meses = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
+meses.forEach((m,i)=>mes.innerHTML+=`<option value="${i}">${m}</option>`);
+
+const anoAtual = new Date().getFullYear();
+for(let a=anoAtual-3;a<=anoAtual+5;a++) ano.innerHTML+=`<option>${a}</option>`;
+mes.value = new Date().getMonth();
+ano.value = anoAtual;
+
+function moeda(v){
+  return "R$ "+v.toFixed(2).replace(".",",");
+}
+
+function limparFiltros(){
+  filtroCliente.value="";
+  filtroServico.value="";
+  filtroMotorista.value="";
+  carregar();
+}
+
+[filtroCliente,filtroServico,filtroMotorista,mes,ano].forEach(el=>{
+  el.onchange = carregar;
+});
+
+async function carregar(){
+  lista.innerHTML="";
+  let total=0, qtd=0;
+  const clientes={}, servicos={};
+
+  const ini=new Date(ano.value,mes.value,1);
+  const fim=new Date(ano.value,Number(mes.value)+1,0,23,59,59);
+
+  const snap = await db.collection("trator_servicos")
+    .where("data",">=",ini)
+    .where("data","<=",fim)
+    .get();
+
+  snap.forEach(doc=>{
+    const v=doc.data();
+
+    if(filtroCliente.value && v.cliente!==filtroCliente.value) return;
+    if(filtroServico.value && v.tipo!==filtroServico.value) return;
+    if(filtroMotorista.value && v.motorista!==filtroMotorista.value) return;
+
+    qtd++;
+    total+=v.valor_total;
+
+    clientes[v.cliente]=(clientes[v.cliente]||0)+v.valor_total;
+
+    lista.innerHTML+=`
+      <tr>
+        <td>${v.data.toDate().toLocaleDateString("pt-BR")}</td>
+        <td>${v.tipo}</td>
+        <td>${v.cliente}</td>
+        <td>${moeda(v.valor_total)}</td>
+        <td><button onclick="editar('${doc.id}')">Editar</button></td>
+      </tr>
+    `;
+  });
+
+  cardQtd.textContent=qtd;
+  cardReceita.textContent=moeda(total);
+  cardTicket.textContent=qtd?moeda(total/qtd):"R$ 0,00";
+  totalTabela.textContent=moeda(total);
+
+  let topCliente="—",topValor=0;
+  Object.keys(clientes).forEach(c=>{
+    if(clientes[c]>topValor){topValor=clientes[c];topCliente=c;}
+  });
+  cardCliente.textContent=topCliente;
+}
+
+function editar(id){
+  location.href="../trator/trator-cadservicos.html?id="+id;
+}
+
+carregar();
+</script>
+
+<script src="../login/logout.js"></script>
+
+</body>
+</html>
