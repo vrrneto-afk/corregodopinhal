@@ -8,7 +8,7 @@
 <link rel="manifest" href="../manifest.json">
 <meta name="theme-color" content="#7b3f2a">
 
-<!-- MENU -->
+<!-- MENU + FORMS (PADRÃO GLOBAL) -->
 <link rel="stylesheet" href="../menu/menu.css">
 
 <!-- FIREBASE -->
@@ -16,7 +16,7 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
-<!-- 🔒 DATE UTILS (OBRIGATÓRIO) -->
+<!-- DATE UTILS -->
 <script src="../utils/date-utils.js"></script>
 
 <script>
@@ -37,147 +37,6 @@ window.PERMISSAO_PAGINA = {
 </script>
 
 <script src="../login/auth-guard.js"></script>
-
-<style>
-:root{
-  --marrom:#7b3f2a;
-  --bege:#f6efe7;
-  --logo:#D0B485;
-  --ok:#2f6b2f;
-  --erro:#c0392b;
-}
-
-*{
-  box-sizing:border-box;
-  font-family:Inter,system-ui,Arial;
-}
-
-body{
-  margin:0;
-  background:var(--bege);
-  color:#333;
-}
-
-header{
-  background:var(--logo);
-  padding:15px;
-  text-align:center;
-}
-header img{
-  max-width:260px;
-  width:100%;
-}
-
-.container{
-  max-width:900px;
-  margin:20px auto;
-  padding:0 15px;
-}
-
-.card{
-  background:#fff;
-  border-radius:14px;
-  padding:16px;
-  box-shadow:0 2px 6px rgba(0,0,0,.06);
-  margin-bottom:20px;
-}
-
-h2{
-  margin:24px 0 14px;
-  color:var(--marrom);
-  display:flex;
-  align-items:center;
-  gap:8px;
-}
-
-label{
-  display:block;
-  font-weight:600;
-  margin-top:12px;
-}
-
-input, select{
-  width:100%;
-  padding:10px;
-  border-radius:10px;
-  border:1px solid #ccc;
-  margin-top:4px;
-  font-size:15px;
-}
-
-.msg{
-  margin-top:10px;
-  font-weight:700;
-}
-.msg.ok{ color:var(--ok); }
-.msg.erro{ color:var(--erro); }
-
-.btn-row{
-  display:flex;
-  gap:10px;
-  margin-top:16px;
-}
-
-.btn-primary{
-  background:var(--marrom);
-  color:#fff;
-  border:none;
-  border-radius:12px;
-  padding:12px;
-  font-weight:700;
-  flex:1;
-}
-
-.btn-secondary{
-  background:#aaa;
-  color:#fff;
-  border:none;
-  border-radius:12px;
-  padding:12px;
-  font-weight:700;
-  flex:1;
-}
-
-.btn-outline{
-  background:transparent;
-  border:2px solid var(--marrom);
-  color:var(--marrom);
-  width:100%;
-  padding:14px;
-  border-radius:14px;
-  font-weight:700;
-  margin-top:20px;
-  cursor:pointer;
-}
-
-.table-wrapper{
-  overflow-x:auto;
-}
-
-table{
-  width:100%;
-  border-collapse:separate;
-  border-spacing:0;
-}
-
-thead{
-  background:#efe3d3;
-}
-
-th, td{
-  padding:12px;
-  text-align:left;
-  white-space:nowrap;
-}
-
-.btn-edit{
-  padding:10px 16px;
-  border-radius:10px;
-  background:#eee;
-  border:none;
-  font-weight:700;
-}
-</style>
 </head>
 
 <body style="display:none">
@@ -193,59 +52,60 @@ th, td{
 <h2>🚜 Cadastro de Serviços</h2>
 
 <div class="card">
-  <label>Data do serviço</label>
-  <input type="date" id="data">
 
-  <label>Cliente</label>
-  <input type="text" id="cliente">
+<label>Data do serviço</label>
+<input type="date" id="data">
 
-  <label>Tipo de serviço</label>
-  <input type="text" id="tipo">
+<label>Cliente</label>
+<input type="text" id="cliente">
 
-  <label>Motorista</label>
-  <select id="motorista">
-    <option value="">Selecione o motorista</option>
-  </select>
+<label>Tipo de serviço</label>
+<input type="text" id="tipo">
 
-  <label>Forma de cobrança</label>
-  <div class="radio-group">
-    <label class="radio-option">
-      <input type="radio" name="cobranca" value="hora" checked>
-      <span>Por hora</span>
-    </label>
-    <label class="radio-option">
-      <input type="radio" name="cobranca" value="fechado">
-      <span>Valor fechado</span>
-    </label>
-  </div>
+<label>Motorista</label>
+<select id="motorista">
+  <option value="">Selecione o motorista</option>
+</select>
 
-  <div id="porHora">
-    <label>Horas trabalhadas</label>
-    <input type="number" id="horas" step="0.1">
+<label>Forma de cobrança</label>
+<div class="radio-group">
+  <label class="radio-option">
+    <input type="radio" name="cobranca" value="hora" checked>
+    <span>Por hora</span>
+  </label>
+  <label class="radio-option">
+    <input type="radio" name="cobranca" value="fechado">
+    <span>Valor fechado</span>
+  </label>
+</div>
 
-    <label>Valor hora trator</label>
-    <input type="text" id="valorHora">
+<div id="porHora">
+  <label>Horas trabalhadas</label>
+  <input type="number" id="horas" step="0.1">
 
-    <label>Valor total</label>
-    <input type="text" id="valorTotal" readonly>
-  </div>
+  <label>Valor hora trator</label>
+  <input type="text" id="valorHora">
 
-  <div id="valorFechado" style="display:none">
-    <label>Valor total</label>
-    <input type="text" id="valorFechadoInput">
-  </div>
+  <label>Valor total</label>
+  <input type="text" id="valorTotal" readonly>
+</div>
 
-  <div id="msg" class="msg"></div>
+<div id="valorFechado" style="display:none">
+  <label>Valor total</label>
+  <input type="text" id="valorFechadoInput">
+</div>
 
-  <div class="btn-row">
-    <button id="excluir" class="btn-secondary" disabled>🗑 Excluir</button>
-    <button id="salvar" class="btn-primary">💾 Salvar Serviço</button>
-  </div>
+<div id="msg" class="msg"></div>
+
+<div class="btn-row">
+  <button id="excluir" class="btn-secondary" disabled>🗑 Excluir</button>
+  <button id="salvar" class="btn-primary">💾 Salvar Serviço</button>
+</div>
+
 </div>
 
 <h2>📊 Serviços do mês</h2>
 
-<!-- 🔒 FILTROS QUE ESTAVAM FALTANDO -->
 <div class="card">
   <div class="btn-row">
     <select id="mes"></select>
@@ -254,25 +114,25 @@ th, td{
 </div>
 
 <div class="card table-wrapper">
-  <table>
-    <thead>
-      <tr>
-        <th>Data</th>
-        <th>Cliente</th>
-        <th>Tipo</th>
-        <th>Valor</th>
-        <th>Ações</th>
-      </tr>
-    </thead>
-    <tbody id="lista"></tbody>
-    <tfoot>
-      <tr>
-        <td colspan="3"><strong>Total do mês</strong></td>
-        <td id="totalMes">R$ 0,00</td>
-        <td></td>
-      </tr>
-    </tfoot>
-  </table>
+<table>
+<thead>
+<tr>
+  <th>Data</th>
+  <th>Cliente</th>
+  <th>Tipo</th>
+  <th>Valor</th>
+  <th>Ações</th>
+</tr>
+</thead>
+<tbody id="lista"></tbody>
+<tfoot>
+<tr>
+  <td colspan="3"><strong>Total do mês</strong></td>
+  <td id="totalMes">R$ 0,00</td>
+  <td></td>
+</tr>
+</tfoot>
+</table>
 </div>
 
 <button class="btn-outline" onclick="location.href='../trator/trator-inicio.html'">
@@ -286,7 +146,7 @@ th, td{
 fetch("../menu/menu.html")
   .then(r=>r.text())
   .then(html=>{
-    menu.innerHTML=html;
+    menu.innerHTML = html;
 
     document.querySelectorAll("#menu a").forEach(a=>{
       if(a.getAttribute("href")==="../trator/trator-inicio.html"){
@@ -294,32 +154,26 @@ fetch("../menu/menu.html")
       }
     });
 
-    const s=document.createElement("script");
-    s.src="../menu/menu-permissoes.js";
+    const s = document.createElement("script");
+    s.src = "../menu/menu-permissoes.js";
     document.body.appendChild(s);
-
     document.body.style.display="block";
   });
 </script>
-
 
 <script>
 const db = firebase.firestore();
 let editId = null;
 
-/* =========================
-   UTILITÁRIOS
-========================= */
+/* ================= UTIL ================= */
 function moeda(v){
   return "R$ " + Number(v).toFixed(2).replace(".", ",");
 }
 function limparMoeda(v){
-  return Number(v.replace(/[^\d]/g, "")) / 100;
+  return Number(v.replace(/[^\d]/g,"")) / 100;
 }
 
-/* =========================
-   CÁLCULO
-========================= */
+/* ================= CÁLCULO ================= */
 function recalcular(){
   valorTotal.value = moeda(
     (Number(horas.value)||0) * limparMoeda(valorHora.value||"0")
@@ -336,32 +190,35 @@ valorFechadoInput.oninput = ()=>{
 };
 
 document.querySelectorAll("input[name='cobranca']").forEach(r=>{
-  r.onchange = ()=>{
-    porHora.style.display = r.value==="hora" ? "block" : "none";
-    valorFechado.style.display = r.value==="fechado" ? "block" : "none";
+  r.onchange=()=>{
+    porHora.style.display = r.value==="hora"?"block":"none";
+    valorFechado.style.display = r.value==="fechado"?"block":"none";
   };
 });
 
-/* =========================
-   MOTORISTAS
-========================= */
+/* ================= MOTORISTAS (CORREÇÃO DEFINITIVA) ================= */
 db.collection("trator_motoristas")
   .where("ativo","==",true)
-  .orderBy("nome_motorista")
   .get()
-  .then(s=>{
-    s.forEach(d=>{
-      const m=d.data();
+  .then(snapshot=>{
+    const listaMotoristas=[];
+    snapshot.forEach(doc=>{
+      listaMotoristas.push({ id:doc.id, ...doc.data() });
+    });
+
+    listaMotoristas.sort((a,b)=>
+      a.nome_motorista.localeCompare(b.nome_motorista)
+    );
+
+    listaMotoristas.forEach(m=>{
       motorista.innerHTML+=`
-        <option value="${d.id}">
+        <option value="${m.id}">
           ${m.nome_motorista}
         </option>`;
     });
   });
 
-/* =========================
-   SALVAR / ATUALIZAR
-========================= */
+/* ================= SALVAR ================= */
 salvar.onclick = async()=>{
   try{
     if(!data.value||!cliente.value||!tipo.value||!motorista.value)
@@ -385,30 +242,26 @@ salvar.onclick = async()=>{
       valor_total: valor
     };
 
-    if(editId){
-      await db.collection("trator_servicos").doc(editId).update(dados);
-    }else{
-      await db.collection("trator_servicos").add(dados);
-    }
+    editId
+      ? await db.collection("trator_servicos").doc(editId).update(dados)
+      : await db.collection("trator_servicos").add(dados);
 
-    msg.textContent = "Serviço salvo com sucesso";
-    msg.className = "msg ok";
+    msg.textContent="Serviço salvo com sucesso";
+    msg.className="msg ok";
     limparFormulario();
     carregarTabela();
 
   }catch(e){
-    msg.textContent = e;
-    msg.className = "msg erro";
+    msg.textContent=e;
+    msg.className="msg erro";
   }
 };
 
-/* =========================
-   EDITAR (AGORA FUNCIONA)
-========================= */
+/* ================= EDITAR ================= */
 function editar(id){
   db.collection("trator_servicos").doc(id).get().then(d=>{
-    const v = d.data();
-    editId = id;
+    const v=d.data();
+    editId=id;
 
     data.value = v.data.toDate().toISOString().split("T")[0];
     cliente.value = v.cliente;
@@ -416,32 +269,26 @@ function editar(id){
     motorista.value = v.motorista_id;
 
     valorFechadoInput.value = moeda(v.valor_total);
+    document.querySelector("input[value='fechado']").checked=true;
+    porHora.style.display="none";
+    valorFechado.style.display="block";
 
-    document.querySelector("input[value='fechado']").checked = true;
-    porHora.style.display = "none";
-    valorFechado.style.display = "block";
-
-    excluir.disabled = false;
+    excluir.disabled=false;
   });
 }
 
-/* =========================
-   EXCLUIR
-========================= */
+/* ================= EXCLUIR ================= */
 excluir.onclick = async()=>{
   if(!editId) return;
   if(!confirm("Deseja excluir este serviço?")) return;
-
   await db.collection("trator_servicos").doc(editId).delete();
   limparFormulario();
   carregarTabela();
 };
 
-/* =========================
-   LIMPAR
-========================= */
+/* ================= LIMPAR ================= */
 function limparFormulario(){
-  editId = null;
+  editId=null;
   data.value="";
   cliente.value="";
   tipo.value="";
@@ -450,12 +297,10 @@ function limparFormulario(){
   valorHora.value="";
   valorTotal.value="";
   valorFechadoInput.value="";
-  excluir.disabled = true;
+  excluir.disabled=true;
 }
 
-/* =========================
-   FILTROS
-========================= */
+/* ================= FILTROS ================= */
 const meses=["Janeiro","Fevereiro","Março","Abril","Maio","Junho",
              "Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
 meses.forEach((m,i)=>mes.innerHTML+=`<option value="${i}">${m}</option>`);
@@ -465,15 +310,13 @@ for(let a=anoAtual-3;a<=anoAtual+10;a++) ano.innerHTML+=`<option>${a}</option>`;
 mes.value=new Date().getMonth();
 ano.value=anoAtual;
 
-/* =========================
-   TABELA
-========================= */
+/* ================= TABELA ================= */
 function carregarTabela(){
   lista.innerHTML="";
   let total=0;
 
-  const ini = new Date(ano.value, mes.value, 1, 12,0,0);
-  const fim = new Date(ano.value, Number(mes.value)+1, 0, 23,59,59);
+  const ini=new Date(ano.value,mes.value,1,12,0,0);
+  const fim=new Date(ano.value,Number(mes.value)+1,0,23,59,59);
 
   db.collection("trator_servicos")
     .where("data",">=",ini)
@@ -499,7 +342,7 @@ function carregarTabela(){
     });
 }
 
-mes.onchange = ano.onchange = carregarTabela;
+mes.onchange=ano.onchange=carregarTabela;
 carregarTabela();
 </script>
 
