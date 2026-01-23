@@ -8,8 +8,10 @@
 <link rel="manifest" href="../manifest.json">
 <meta name="theme-color" content="#7b3f2a">
 
+<!-- MENU + PADRÃO VISUAL -->
 <link rel="stylesheet" href="../menu/menu.css">
 
+<!-- FIREBASE -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
@@ -34,7 +36,6 @@ window.PERMISSAO_PAGINA = {
 <script src="../login/auth-guard.js"></script>
 
 <style>
-/* ===== MESMO PADRÃO DO CADSERVICOS ===== */
 :root{
   --marrom:#7b3f2a;
   --bege:#f6efe7;
@@ -52,60 +53,80 @@ body{
   color:#333;
 }
 
+/* HEADER */
 header{
   background:var(--logo);
   padding:15px;
   text-align:center;
 }
-
 header img{
   max-width:260px;
   width:100%;
 }
 
+/* CONTAINER */
 .container{
   max-width:900px;
   margin:20px auto;
   padding:0 15px;
 }
 
+/* CARD */
 .card{
   background:#fff;
-  border-radius:14px;
+  border-radius:18px;
   padding:16px;
   box-shadow:0 2px 6px rgba(0,0,0,.06);
-  margin-bottom:20px;
+  margin-bottom:18px;
 }
 
+/* TITULOS */
 h2{
-  margin:24px 0 14px;
   color:var(--marrom);
   display:flex;
   align-items:center;
   gap:8px;
+  margin:18px 0 12px;
 }
 
+/* FORM */
 select{
   width:100%;
-  padding:10px;
-  border-radius:10px;
+  padding:12px;
+  border-radius:12px;
   border:1px solid #ccc;
   font-size:15px;
+  margin-bottom:10px;
 }
 
-.btn-outline{
-  background:transparent;
-  border:2px solid var(--marrom);
-  color:var(--marrom);
-  width:100%;
+/* GRID CARDS */
+.cards-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:12px;
+}
+
+.card-resumo{
+  background:#fff;
+  border-radius:16px;
   padding:14px;
-  border-radius:14px;
-  font-weight:700;
-  cursor:pointer;
+  box-shadow:0 2px 6px rgba(0,0,0,.06);
 }
 
+.card-resumo strong{
+  display:block;
+  font-size:14px;
+  margin-bottom:6px;
+}
+
+.card-resumo span{
+  font-size:18px;
+  font-weight:800;
+}
+
+/* TABELA */
 .table-wrapper{
-  overflow-x:auto;
+  overflow:hidden;
 }
 
 table{
@@ -121,15 +142,37 @@ thead{
 th, td{
   padding:12px;
   text-align:left;
-  white-space:nowrap;
+  vertical-align:top;
+  word-break:break-word;
+}
+
+th{
+  font-weight:700;
+}
+
+td.cliente,
+td.servico{
+  white-space:normal;
 }
 
 .btn-edit{
-  padding:10px 16px;
-  border-radius:10px;
   background:#eee;
   border:none;
+  padding:10px 16px;
+  border-radius:12px;
   font-weight:700;
+}
+
+/* BOTAO VOLTAR */
+.btn-voltar{
+  margin-top:20px;
+  width:100%;
+  padding:14px;
+  border-radius:16px;
+  background:#fff;
+  border:2px solid var(--marrom);
+  color:var(--marrom);
+  font-weight:800;
 }
 </style>
 </head>
@@ -148,22 +191,39 @@ th, td{
 
 <!-- FILTROS -->
 <div class="card">
-  <div class="btn-row" style="gap:10px">
-    <select id="filtroCliente"><option value="">Cliente (todos)</option></select>
-    <select id="filtroServico"><option value="">Serviço (todos)</option></select>
-  </div>
+  <select id="filtroCliente">
+    <option value="">Cliente (todos)</option>
+  </select>
 
-  <div class="btn-row" style="gap:10px;margin-top:10px">
-    <select id="mes"></select>
-    <select id="ano"></select>
-  </div>
+  <select id="filtroServico">
+    <option value="">Serviço (todos)</option>
+  </select>
+
+  <select id="mes"></select>
+  <select id="ano"></select>
 </div>
 
-<!-- RESUMO -->
-<div class="card">
-  <strong>Total de serviços:</strong> <span id="qtd">0</span><br>
-  <strong>Receita total:</strong> <span id="receita">R$ 0,00</span><br>
-  <strong>Ticket médio:</strong> <span id="ticket">R$ 0,00</span>
+<!-- CARDS RESUMO -->
+<div class="cards-grid">
+  <div class="card-resumo">
+    <strong>Total de serviços</strong>
+    <span id="totalServicos">0</span>
+  </div>
+
+  <div class="card-resumo">
+    <strong>Receita total</strong>
+    <span id="receitaTotal">R$ 0,00</span>
+  </div>
+
+  <div class="card-resumo">
+    <strong>Ticket médio</strong>
+    <span id="ticketMedio">R$ 0,00</span>
+  </div>
+
+  <div class="card-resumo">
+    <strong>Cliente destaque</strong>
+    <span id="clienteTop">—</span>
+  </div>
 </div>
 
 <!-- TABELA -->
@@ -189,7 +249,7 @@ th, td{
 </table>
 </div>
 
-<button class="btn-outline" onclick="location.href='../trator/trator-inicio.html'">
+<button class="btn-voltar" onclick="location.href='../trator/trator-inicio.html'">
 ← Voltar para Trator
 </button>
 
@@ -216,52 +276,61 @@ fetch("../menu/menu.html")
 <script>
 const db=firebase.firestore();
 
-function moeda(v){return "R$ "+v.toFixed(2).replace(".",",");}
+function moeda(v){
+  return "R$ "+v.toFixed(2).replace(".",",");
+}
 
 const meses=["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
 meses.forEach((m,i)=>mes.innerHTML+=`<option value="${i}">${m}</option>`);
+
 const anoAtual=new Date().getFullYear();
 for(let a=anoAtual-3;a<=anoAtual+10;a++) ano.innerHTML+=`<option>${a}</option>`;
+
 mes.value=new Date().getMonth();
 ano.value=anoAtual;
 
-[filtroCliente,filtroServico,mes,ano].forEach(e=>e.onchange=carregar);
-
-async function carregar(){
+function carregar(){
   lista.innerHTML="";
-  let total=0,qtd=0;
+  let total=0;
+  let clientes={};
+
   const ini=new Date(ano.value,mes.value,1,12);
   const fim=new Date(ano.value,Number(mes.value)+1,0,23,59,59);
 
-  const snap=await db.collection("trator_servicos")
+  db.collection("trator_servicos")
     .where("data",">=",ini)
     .where("data","<=",fim)
-    .get();
+    .get()
+    .then(s=>{
+      s.forEach(d=>{
+        const v=d.data();
+        total+=v.valor_total;
+        clientes[v.cliente]=(clientes[v.cliente]||0)+v.valor_total;
 
-  snap.forEach(d=>{
-    const v=d.data();
-    if(filtroCliente.value && v.cliente!==filtroCliente.value) return;
-    if(filtroServico.value && v.tipo!==filtroServico.value) return;
+        lista.innerHTML+=`
+        <tr>
+          <td>${v.data.toDate().toLocaleDateString("pt-BR")}</td>
+          <td class="cliente">${v.cliente}</td>
+          <td class="servico">${v.tipo}</td>
+          <td>${moeda(v.valor_total)}</td>
+          <td><button class="btn-edit" onclick="location.href='../trator/trator-cadservicos.html?id=${d.id}'">Editar</button></td>
+        </tr>`;
+      });
 
-    qtd++;
-    total+=v.valor_total;
+      totalTabela.textContent=moeda(total);
+      totalServicos.textContent=s.size;
+      receitaTotal.textContent=moeda(total);
+      ticketMedio.textContent=s.size?moeda(total/s.size):"R$ 0,00";
 
-    lista.innerHTML+=`
-      <tr>
-        <td>${v.data.toDate().toLocaleDateString("pt-BR")}</td>
-        <td>${v.cliente}</td>
-        <td>${v.tipo}</td>
-        <td>${moeda(v.valor_total)}</td>
-        <td><button class="btn-edit" onclick="location.href='../trator/trator-cadservicos.html?id=${d.id}'">Editar</button></td>
-      </tr>`;
-  });
-
-  qtd.textContent=qtd;
-  receita.textContent=moeda(total);
-  ticket.textContent=qtd?moeda(total/qtd):"R$ 0,00";
-  totalTabela.textContent=moeda(total);
+      let top="-", maior=0;
+      Object.keys(clientes).forEach(c=>{
+        if(clientes[c]>maior){maior=clientes[c];top=c;}
+      });
+      clienteTop.textContent=top;
+    });
 }
 
+mes.onchange=ano.onchange=carregar;
 carregar();
 </script>
 
