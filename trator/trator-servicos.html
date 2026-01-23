@@ -177,6 +177,15 @@ select{
   color:var(--marrom);
   font-weight:800;
 }
+
+  /* LISTA DE SERVIÇOS (mini-cards) */
+.lista-servicos{
+  margin-top: 22px;   /* espaço entre cards grandes e mini-cards */
+}
+
+.lista-servicos .mini-card{
+  margin-bottom: 14px; /* espaço entre cada mini-card */
+}
 </style>
 </head>
 
@@ -234,7 +243,7 @@ select{
 </div>
 
 <!-- LISTA DE SERVIÇOS -->
-<div id="lista"></div>
+<div id="lista" class="lista-servicos"></div>
 
 <div id="totalPeriodo" class="total-card">Total do período: R$ 0,00</div>
 
