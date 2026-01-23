@@ -7,13 +7,8 @@
 
 <link rel="manifest" href="../manifest.json">
 <meta name="theme-color" content="#7b3f2a">
-
-<!-- CSS GLOBAL -->
 <link rel="stylesheet" href="../menu/menu.css">
-<link rel="stylesheet" href="../menu/forms.css">
-<link rel="stylesheet" href="../menu/components.css">
 
-<!-- FIREBASE -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
@@ -29,16 +24,28 @@ if (!firebase.apps.length) {
 </script>
 
 <script>
-window.PERMISSAO_PAGINA = {
-  area: "trator",
-  chave: "trator-motorista"
-};
+window.PERMISSAO_PAGINA = { area:"trator", chave:"trator-motorista" };
 </script>
 
 <script src="../login/auth-guard.js"></script>
+
+<style>
+/* reaproveita exatamente o padrão do caddespesas */
+.card{ margin-bottom:20px; }
+.card strong{ display:block; margin-top:6px; }
+.card .linha{ margin-top:8px; }
+.card-total{
+  background:#efe3d3;
+  font-weight:700;
+}
+</style>
 </head>
 
 <body style="display:none">
+
+<header>
+  <img src="../logo.png" alt="Sítio Córrego do Pinhal">
+</header>
 
 <div id="menu"></div>
 
@@ -49,150 +56,129 @@ window.PERMISSAO_PAGINA = {
 <!-- 🔎 FILTROS -->
 <div class="card">
 
-  <label>Motorista</label>
-  <select id="filtroMotorista">
-    <option value="">Todos os motoristas</option>
-  </select>
+<label>Motorista</label>
+<select id="filtroMotorista">
+  <option value="">Todos os motoristas</option>
+</select>
 
-  <div class="grid-2">
-    <div>
-      <label>Mês</label>
-      <select id="mes"></select>
-    </div>
-
-    <div>
-      <label>Ano</label>
-      <select id="ano"></select>
-    </div>
-  </div>
+<div style="display:flex;gap:10px;margin-top:12px">
+  <select id="mes"></select>
+  <select id="ano"></select>
+</div>
 
 </div>
 
-<!-- 📋 LISTA DE SERVIÇOS -->
-<div id="cards"></div>
+<!-- 📋 SERVIÇOS -->
+<div id="listaServicos"></div>
 
-<!-- 🔢 TOTALIZADOR -->
-<div class="card destaque" id="totalizador" style="display:none">
-  <strong>Total de serviços:</strong> <span id="qtdServicos">0</span><br>
-  <strong>Valor total dos serviços:</strong> <span id="totalServicos">R$ 0,00</span><br>
-  <strong>Valor bruto do motorista:</strong> <span id="totalMotorista">R$ 0,00</span>
+<!-- 🔢 TOTAL -->
+<div class="card card-total" id="totalizador" style="display:none">
+  Total de serviços: <span id="qtd">0</span><br>
+  Valor total dos serviços: <span id="totalServ">R$ 0,00</span><br>
+  Valor bruto do motorista: <span id="totalMot">R$ 0,00</span>
 </div>
 
-<!-- 🔙 VOLTAR -->
-<div class="voltar-wrapper">
-  <a href="../trator/trator-inicio.html" class="btn-voltar">
-    ← Voltar para Trator
-  </a>
-</div>
+<button class="btn-outline" onclick="location.href='../trator/trator-inicio.html'">
+← Voltar para Trator
+</button>
 
 </div>
 
 <script>
-fetch("../menu/menu.html").then(r=>r.text()).then(html=>{
-  document.getElementById("menu").innerHTML = html;
-
-  document.querySelectorAll("#menu a").forEach(a=>{
-    if(a.getAttribute("href")==="../trator/trator-inicio.html"){
-      a.classList.add("ativo");
-    }
+fetch("../menu/menu.html")
+  .then(r=>r.text())
+  .then(html=>{
+    menu.innerHTML=html;
+    document.querySelectorAll("#menu a").forEach(a=>{
+      if(a.getAttribute("href")==="../trator/trator-inicio.html"){
+        a.classList.add("ativo");
+      }
+    });
+    const s=document.createElement("script");
+    s.src="../menu/menu-permissoes.js";
+    document.body.appendChild(s);
+    document.body.style.display="block";
   });
-
-  const s=document.createElement("script");
-  s.src="../menu/menu-permissoes.js";
-  document.body.appendChild(s);
-  document.body.style.display="block";
-});
 </script>
 
 <script>
-const db = firebase.firestore();
+const db=firebase.firestore();
 
-const filtroMotorista = document.getElementById("filtroMotorista");
-const cards = document.getElementById("cards");
+function moeda(v){return "R$ "+v.toFixed(2).replace(".",",");}
 
-const qtdServicos = document.getElementById("qtdServicos");
-const totalServicos = document.getElementById("totalServicos");
-const totalMotorista = document.getElementById("totalMotorista");
-const totalizador = document.getElementById("totalizador");
-
-function moeda(v){
-  return "R$ " + v.toFixed(2).replace(".",",");
-}
-
-/* 🔹 MESES */
-const meses = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
+const meses=["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
 meses.forEach((m,i)=>mes.innerHTML+=`<option value="${i}">${m}</option>`);
 
-const anoAtual = new Date().getFullYear();
-for(let a=anoAtual-3;a<=anoAtual+5;a++){
-  ano.innerHTML+=`<option>${a}</option>`;
-}
+const anoAtual=new Date().getFullYear();
+for(let a=anoAtual-3;a<=anoAtual+10;a++) ano.innerHTML+=`<option>${a}</option>`;
+mes.value=new Date().getMonth();
+ano.value=anoAtual;
 
-mes.value = new Date().getMonth();
-ano.value = anoAtual;
-
-/* 🔹 MOTORISTAS */
+/* MOTORISTAS */
 db.collection("motoristas").orderBy("nome_motorista").get().then(s=>{
   s.forEach(d=>{
-    const m = d.data();
-    filtroMotorista.innerHTML += `<option value="${m.id_motorista}">${m.nome_motorista}</option>`;
+    const m=d.data();
+    filtroMotorista.innerHTML+=`<option value="${m.id_motorista}">${m.nome_motorista}</option>`;
   });
 });
 
-/* 🔹 CARREGAR DADOS */
 function carregar(){
-  cards.innerHTML="";
+  listaServicos.innerHTML="";
   totalizador.style.display="none";
 
-  let totalValor = 0;
-  let totalMotor = 0;
-  let qtd = 0;
+  let qtd=0,total=0,totalMot=0;
 
-  const ini = new Date(ano.value, mes.value, 1);
-  const fim = new Date(ano.value, Number(mes.value)+1, 0, 23,59,59);
+  const ini=new Date(ano.value,mes.value,1);
+  const fim=new Date(ano.value,Number(mes.value)+1,0,23,59,59);
 
-  let query = db.collection("trator_servicos")
-    .where("data", ">=", ini)
-    .where("data", "<=", fim);
+  let q=db.collection("trator_servicos")
+    .where("data",">=",ini)
+    .where("data","<=",fim);
 
   if(filtroMotorista.value){
-    query = query.where("motorista_id","==",filtroMotorista.value);
+    q=q.where("motorista_id","==",filtroMotorista.value);
   }
 
-  query.get().then(s=>{
+  q.get().then(s=>{
     s.forEach(d=>{
-      const v = d.data();
+      const v=d.data();
+      const bruto=v.valor_total*0.10;
+
       qtd++;
+      total+=v.valor_total;
+      totalMot+=bruto;
 
-      const valorServico = v.valor_total || 0;
-      const valorMotorista = valorServico * 0.10;
-
-      totalValor += valorServico;
-      totalMotor += valorMotorista;
-
-      cards.innerHTML += `
+      listaServicos.innerHTML+=`
         <div class="card">
-          <strong>Cliente:</strong> ${v.cliente}<br>
-          <strong>Serviço:</strong> ${v.tipo}<br><br>
-
-          <strong>Valor total serviço:</strong> ${moeda(valorServico)}<br><br>
-
-          <strong>Motorista:</strong> ${v.motorista_nome || "-"}<br>
-          <strong>Valor bruto motorista:</strong> ${moeda(valorMotorista)}
+          <strong>Cliente:</strong> ${v.cliente}
+          <strong>Serviço:</strong> ${v.tipo}
+          <div class="linha">
+            Valor total serviço: ${moeda(v.valor_total)}
+          </div>
+          <div class="linha">
+            Motorista: ${v.motorista_nome||"-"}
+          </div>
+          <div class="linha">
+            Valor bruto motorista: ${moeda(bruto)}
+          </div>
         </div>
       `;
     });
 
     if(qtd){
-      qtdServicos.textContent = qtd;
-      totalServicos.textContent = moeda(totalValor);
-      totalMotorista.textContent = moeda(totalMotor);
+      qtdSpan.textContent=qtd;
+      totalServ.textContent=moeda(total);
+      totalMotSpan.textContent=moeda(totalMot);
       totalizador.style.display="block";
     }
   });
 }
 
-mes.onchange = ano.onchange = filtroMotorista.onchange = carregar;
+const qtdSpan=document.getElementById("qtd");
+const totalServ=document.getElementById("totalServ");
+const totalMotSpan=document.getElementById("totalMot");
+
+mes.onchange=ano.onchange=filtroMotorista.onchange=carregar;
 carregar();
 </script>
 
