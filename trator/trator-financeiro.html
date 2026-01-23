@@ -9,6 +9,7 @@
 <meta name="theme-color" content="#7b3f2a">
 <link rel="stylesheet" href="../menu/menu.css">
 
+<!-- FIREBASE -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
@@ -37,14 +38,17 @@ window.PERMISSAO_PAGINA = { area:"trator", chave:"trator-financeiro" };
   --verde:#2f6b2f;
   --vermelho:#c0392b;
 }
+
 *{box-sizing:border-box;font-family:Inter,system-ui,Arial}
+
 body{margin:0;background:var(--bege);color:#333}
 
 header{background:var(--logo);padding:15px;text-align:center}
 header img{max-width:260px;width:100%}
 
 .container{max-width:900px;margin:20px auto;padding:0 15px}
-h2{color:var(--marrom);display:flex;gap:8px;align-items:center}
+
+h2{color:var(--marrom);display:flex;gap:8px;align-items:center;margin:18px 0 12px}
 
 .card{
   background:#fff;
@@ -103,6 +107,16 @@ select{
   margin-bottom:14px;
 }
 
+.motorista-card{
+  background:#fff;
+  border-radius:16px;
+  padding:14px;
+  box-shadow:0 2px 6px rgba(0,0,0,.06);
+  margin-bottom:14px;
+}
+
+.motorista-card div{margin-bottom:6px}
+
 .final{
   background:#efe3d3;
   text-align:center;
@@ -123,24 +137,56 @@ select{
 </head>
 
 <body style="display:none">
+
 <header><img src="../logo.png"></header>
 <div id="menu"></div>
 
 <div class="container">
+
 <h2>📊 Financeiro do Trator</h2>
 
+<!-- FILTRO -->
 <div class="card">
   <select id="mes"></select>
   <select id="ano"></select>
 </div>
 
+<!-- VISÃO GERAL -->
 <div class="grid-2x2">
-  <div class="card metric"><div class="bar" style="background:var(--verde)"></div><div><strong id="recServ">R$ 0,00</strong><span>Receita de Serviços</span></div></div>
-  <div class="card metric"><div class="bar" style="background:var(--vermelho)"></div><div><strong id="despTrator">R$ 0,00</strong><span>Despesas do Trator</span></div></div>
-  <div class="card metric"><div class="bar" style="background:var(--vermelho)"></div><div><strong id="custoMot">R$ 0,00</strong><span>Custo Motoristas (configuração aplicada)</span></div></div>
-  <div class="card metric"><div class="bar" id="barLucro"></div><div><strong id="lucro">R$ 0,00</strong><span>Lucro do Período</span></div></div>
+  <div class="card metric">
+    <div class="bar" style="background:var(--verde)"></div>
+    <div>
+      <strong id="recServ">R$ 0,00</strong>
+      <span>Receita de Serviços</span>
+    </div>
+  </div>
+
+  <div class="card metric">
+    <div class="bar" style="background:var(--vermelho)"></div>
+    <div>
+      <strong id="despTrator">R$ 0,00</strong>
+      <span>Despesas do Trator</span>
+    </div>
+  </div>
+
+  <div class="card metric">
+    <div class="bar" style="background:var(--vermelho)"></div>
+    <div>
+      <strong id="custoMot">R$ 0,00</strong>
+      <span>Custo Motoristas (configuração aplicada)</span>
+    </div>
+  </div>
+
+  <div class="card metric">
+    <div class="bar" id="barLucro"></div>
+    <div>
+      <strong id="lucro">R$ 0,00</strong>
+      <span>Lucro do Período</span>
+    </div>
+  </div>
 </div>
 
+<!-- COMPOSIÇÃO -->
 <div class="card explicativo">
   <strong>📐 Composição do Resultado</strong>
   <div><span>Receita de Serviços</span><span id="c1"></span></div>
@@ -156,58 +202,105 @@ select{
 <h2>💸 Despesas do Trator</h2>
 <div id="listaDespesas"></div>
 
-<div class="card final" id="resultadoFinal"></div>
+<h2>👨‍✈️ Motoristas – Visão Financeira</h2>
+<div id="listaMotoristas"></div>
 
-<button class="btn-voltar" onclick="location.href='../trator/trator-inicio.html'">← Voltar para Trator</button>
+<!-- TOTAL FINAL -->
+<div class="card metric">
+  <div class="bar" id="barResultadoFinal"></div>
+  <div>
+    <strong id="resultadoFinalValor">R$ 0,00</strong>
+    <span>Resultado final do período</span>
+  </div>
 </div>
 
-<script>
-fetch("../menu/menu.html").then(r=>r.text()).then(h=>{
-  menu.innerHTML=h;
-  const s=document.createElement("script");
-  s.src="../menu/menu-permissoes.js";
-  document.body.appendChild(s);
-  document.body.style.display="block";
-});
+<button class="btn-voltar" onclick="location.href='../trator/trator-inicio.html'">
+← Voltar para Trator
+</button>
 
-const db=firebase.firestore();
+</div>
+
+<!-- MENU -->
+<script>
+fetch("../menu/menu.html")
+  .then(r=>r.text())
+  .then(html=>{
+    menu.innerHTML=html;
+    document.querySelectorAll("#menu a").forEach(a=>{
+      if(a.getAttribute("href")==="../trator/trator-inicio.html"){
+        a.classList.add("ativo");
+      }
+    });
+    const s=document.createElement("script");
+    s.src="../menu/menu-permissoes.js";
+    document.body.appendChild(s);
+    document.body.style.display="block";
+  });
+</script>
+
+<script>
+const db = firebase.firestore();
+
 const meses=["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
 meses.forEach((m,i)=>mes.innerHTML+=`<option value="${i}">${m}</option>`);
+
 const anoAtual=new Date().getFullYear();
 for(let a=anoAtual-2;a<=anoAtual+5;a++) ano.innerHTML+=`<option>${a}</option>`;
-mes.value=new Date().getMonth(); ano.value=anoAtual;
+
+mes.value=new Date().getMonth();
+ano.value=anoAtual;
 
 function moeda(v){return "R$ "+v.toFixed(2).replace(".",",");}
 
 async function carregar(){
-  listaServicos.innerHTML=""; listaDespesas.innerHTML="";
+  listaServicos.innerHTML="";
+  listaDespesas.innerHTML="";
+  listaMotoristas.innerHTML="";
+
   let receita=0, despesas=0, motoristas=0;
+  const resumoMotoristas={};
 
   const ini=new Date(ano.value,mes.value,1);
   const fim=new Date(ano.value,Number(mes.value)+1,0,23,59,59);
 
-  const serv=await db.collection("trator_servicos").where("data",">=",ini).where("data","<=",fim).get();
+  const serv=await db.collection("trator_servicos")
+    .where("data",">=",ini)
+    .where("data","<=",fim)
+    .get();
+
   serv.forEach(d=>{
     const v=d.data();
     receita+=v.valor_total;
+
     const custo=v.valor_total*0.1;
     motoristas+=custo;
+
+    const nome=v.motorista_nome||"Não informado";
+    if(!resumoMotoristas[nome]){
+      resumoMotoristas[nome]={servicos:0,bruto:0,encargos:0};
+    }
+    resumoMotoristas[nome].servicos++;
+    resumoMotoristas[nome].bruto+=v.valor_total;
+    resumoMotoristas[nome].encargos+=custo;
+
     listaServicos.innerHTML+=`
       <div class="mini-card">
         📅 ${v.data.toDate().toLocaleDateString("pt-BR")}<br>
         Cliente: ${v.cliente}<br>
         Serviço: ${v.tipo}<br>
-        Motorista: ${v.motorista_nome||"-"}<br>
-        Valor: <b>${moeda(v.valor_total)}</b><br>
-        Custo motorista: ${moeda(custo)}<br>
-        Líquido estimado: ${moeda(v.valor_total-custo)}
+        Valor: <b>${moeda(v.valor_total)}</b>
       </div>`;
   });
 
-  const desp=await db.collection("trator_despesas").where("data_despesa",">=",ini).where("data_despesa","<=",fim).get();
+  const desp=await db.collection("trator_despesas")
+    .where("data_despesa",">=",ini)
+    .where("data_despesa","<=",fim)
+    .get();
+
   desp.forEach(d=>{
     const v=d.data();
     despesas+=v.valor_despesa;
+
     listaDespesas.innerHTML+=`
       <div class="mini-card">
         📅 ${v.data_despesa.toDate().toLocaleDateString("pt-BR")}<br>
@@ -218,17 +311,33 @@ async function carregar(){
       </div>`;
   });
 
+  Object.keys(resumoMotoristas).forEach(nome=>{
+    const m=resumoMotoristas[nome];
+    listaMotoristas.innerHTML+=`
+      <div class="motorista-card">
+        👤 <b>${nome}</b><br>
+        Serviços realizados: ${m.servicos}<br>
+        Valor bruto: ${moeda(m.bruto)}<br>
+        Encargos (configuração aplicada): ${moeda(m.encargos)}<br>
+        <b>Custo total: ${moeda(m.encargos)}</b>
+      </div>`;
+  });
+
   const lucroFinal=receita-despesas-motoristas;
+
   recServ.textContent=moeda(receita);
   despTrator.textContent=moeda(despesas);
   custoMot.textContent=moeda(motoristas);
   lucro.textContent=moeda(lucroFinal);
   barLucro.style.background=lucroFinal>=0?"var(--verde)":"var(--vermelho)";
+
   c1.textContent=moeda(receita);
   c2.textContent=moeda(despesas);
   c3.textContent=moeda(motoristas);
   c4.textContent=moeda(lucroFinal);
-  resultadoFinal.textContent="Resultado final do período: "+moeda(lucroFinal);
+
+  resultadoFinalValor.textContent=moeda(lucroFinal);
+  barResultadoFinal.style.background=lucroFinal>=0?"var(--verde)":"var(--vermelho)";
 }
 
 mes.onchange=ano.onchange=carregar;
