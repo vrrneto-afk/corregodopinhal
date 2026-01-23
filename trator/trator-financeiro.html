@@ -200,7 +200,7 @@ async function carregar(){
         Motorista: ${v.motorista_nome||"-"}<br>
         Valor: <b>${moeda(v.valor_total)}</b><br>
         Custo motorista: ${moeda(custo)}<br>
-        Lucro estimado: ${moeda(v.valor_total-custo)}
+        Líquido estimado: ${moeda(v.valor_total-custo)}
       </div>`;
   });
 
