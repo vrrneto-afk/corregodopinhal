@@ -47,3 +47,28 @@ button:disabled{
 .badge.ok{ background:var(--verde); }
 .badge.warn{ background:var(--amarelo); }
 .badge.err{ background:var(--vermelho); }
+
+/* -------- VOLTAR -------- */
+.voltar-wrapper{
+  margin:30px 0 10px;
+}
+
+.btn-voltar{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+
+  width:100%;
+  padding:14px;
+
+  border:2px solid var(--marrom);
+  border-radius:14px;
+
+  background:transparent;
+  color:var(--marrom);
+
+  font-weight:700;
+  font-size:16px;
+  text-decoration:none;
+}
