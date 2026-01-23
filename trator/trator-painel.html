@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Painel do Trator</title>
+
+<link rel="manifest" href="../manifest.json">
+<meta name="theme-color" content="#7b3f2a">
+<link rel="stylesheet" href="../menu/menu.css">
+
+<!-- FIREBASE -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+<script>
+if (!firebase.apps.length) {
+  firebase.initializeApp({
+    apiKey: "AIzaSyCW-CuFDrOLO-dteckl_GrPTocmyS-IrzY",
+    authDomain: "sitio-corrego-do-pinhal.firebaseapp.com",
+    projectId: "sitio-corrego-do-pinhal"
+  });
+}
+</script>
+
+<script>
+window.PERMISSAO_PAGINA = { area:"trator", chave:"trator-painel" };
+</script>
+
+<script src="../login/auth-guard.js"></script>
+
+<style>
+:root{
+  --marrom:#7b3f2a;
+  --bege:#f6efe7;
+  --logo:#D0B485;
+  --verde:#2f6b2f;
+  --vermelho:#c0392b;
+}
+
+*{box-sizing:border-box;font-family:Inter,system-ui,Arial}
+body{margin:0;background:var(--bege);color:#333}
+
+header{background:var(--logo);padding:15px;text-align:center}
+header img{max-width:260px;width:100%}
+
+.container{max-width:900px;margin:20px auto;padding:0 15px}
+
+h2{color:var(--marrom);margin:18px 0 6px}
+.subtitulo{opacity:.7;margin-bottom:12px}
+
+/* VISÃO */
+.visao-toggle{
+  display:flex;
+  gap:10px;
+  margin-bottom:18px;
+}
+.visao-toggle button{
+  flex:1;
+  padding:12px;
+  border-radius:14px;
+  border:2px solid var(--marrom);
+  background:#fff;
+  color:var(--marrom);
+  font-weight:800;
+}
+.visao-toggle button.ativo{
+  background:var(--marrom);
+  color:#fff;
+}
+
+/* GRID */
+.grid-2x2{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:12px;
+}
+
+/* CARD */
+.card{
+  background:#fff;
+  border-radius:18px;
+  padding:16px;
+  box-shadow:0 2px 6px rgba(0,0,0,.06);
+  margin-bottom:18px;
+}
+
+.metric{
+  display:flex;
+  gap:10px;
+  align-items:center;
+}
+.metric .bar{
+  width:6px;
+  border-radius:6px;
+  height:100%;
+}
+.metric strong{font-size:20px}
+.metric span{font-size:12px;opacity:.7}
+
+/* MINI */
+.mini-card{
+  background:#fff;
+  border-radius:16px;
+  padding:14px;
+  box-shadow:0 2px 6px rgba(0,0,0,.06);
+  margin-bottom:12px;
+}
+
+/* AÇÕES */
+.acoes button{
+  width:100%;
+  padding:14px;
+  border-radius:16px;
+  border:2px solid var(--marrom);
+  background:#fff;
+  color:var(--marrom);
+  font-weight:800;
+  margin-bottom:10px;
+}
+
+/* CONTEXTO */
+.contexto{
+  text-align:center;
+  opacity:.7;
+  margin-top:16px;
+}
+</style>
+</head>
+
+<body style="display:none">
+
+<header><img src="../logo.png"></header>
+<div id="menu"></div>
+
+<div class="container">
+
+<h2>🚜 Painel do Trator</h2>
+<div id="subtitulo" class="subtitulo"></div>
+
+<!-- VISÃO -->
+<div class="visao-toggle">
+  <button id="btnMensal" class="ativo">📅 Mensal</button>
+  <button id="btnAnual">📆 Anual</button>
+  <button id="btnGeral">🌍 Geral</button>
+</div>
+
+<!-- FINANCEIRO -->
+<div class="grid-2x2">
+  <div class="card metric"><div class="bar" style="background:var(--verde)"></div><div><strong id="receita">R$ 0,00</strong><span>Receita</span></div></div>
+  <div class="card metric"><div class="bar" style="background:var(--vermelho)"></div><div><strong id="despesas">R$ 0,00</strong><span>Despesas</span></div></div>
+  <div class="card metric"><div class="bar" id="barLucro"></div><div><strong id="lucro">R$ 0,00</strong><span>Lucro / Prejuízo</span></div></div>
+  <div class="card metric"><div class="bar" style="background:var(--marrom)"></div><div><strong id="ticket">R$ 0,00</strong><span>Ticket médio</span></div></div>
+</div>
+
+<!-- DESTAQUES -->
+<h2>⭐ Destaques</h2>
+<div class="grid-2x2">
+  <div class="card"><strong id="clienteTop">—</strong><div class="subtitulo">Cliente destaque</div></div>
+  <div class="card"><strong id="servicoTop">—</strong><div class="subtitulo">Serviço destaque</div></div>
+  <div class="card"><strong id="motoristaTop">—</strong><div class="subtitulo">Motorista destaque</div></div>
+  <div class="card"><strong id="maiorDespesa">—</strong><div class="subtitulo">Maior despesa</div></div>
+</div>
+
+<!-- ÚLTIMOS -->
+<h2>📋 Últimas movimentações</h2>
+<div id="ultimos"></div>
+
+<!-- AÇÕES -->
+<h2>🔗 Ações rápidas</h2>
+<div class="acoes">
+  <button onclick="location.href='../trator/trator-cadservicos.html'">➕ Cadastrar Serviço</button>
+  <button onclick="location.href='../trator/trator-caddespesas.html'">➕ Cadastrar Despesa</button>
+  <button onclick="location.href='../trator/trator-financeiro.html'">📊 Financeiro</button>
+  <button onclick="location.href='../trator/trator-motoristas.html'">👨‍✈️ Motoristas</button>
+</div>
+
+<div id="contexto" class="contexto"></div>
+
+</div>
+
+<!-- MENU -->
+<script>
+fetch("../menu/menu.html")
+  .then(r=>r.text())
+  .then(html=>{
+    menu.innerHTML=html;
+    document.querySelectorAll("#menu a").forEach(a=>{
+      if(a.getAttribute("href")==="../trator/trator-inicio.html"){
+        a.classList.add("ativo");
+      }
+    });
+    const s=document.createElement("script");
+    s.src="../menu/menu-permissoes.js";
+    document.body.appendChild(s);
+    document.body.style.display="block";
+  });
+</script>
+
+<script>
+const db=firebase.firestore();
+let visao="mensal";
+
+function moeda(v){return "R$ "+v.toFixed(2).replace(".",",");}
+
+function setVisao(v){
+  visao=v;
+  btnMensal.classList.remove("ativo");
+  btnAnual.classList.remove("ativo");
+  btnGeral.classList.remove("ativo");
+  (v==="mensal"?btnMensal:v==="anual"?btnAnual:btnGeral).classList.add("ativo");
+  carregar();
+}
+
+btnMensal.onclick=()=>setVisao("mensal");
+btnAnual.onclick=()=>setVisao("anual");
+btnGeral.onclick=()=>setVisao("geral");
+
+async function carregar(){
+  ultimos.innerHTML="";
+  let receita=0, despesas=0, qtd=0;
+  let clientes={}, servicos={}, motoristas={}, despMaior=0;
+
+  const now=new Date();
+  let ini=null, fim=null;
+
+  if(visao==="mensal"){
+    ini=new Date(now.getFullYear(),now.getMonth(),1);
+    fim=new Date(now.getFullYear(),now.getMonth()+1,0,23,59,59);
+    subtitulo.textContent=`${now.toLocaleString("pt-BR",{month:"long"})} / ${now.getFullYear()} • Visão Mensal`;
+    contexto.textContent="Visão baseada no mês atual";
+  }
+  if(visao==="anual"){
+    ini=new Date(now.getFullYear(),0,1);
+    fim=new Date(now.getFullYear(),11,31,23,59,59);
+    subtitulo.textContent=`${now.getFullYear()} • Visão Anual`;
+    contexto.textContent="Visão baseada no ano atual";
+  }
+  if(visao==="geral"){
+    subtitulo.textContent="Visão Geral do Trator";
+    contexto.textContent="Visão histórica completa";
+  }
+
+  const serv=await db.collection("trator_servicos").get();
+  serv.forEach(d=>{
+    const v=d.data();
+    const dt=v.data.toDate();
+    if(ini && (dt<ini||dt>fim)) return;
+    receita+=v.valor_total;
+    qtd++;
+    clientes[v.cliente]=(clientes[v.cliente]||0)+v.valor_total;
+    servicos[v.tipo]=(servicos[v.tipo]||0)+1;
+    motoristas[v.motorista_nome]=(motoristas[v.motorista_nome]||0)+v.valor_total;
+    if(ultimos.children.length<3){
+      ultimos.innerHTML+=`<div class="mini-card">📅 ${dt.toLocaleDateString("pt-BR")}<br>${v.tipo}<br>${moeda(v.valor_total)}</div>`;
+    }
+  });
+
+  const desp=await db.collection("trator_despesas").get();
+  desp.forEach(d=>{
+    const v=d.data();
+    const dt=v.data_despesa.toDate();
+    if(ini && (dt<ini||dt>fim)) return;
+    despesas+=v.valor_despesa;
+    despMaior=Math.max(despMaior,v.valor_despesa);
+  });
+
+  const lucroFinal=receita-despesas;
+  receitaEl.textContent=moeda(receita);
+  despesasEl.textContent=moeda(despesas);
+  lucro.textContent=moeda(lucroFinal);
+  ticket.textContent=qtd?moeda(receita/qtd):"R$ 0,00";
+  barLucro.style.background=lucroFinal>=0?"var(--verde)":"var(--vermelho)";
+
+  clienteTop.textContent=Object.keys(clientes).sort((a,b)=>clientes[b]-clientes[a])[0]||"—";
+  servicoTop.textContent=Object.keys(servicos).sort((a,b)=>servicos[b]-servicos[a])[0]||"—";
+  motoristaTop.textContent=Object.keys(motoristas).sort((a,b)=>motoristas[b]-motoristas[a])[0]||"—";
+  maiorDespesa.textContent=despMaior?moeda(despMaior):"—";
+}
+
+const receitaEl=document.getElementById("receita");
+const despesasEl=document.getElementById("despesas");
+
+carregar();
+</script>
+
+<script src="../login/logout.js"></script>
+</body>
+</html>
