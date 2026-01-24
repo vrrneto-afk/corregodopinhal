@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Sítio Córrego do Pinhal</title>
 
 <link rel="manifest" href="../manifest.json">
@@ -14,17 +14,17 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
 <script>
-if (!firebase.apps.length) {
+if(!firebase.apps.length){
   firebase.initializeApp({
-    apiKey: "AIzaSyCW-CuFDrOLO-dteckl_GrPTocmyS-IrzY",
-    authDomain: "sitio-corrego-do-pinhal.firebaseapp.com",
-    projectId: "sitio-corrego-do-pinhal"
+    apiKey:"AIzaSyCW-CuFDrOLO-dteckl_GrPTocmyS-IrzY",
+    authDomain:"sitio-corrego-do-pinhal.firebaseapp.com",
+    projectId:"sitio-corrego-do-pinhal"
   });
 }
 </script>
 
 <script>
-window.PERMISSAO_PAGINA = { area: "app", chave: "inicio" };
+window.PERMISSAO_PAGINA = { area:"app", chave:"inicio" };
 </script>
 
 <script src="../login/auth-guard.js"></script>
@@ -41,42 +41,19 @@ window.PERMISSAO_PAGINA = { area: "app", chave: "inicio" };
   --logo:#D0B485;
 }
 
-*{
-  box-sizing:border-box;
-  font-family:'Inter',system-ui,-apple-system,Arial;
-}
+*{box-sizing:border-box;font-family:Inter,system-ui,Arial}
 
-body{
-  margin:0;
-  background:var(--bege);
-  color:#333;
-}
+body{margin:0;background:var(--bege);color:#333}
 
-header{
-  background:var(--logo);
-  padding:15px 10px;
-  text-align:center;
-}
+header{background:var(--logo);padding:15px;text-align:center}
+header img{max-width:260px;width:100%}
 
-header img{
-  max-width:260px;
-  width:100%;
-}
+.container{max-width:900px;margin:20px auto;padding:0 15px}
 
-.container{
-  max-width:900px;
-  margin:20px auto;
-  padding:0 15px;
-}
-
-h2{
-  margin:28px 0 12px;
-  color:var(--marrom);
-}
+h2{margin:28px 0 12px;color:var(--marrom)}
 
 .clima-bar{
   background:#fff;
-  margin:12px auto 16px;
   padding:10px;
   border-radius:10px;
   box-shadow:0 1px 4px rgba(0,0,0,.08);
@@ -86,22 +63,15 @@ h2{
 
 .alerta-rapido{
   display:block;
-  margin:0 auto 20px;
+  margin:20px auto;
   padding:12px;
   border-radius:12px;
   font-weight:700;
   text-align:center;
 }
 
-.alerta-ok{
-  background:#eaf6ec;
-  color:var(--verde);
-}
-
-.alerta-on{
-  background:#fdecea;
-  color:var(--vermelho);
-}
+.alerta-ok{background:#eaf6ec;color:var(--verde)}
+.alerta-on{background:#fdecea;color:var(--vermelho)}
 
 .card{
   background:#fff;
@@ -111,63 +81,37 @@ h2{
   border-radius:12px;
 }
 
-.card.ok{border-color:var(--verde);}
-.card.atencao{border-color:var(--amarelo);}
-.card.alerta{border-color:var(--laranja);}
-.card.atrasada{border-color:var(--vermelho);}
-.card.pendente{border-color:var(--amarelo);}
+.card.ok{border-color:var(--verde)}
+.card.atencao{border-color:var(--amarelo)}
+.card.alerta{border-color:var(--laranja)}
+.card.atrasada{border-color:var(--vermelho)}
+.card.urgente{border-color:var(--vermelho)}
+.card.pendente{border-color:var(--amarelo)}
 
-.card strong{
-  font-size:17px;
-  font-weight:800;
-}
-
-.card .dias{
-  font-size:18px;
-  font-weight:800;
-  margin:6px 0;
-}
-
-.card .data{
-  font-size:13px;
-  color:var(--cinza);
-}
-
-.card .msg{
-  font-weight:700;
-  margin-top:4px;
-}
-
-.card{
-  background-color: #ffffff;
-}
-
+.card strong{font-size:17px;font-weight:800}
+.card .dias{font-size:18px;font-weight:800;margin:6px 0}
+.card .data{font-size:13px;color:var(--cinza)}
+.card .msg{font-weight:700}
 </style>
 </head>
 
 <body>
 
-<header>
-  <img src="../logo.png">
-</header>
-
+<header><img src="../logo.png"></header>
 <div id="menu"></div>
 
 <div class="container">
   <div id="clima" class="clima-bar">⏳ Carregando clima...</div>
-
   <a id="alertaRapido" href="../app/lembretes.html" class="alerta-rapido alerta-ok">
     🔔 Nenhum alerta no momento
   </a>
-
   <div id="conteudo"></div>
 </div>
 
 <script>
-const menu = document.getElementById("menu");
-const clima = document.getElementById("clima");
-const alertaRapido = document.getElementById("alertaRapido");
-const conteudo = document.getElementById("conteudo");
+const clima=document.getElementById("clima");
+const alertaRapido=document.getElementById("alertaRapido");
+const conteudo=document.getElementById("conteudo");
 
 /* ===== MENU ===== */
 fetch("../menu/menu.html")
