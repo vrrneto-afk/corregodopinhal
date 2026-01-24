@@ -124,35 +124,73 @@ body{
 </div>
 
 <script>
+/* ================= CONFIG ================= */
+const API_KEY = "SUA_API_KEY_AQUI";
+const LAT = -21.3127;
+const LON = -46.3721;
+
+const CACHE_KEY = "clima_previsao_7dias";
+const CACHE_TTL = 30 * 60 * 1000; // 30 minutos
+
 const lista = document.getElementById("lista");
 const dias = ["DOM","SEG","TER","QUA","QUI","SEX","SÁB"];
 
-/* ===== FECHAR MODAL (COMUNICA COM O PAI) ===== */
+/* ================= FECHAR MODAL ================= */
 document.getElementById("btnFechar").addEventListener("click",()=>{
   parent.postMessage({ tipo:"fechar-clima" }, "*");
 });
 
-/* ===== FETCH COM TIMEOUT ===== */
+/* ================= FETCH COM TIMEOUT ================= */
 async function fetchComTimeout(url, tempo = 6000){
   const controller = new AbortController();
   const id = setTimeout(()=>controller.abort(), tempo);
 
   try{
     const r = await fetch(url, { signal: controller.signal });
+    if(!r.ok) throw new Error("Erro API");
     return await r.json();
   }finally{
     clearTimeout(id);
   }
 }
 
-/* ===== CARREGAR PREVISÃO ===== */
+/* ================= BUSCA DADOS (CACHE + API) ================= */
+async function obterPrevisao(){
+  const agora = Date.now();
+  const cache = localStorage.getItem(CACHE_KEY);
+
+  if(cache){
+    const c = JSON.parse(cache);
+    if(agora - c.time < CACHE_TTL){
+      return c.data;
+    }
+  }
+
+  const url =
+    "https://api.openweathermap.org/data/2.5/onecall" +
+    `?lat=${LAT}` +
+    `&lon=${LON}` +
+    "&exclude=current,minutely,hourly,alerts" +
+    "&units=metric" +
+    "&lang=pt_br" +
+    `&appid=${API_KEY}`;
+
+  const data = await fetchComTimeout(url);
+
+  localStorage.setItem(CACHE_KEY, JSON.stringify({
+    time: agora,
+    data
+  }));
+
+  return data;
+}
+
+/* ================= RENDERIZA ================= */
 async function carregar(){
   let d;
 
   try{
-    d = await fetchComTimeout(
-      "https://api.open-meteo.com/v1/forecast?latitude=-21.3127&longitude=-46.3721&daily=temperature_2m_min,temperature_2m_max,precipitation_probability_mean,precipitation_sum&timezone=America/Sao_Paulo"
-    );
+    d = await obterPrevisao();
   }catch(e){
     lista.innerHTML = `
       <div class="dia-card alerta">
@@ -162,22 +200,14 @@ async function carregar(){
     return;
   }
 
-  const hoje = new Date();
-  hoje.setHours(0,0,0,0);
-
-  let inicio = d.daily.time.findIndex(t=>{
-    const x = new Date(t);
-    x.setHours(0,0,0,0);
-    return x.getTime() === hoje.getTime();
-  });
-  if(inicio < 0) inicio = 0;
-
   let html = "";
 
-  for(let i=inicio;i<inicio+7 && i<d.daily.time.length;i++){
-    const data = new Date(d.daily.time[i]);
-    const prob = d.daily.precipitation_probability_mean[i];
-    const mm   = d.daily.precipitation_sum[i];
+  d.daily.slice(0,7).forEach(dia=>{
+    const data = new Date(dia.dt * 1000);
+    const prob = Math.round((dia.pop || 0) * 100);
+    const mm   = dia.rain || 0;
+    const min  = Math.round(dia.temp.min);
+    const max  = Math.round(dia.temp.max);
 
     let classe = "dia-card";
     if(prob >= 30 && prob < 60) classe += " atencao";
@@ -191,16 +221,15 @@ async function carregar(){
         </div>
 
         <div class="chuva">
-          🌧️ ${prob}% • ${mm.toFixed(1)} mm
+          🌧️ ${prob}% • ${Number(mm).toFixed(1)} mm
         </div>
 
         <div class="temperatura">
-          🌡️ ${Math.round(d.daily.temperature_2m_min[i])}° mín /
-          ${Math.round(d.daily.temperature_2m_max[i])}° máx
+          🌡️ ${min}° mín / ${max}° máx
         </div>
       </div>
     `;
-  }
+  });
 
   lista.innerHTML = html;
 }
