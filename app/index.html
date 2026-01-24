@@ -238,6 +238,13 @@ clima.addEventListener("click",()=>{
   });
 });
 
+/* ===== RECEBE MENSAGEM DO IFRAME (FECHAR CLIMA) ===== */
+window.addEventListener("message", e => {
+  if (e.data?.tipo === "fechar-clima") {
+    document.getElementById("modal-clima")?.remove();
+  }
+});
+
 /* ================= ALERTAS ================= */
 async function loadAlertas(){
   const s = await db.collection("lembretes").get();
