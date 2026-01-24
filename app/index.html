@@ -176,16 +176,18 @@ clima.addEventListener("click", () => {
   max-height:75vh;
   background:#fff;
   border-radius:14px;
-  overflow:hidden;
+  overflow:auto;
+  display:flex;
+  flex-direction:column;
 `;
 
   const iframe = document.createElement("iframe");
   iframe.src = "../app/tempo.html";
   iframe.style = `
-    width:100%;
-    height:100%;
-    border:none;
-  `;
+  width:100%;
+  flex:1;
+  border:none;
+`;
 
   iframe.onload = () => {
     try{
