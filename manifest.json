@@ -1,6 +1,8 @@
 {
+  "id": "/corregodopinhal/",
   "name": "Sítio Córrego do Pinhal",
   "short_name": "Córrego do Pinhal",
+  "description": "Sistema de gestão rural do Sítio Córrego do Pinhal, com controle de animais, produção de leite, despesas e histórico.",
   "start_url": "/corregodopinhal/login/login.html",
   "scope": "/corregodopinhal/",
   "display": "standalone",
