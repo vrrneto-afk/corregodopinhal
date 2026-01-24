@@ -9,28 +9,26 @@
   "orientation": "portrait",
   "icons": [
     {
-      "src": "/corregodopinhal/icon/icon-72.png",
-      "sizes": "72x72",
-      "type": "image/png",
-      "purpose": "any"
+      "src": "/corregodopinhal/icon/android/192.png",
+      "sizes": "192x192",
+      "type": "image/png"
     },
     {
-      "src": "/corregodopinhal/icon/icon-192.png",
+      "src": "/corregodopinhal/icon/android/512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    },
+    {
+      "src": "/corregodopinhal/icon/android/192.png",
       "sizes": "192x192",
       "type": "image/png",
-      "purpose": "any"
+      "purpose": "maskable"
     },
     {
-      "src": "/corregodopinhal/icon/icon-256.png",
-      "sizes": "256x256",
-      "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "/corregodopinhal/icon/icon-512.png",
+      "src": "/corregodopinhal/icon/android/512.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "any"
+      "purpose": "maskable"
     }
   ]
 }
