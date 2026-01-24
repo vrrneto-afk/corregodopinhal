@@ -14,11 +14,11 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
 <script>
-if(!firebase.apps.length){
+if (!firebase.apps.length) {
   firebase.initializeApp({
-    apiKey:"AIzaSyCW-CuFDrOLO-dteckl_GrPTocmyS-IrzY",
-    authDomain:"sitio-corrego-do-pinhal.firebaseapp.com",
-    projectId:"sitio-corrego-do-pinhal"
+    apiKey: "AIzaSyCW-CuFDrOLO-dteckl_GrPTocmyS-IrzY",
+    authDomain: "sitio-corrego-do-pinhal.firebaseapp.com",
+    projectId: "sitio-corrego-do-pinhal"
   });
 }
 </script>
@@ -42,14 +42,12 @@ window.PERMISSAO_PAGINA = { area:"app", chave:"inicio" };
 }
 
 *{box-sizing:border-box;font-family:Inter,system-ui,Arial}
-
-body{margin:0;background:var(--bege);color:#333}
+body{margin:0;background:var(--bege);color:#333;display:none}
 
 header{background:var(--logo);padding:15px;text-align:center}
 header img{max-width:260px;width:100%}
 
 .container{max-width:900px;margin:20px auto;padding:0 15px}
-
 h2{margin:28px 0 12px;color:var(--marrom)}
 
 .clima-bar{
@@ -109,28 +107,11 @@ h2{margin:28px 0 12px;color:var(--marrom)}
 </div>
 
 <script>
-const clima=document.getElementById("clima");
-const alertaRapido=document.getElementById("alertaRapido");
-const conteudo=document.getElementById("conteudo");
-
-/* ===== MENU ===== */
-fetch("../menu/menu.html")
-  .then(r => r.text())
-  .then(html => {
-    menu.innerHTML = html;
-
-    document.querySelectorAll("#menu a").forEach(a => {
-      if (a.getAttribute("href") === "../app/index.html") {
-        a.classList.add("ativo");
-      }
-    });
-
-    const s = document.createElement("script");
-    s.src = "../menu/menu-permissoes.js";
-    document.body.appendChild(s);
-  });
-
+const clima = document.getElementById("clima");
+const alertaRapido = document.getElementById("alertaRapido");
+const conteudo = document.getElementById("conteudo");
 const db = firebase.firestore();
+
 const hoje = new Date();
 const hojeZ = new Date(hoje.getFullYear(), hoje.getMonth(), hoje.getDate());
 
@@ -154,211 +135,171 @@ function diffDias(a,b){
   return Math.floor((b - a) / 86400000);
 }
 
-/* ===== CLIMA ===== */
-async function loadClima(){
-  const snap = await db.collection("config").doc("clima").get();
-  if (!snap.exists) return;
+/* ================= MENU ================= */
+fetch("../menu/menu.html")
+  .then(r => r.text())
+  .then(html => {
+    menu.innerHTML = html;
 
+    document.querySelectorAll("#menu a").forEach(a=>{
+      if(a.getAttribute("href")==="../app/index.html"){
+        a.classList.add("ativo");
+      }
+    });
+
+    const s = document.createElement("script");
+    s.src = "../menu/menu-permissoes.js";
+    s.onload = () => document.body.style.display = "block";
+    document.body.appendChild(s);
+  });
+
+/* ================= CLIMA (CACHE 10 MIN) ================= */
+async function loadClima(){
+  const cache = localStorage.getItem("clima_cache");
+  const agora = Date.now();
+
+  if(cache){
+    const c = JSON.parse(cache);
+    if(agora - c.time < 600000){
+      clima.innerHTML = c.html;
+      return;
+    }
+  }
+
+  const snap = await db.collection("config").doc("clima").get();
+  if(!snap.exists) return;
   const cfg = snap.data();
 
-  const r = await fetch(
-    `https://api.open-meteo.com/v1/forecast?latitude=${cfg.latitude}&longitude=${cfg.longitude}&current_weather=true&hourly=precipitation_probability&timezone=${cfg.timezone}`
-  );
-
+  const r = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${cfg.latitude}&longitude=${cfg.longitude}&current_weather=true&hourly=precipitation_probability&timezone=${cfg.timezone}`);
   const d = await r.json();
-  let texto = cfg.textos?.sem_chuva || "";
-  const agora = new Date();
 
-  for (let i=0;i<d.hourly.time.length;i++){
+  let texto = cfg.textos?.sem_chuva || "";
+  const agoraD = new Date();
+
+  for(let i=0;i<d.hourly.time.length;i++){
     const h = new Date(d.hourly.time[i]);
-    const diffMin = (h - agora) / 60000;
-    if (
-      diffMin > 0 &&
-      diffMin <= cfg.janela_previsao_minutos &&
-      d.hourly.precipitation_probability[i] >= cfg.limite_chuva_percentual
-    ){
+    const diffMin = (h - agoraD) / 60000;
+    if(diffMin>0 && diffMin<=cfg.janela_previsao_minutos && d.hourly.precipitation_probability[i]>=cfg.limite_chuva_percentual){
       texto = `${cfg.textos?.chuva_em} ${Math.round(diffMin)} minutos.`;
       break;
     }
   }
 
-  clima.innerHTML = `☀️ ${cfg.cidade} – ${cfg.regiao} • ${Math.round(d.current_weather.temperature)}°C<br>${texto}`;
+  const html = `☀️ ${cfg.cidade} – ${cfg.regiao} • ${Math.round(d.current_weather.temperature)}°C<br>${texto}`;
+  clima.innerHTML = html;
+  localStorage.setItem("clima_cache", JSON.stringify({time:agora, html}));
 }
 
-/* ===== MODAL CLIMA ===== */
-clima.addEventListener("click", () => {
-  if (document.getElementById("modal-clima")) return;
+/* ================= MODAL CLIMA ================= */
+clima.addEventListener("click",()=>{
+  if(document.getElementById("modal-clima")) return;
 
-  const overlay = document.createElement("div");
-  overlay.id = "modal-clima";
-  overlay.style.cssText = `
-    position:fixed;
-    inset:0;
-    background:rgba(0,0,0,.55);
-    z-index:9999;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-  `;
+  const overlay=document.createElement("div");
+  overlay.id="modal-clima";
+  overlay.style.cssText="position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9999;display:flex;align-items:center;justify-content:center";
 
-  const box = document.createElement("div");
-  box.style.cssText = `
-    width:92%;
-    max-width:480px;
-    height:70vh;
-    background:#fff;
-    border-radius:14px;
-    overflow:hidden;
-    display:flex;
-    flex-direction:column;
-  `;
+  const box=document.createElement("div");
+  box.style.cssText="width:92%;max-width:480px;height:70vh;background:#fff;border-radius:14px;overflow:hidden;display:flex;flex-direction:column";
 
-  const iframe = document.createElement("iframe");
-  iframe.src = "../app/tempo.html";
-  iframe.style.cssText = `
-    width:100%;
-    height:100%;
-    border:none;
-  `;
-
-iframe.onload = () => {
-  try {
-    const doc = iframe.contentWindow.document;
-    const btn = doc.querySelector("button");
-
-    if (btn) {
-      btn.addEventListener("click", () => {
-        document.getElementById("modal-clima")?.remove();
-      });
-    }
-  } catch (e) {
-    console.warn("Não foi possível acessar o botão Fechar do iframe:", e);
-  }
-};
+  const iframe=document.createElement("iframe");
+  iframe.src="../app/tempo.html";
+  iframe.style.cssText="width:100%;height:100%;border:none";
 
   box.appendChild(iframe);
   overlay.appendChild(box);
   document.body.appendChild(overlay);
 
-  overlay.addEventListener("click", e => {
-    if (e.target === overlay) overlay.remove();
+  overlay.addEventListener("click",e=>{
+    if(e.target===overlay) overlay.remove();
   });
 });
 
-/* ===== ALERTAS ===== */
+/* ================= ALERTAS ================= */
 async function loadAlertas(){
   const s = await db.collection("lembretes").get();
-  alertaRapido.className = s.size
-    ? "alerta-rapido alerta-on"
-    : "alerta-rapido alerta-ok";
-
-  alertaRapido.innerText = s.size
-    ? `🔔 ${s.size} itens pendentes para comprar`
-    : "🔔 Nenhum alerta no momento";
+  alertaRapido.className = s.size ? "alerta-rapido alerta-on" : "alerta-rapido alerta-ok";
+  alertaRapido.innerText = s.size ? `🔔 ${s.size} itens pendentes para comprar` : "🔔 Nenhum alerta no momento";
 }
 
 /* ================= INDEX ================= */
 async function loadIndex(){
   conteudo.innerHTML="";
 
-  const cfgVacas = (await db.collection("config").doc("vacas").get()).data();
-  const cfgVacinas = (await db.collection("config").doc("vacinas").get()).data();
+  const [
+    cfgVacasSnap,
+    cfgVacinasSnap,
+    animaisSnap,
+    eventosSnap,
+    vacinasSnap
+  ] = await Promise.all([
+    db.collection("config").doc("vacas").get(),
+    db.collection("config").doc("vacinas").get(),
+    db.collection("animais").get(),
+    db.collection("eventos").get(),
+    db.collection("vacinas").get()
+  ]);
 
-  const animais = (await db.collection("animais").get()).docs.map(d=>({_id:d.id,...d.data()}));
-  const eventos = (await db.collection("eventos").get()).docs.map(d=>d.data());
-  const vacinas = (await db.collection("vacinas").get()).docs.map(d=>d.data());
+  const cfgVacas = cfgVacasSnap.data();
+  const cfgVacinas = cfgVacinasSnap.data();
+  const animais = animaisSnap.docs.map(d=>({_id:d.id,...d.data()}));
+  const eventos = eventosSnap.docs.map(d=>d.data());
+  const vacinas = vacinasSnap.docs.map(d=>d.data());
 
-  /* ===== VACAS ===== */
-  conteudo.innerHTML += "<h2>🐄 Vacas a Criar</h2>";
+  let html = "<h2>🐄 Vacas a Criar</h2>";
 
-  eventos
-    .filter(e => e.tipo_evento === "cobertura")
-    .map(c => {
-      const prev = addMeses(parseData(c.data_evento), cfgVacas.gestacao_meses);
-      const dias = diffDias(hojeZ, prev);
-      return {
-        animal: animais.find(a => a._id === c.id_animal),
-        prev,
-        dias
-      };
-    })
-    .filter(x => x.animal)
-    .sort((a, b) => a.dias - b.dias)
-    .forEach(v => {
+  eventos.filter(e=>e.tipo_evento==="cobertura").forEach(c=>{
+    const animal = animais.find(a=>a._id===c.id_animal);
+    if(!animal) return;
 
-      const diasAbs = Math.abs(v.dias);
+    const prev = addMeses(parseData(c.data_evento), cfgVacas.gestacao_meses);
+    const dias = diffDias(hojeZ, prev);
+    const abs = Math.abs(dias);
 
-      let regra = cfgVacas.prenhez_intervalos
-        .filter(r =>
-          r.ativa !== false &&
-          diasAbs >= r.dias_de &&
-          diasAbs <= r.dias_ate
-        )
-        .sort((a, b) => a.dias_de - b.dias_de)[0];
+    const regra = cfgVacas.prenhez_intervalos
+      .filter(r=>r.ativa!==false && abs>=r.dias_de && abs<=r.dias_ate)
+      .sort((a,b)=>a.dias_de-b.dias_de)[0];
 
-      let textoPrenhez = "";
+    let texto="";
+    if(dias>0) texto=cfgVacas.prenhez_textos?.antes_parto?.replace("{{dias}}",dias);
+    else if(dias===0) texto=cfgVacas.prenhez_textos?.parto_hoje;
+    else texto=cfgVacas.prenhez_textos?.parto_atrasado?.replace("{{dias}}",abs);
 
-      if (v.dias > 0) {
-        textoPrenhez = cfgVacas.prenhez_textos?.antes_parto
-          ?.replace("{{dias}}", v.dias);
-      } else if (v.dias === 0) {
-        textoPrenhez = cfgVacas.prenhez_textos?.parto_hoje;
-      } else {
-        textoPrenhez = cfgVacas.prenhez_textos?.parto_atrasado
-          ?.replace("{{dias}}", diasAbs);
-      }
+    html+=`
+      <div class="card ${regra?.classe||"ok"}">
+        <strong>🐄 ${animal.nome.toUpperCase()}</strong>
+        <p class="dias">${texto}</p>
+        <p class="data">📅 ${prev.toLocaleDateString("pt-BR")}</p>
+        ${regra?.mensagem?`<p class="msg">${regra.mensagem}</p>`:""}
+      </div>`;
+  });
 
-      conteudo.innerHTML += `
-        <div class="card ${regra?.classe || "ok"}">
-          <strong>🐄 ${v.animal.nome.toUpperCase()}</strong>
-          <p class="dias">${textoPrenhez}</p>
-          <p class="data">📅 ${v.prev.toLocaleDateString("pt-BR")}</p>
-          ${regra?.mensagem ? `<p class="msg">${regra.mensagem}</p>` : ""}
-        </div>
-      `;
-    });
+  html+="<h2>💉 Vacinas pendentes</h2>";
 
-  /* ===== VACINAS ===== */
-  conteudo.innerHTML += "<h2>💉 Vacinas pendentes</h2>";
+  vacinas.filter(v=>v.data_aplicacao && Number(v.repeticao_dias)>0 && v.status!=="Finalizada").forEach(v=>{
+    const reap=parseData(v.data_aplicacao);
+    reap.setDate(reap.getDate()+Number(v.repeticao_dias));
+    const dias=diffDias(hojeZ,reap);
+    const animal=animais.find(a=>a._id===v.id_animal);
+    const status=dias<0?"atrasada":"pendente";
 
-  vacinas
-    .filter(v =>
-      v.data_aplicacao &&
-      Number(v.repeticao_dias) > 0 &&
-      v.status !== "Finalizada"
-    )
-    .map(v => {
-      const reap = parseData(v.data_aplicacao);
-      reap.setDate(reap.getDate() + Number(v.repeticao_dias));
-      return {
-        ...v,
-        reap,
-        dias: diffDias(hojeZ, reap)
-      };
-    })
-    .sort((a, b) => a.dias - b.dias)
-    .forEach(v => {
+    html+=`
+      <div class="card ${status}">
+        <strong>💉 ${v.nome_vacina}</strong>
+        <p class="dias">${cfgVacinas.status?.[status]} ${Math.abs(dias)} dias</p>
+        <p class="data">🐄 ${(animal?.nome||"-").toUpperCase()}</p>
+        <p class="data">📅 ${reap.toLocaleDateString("pt-BR")}</p>
+      </div>`;
+  });
 
-      const animal = animais.find(a => a._id === v.id_animal);
-      const status = v.dias < 0 ? "atrasada" : "pendente";
-
-      conteudo.innerHTML += `
-        <div class="card ${status}">
-          <strong>💉 ${v.nome_vacina}</strong>
-          <p class="dias">
-            ${cfgVacinas.status?.[status]}
-            ${Math.abs(v.dias)} dias
-          </p>
-          <p class="data">🐄 ${(animal?.nome || "-").toUpperCase()}</p>
-          <p class="data">📅 ${v.reap.toLocaleDateString("pt-BR")}</p>
-        </div>
-      `;
-    });
+  conteudo.innerHTML = html;
 }
 
-loadClima();
-loadAlertas();
-loadIndex();
+/* ================= START ================= */
+setTimeout(()=>{
+  loadClima();
+  loadAlertas();
+  loadIndex();
+},0);
 </script>
 
 <script src="../login/logout.js"></script>
