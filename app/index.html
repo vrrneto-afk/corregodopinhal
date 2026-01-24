@@ -247,30 +247,52 @@ async function loadIndex(){
 
   let html = "<h2>🐄 Vacas a Criar</h2>";
 
-  eventos.filter(e=>e.tipo_evento==="cobertura").forEach(c=>{
-    const animal = animais.find(a=>a._id===c.id_animal);
-    if(!animal) return;
+  eventos
+  .filter(e => e.tipo_evento === "cobertura")
+  .map(c => {
+    const animal = animais.find(a => a._id === c.id_animal);
+    if (!animal) return null;
 
     const prev = addMeses(parseData(c.data_evento), cfgVacas.gestacao_meses);
     const dias = diffDias(hojeZ, prev);
-    const abs = Math.abs(dias);
+
+    return {
+      animal,
+      prev,
+      dias,
+      evento: c
+    };
+  })
+  .filter(Boolean)
+  .sort((a, b) => a.dias - b.dias)   // 👈 AQUI ESTÁ A CHAVE
+  .forEach(v => {
+
+    const abs = Math.abs(v.dias);
 
     const regra = cfgVacas.prenhez_intervalos
-      .filter(r=>r.ativa!==false && abs>=r.dias_de && abs<=r.dias_ate)
-      .sort((a,b)=>a.dias_de-b.dias_de)[0];
+      .filter(r =>
+        r.ativa !== false &&
+        abs >= r.dias_de &&
+        abs <= r.dias_ate
+      )
+      .sort((a, b) => a.dias_de - b.dias_de)[0];
 
-    let texto="";
-    if(dias>0) texto=cfgVacas.prenhez_textos?.antes_parto?.replace("{{dias}}",dias);
-    else if(dias===0) texto=cfgVacas.prenhez_textos?.parto_hoje;
-    else texto=cfgVacas.prenhez_textos?.parto_atrasado?.replace("{{dias}}",abs);
+    let texto = "";
+    if (v.dias > 0)
+      texto = cfgVacas.prenhez_textos?.antes_parto?.replace("{{dias}}", v.dias);
+    else if (v.dias === 0)
+      texto = cfgVacas.prenhez_textos?.parto_hoje;
+    else
+      texto = cfgVacas.prenhez_textos?.parto_atrasado?.replace("{{dias}}", abs);
 
-    html+=`
-      <div class="card ${regra?.classe||"ok"}">
-        <strong>🐄 ${animal.nome.toUpperCase()}</strong>
+    html += `
+      <div class="card ${regra?.classe || "ok"}">
+        <strong>🐄 ${v.animal.nome.toUpperCase()}</strong>
         <p class="dias">${texto}</p>
-        <p class="data">📅 ${prev.toLocaleDateString("pt-BR")}</p>
-        ${regra?.mensagem?`<p class="msg">${regra.mensagem}</p>`:""}
-      </div>`;
+        <p class="data">📅 ${v.prev.toLocaleDateString("pt-BR")}</p>
+        ${regra?.mensagem ? `<p class="msg">${regra.mensagem}</p>` : ""}
+      </div>
+    `;
   });
 
   html+="<h2>💉 Vacinas pendentes</h2>";
