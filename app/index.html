@@ -137,6 +137,11 @@ h2{
   font-weight:700;
   margin-top:4px;
 }
+
+.card{
+  background-color: #ffffff;
+}
+
 </style>
 </head>
 
@@ -271,6 +276,21 @@ clima.addEventListener("click", () => {
     height:100%;
     border:none;
   `;
+
+iframe.onload = () => {
+  try {
+    const doc = iframe.contentWindow.document;
+    const btn = doc.querySelector("button");
+
+    if (btn) {
+      btn.addEventListener("click", () => {
+        document.getElementById("modal-clima")?.remove();
+      });
+    }
+  } catch (e) {
+    console.warn("Não foi possível acessar o botão Fechar do iframe:", e);
+  }
+};
 
   box.appendChild(iframe);
   overlay.appendChild(box);
