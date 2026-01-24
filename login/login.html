@@ -16,7 +16,6 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 
-<!-- FIREBASE INIT -->
 <script>
 if (!firebase.apps.length) {
   firebase.initializeApp({
@@ -45,7 +44,7 @@ body{
   margin:0;
   min-height:100vh;
   background:var(--bege);
-  display:flex;
+  display:none;
   align-items:center;
   justify-content:center;
 }
@@ -88,7 +87,6 @@ body{
   font-size:15px;
 }
 
-/* CHECKBOX */
 .lembrar-wrap{
   display:flex;
   align-items:center;
@@ -117,9 +115,7 @@ body{
   cursor:pointer;
 }
 
-.login-box button:hover{
-  opacity:.9;
-}
+.login-box button:hover{opacity:.9}
 
 .link{
   margin-top:12px;
@@ -167,20 +163,22 @@ const emailInput = document.getElementById("email");
 const senhaInput = document.getElementById("senha");
 const lembrarCheck = document.getElementById("lembrar");
 
-/* ====== SE JÁ ESTIVER LOGADO, NÃO MOSTRA LOGIN ====== */
-auth.onAuthStateChanged(user => {
-  if (user) {
-    location.replace("../app/index.html");
-  }
-});
-
-/* ====== RESTAURA EMAIL ====== */
+/* ===== RESTAURA EMAIL ===== */
 if (localStorage.getItem("email_salvo")) {
   emailInput.value = localStorage.getItem("email_salvo");
   lembrarCheck.checked = true;
 }
 
-/* ====== LOGIN ====== */
+/* ===== VERIFICA LOGIN IMEDIATO ===== */
+auth.onAuthStateChanged(user => {
+  if (user) {
+    location.replace("../app/index.html");
+  } else {
+    document.body.style.display = "flex";
+  }
+});
+
+/* ===== LOGIN ===== */
 async function login(){
   erro.style.display = "none";
 
@@ -210,7 +208,7 @@ async function login(){
   }
 }
 
-/* ====== RESET SENHA ====== */
+/* ===== RESET SENHA ===== */
 async function resetarSenha(){
   if(!emailInput.value){
     alert("Informe o e-mail.");
