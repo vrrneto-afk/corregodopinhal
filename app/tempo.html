@@ -125,11 +125,10 @@ body{
 
 <script>
 /* ================= CONFIG ================= */
-const API_KEY = "SUA_API_KEY_AQUI";
 const LAT = -21.3127;
 const LON = -46.3721;
 
-const CACHE_KEY = "clima_previsao_7dias";
+const CACHE_KEY = "clima_openmeteo_7dias";
 const CACHE_TTL = 30 * 60 * 1000; // 30 minutos
 
 const lista = document.getElementById("lista");
@@ -167,13 +166,11 @@ async function obterPrevisao(){
   }
 
   const url =
-    "https://api.openweathermap.org/data/2.5/onecall" +
-    `?lat=${LAT}` +
-    `&lon=${LON}` +
-    "&exclude=current,minutely,hourly,alerts" +
-    "&units=metric" +
-    "&lang=pt_br" +
-    `&appid=${API_KEY}`;
+    "https://api.open-meteo.com/v1/forecast" +
+    `?latitude=${LAT}` +
+    `&longitude=${LON}` +
+    "&daily=temperature_2m_min,temperature_2m_max,precipitation_sum" +
+    "&timezone=America/Sao_Paulo";
 
   const data = await fetchComTimeout(url);
 
@@ -202,16 +199,20 @@ async function carregar(){
 
   let html = "";
 
-  d.daily.slice(0,7).forEach(dia=>{
-    const data = new Date(dia.dt * 1000);
-    const prob = Math.round((dia.pop || 0) * 100);
-    const mm   = dia.rain || 0;
-    const min  = Math.round(dia.temp.min);
-    const max  = Math.round(dia.temp.max);
+  const times = d.daily.time;
+  const mins  = d.daily.temperature_2m_min;
+  const maxs  = d.daily.temperature_2m_max;
+  const rains = d.daily.precipitation_sum;
+
+  for(let i=0;i<7 && i<times.length;i++){
+    const data = new Date(times[i]);
+    const mm   = Number(rains[i] || 0);
+    const min  = Math.round(mins[i]);
+    const max  = Math.round(maxs[i]);
 
     let classe = "dia-card";
-    if(prob >= 30 && prob < 60) classe += " atencao";
-    if(prob >= 60) classe += " alerta";
+    if(mm > 2 && mm <= 10) classe += " atencao";
+    if(mm > 10) classe += " alerta";
 
     html += `
       <div class="${classe}">
@@ -221,7 +222,7 @@ async function carregar(){
         </div>
 
         <div class="chuva">
-          🌧️ ${prob}% • ${Number(mm).toFixed(1)} mm
+          🌧️ ${mm.toFixed(1)} mm
         </div>
 
         <div class="temperatura">
@@ -229,7 +230,7 @@ async function carregar(){
         </div>
       </div>
     `;
-  });
+  }
 
   lista.innerHTML = html;
 }
