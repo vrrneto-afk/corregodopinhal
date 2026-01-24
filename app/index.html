@@ -160,26 +160,18 @@ clima.addEventListener("click", () => {
   const overlay = document.createElement("div");
   overlay.id = "modal-clima";
   overlay.style = `
-    position:fixed;
-    inset:0;
-    background:rgba(0,0,0,.55);
-    z-index:9999;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-  `;
-
-  const box = document.createElement("div");
-  box.style = `
-  width:96%;
+    const box = document.createElement("div");
+box.style = `
+  width:92%;
   max-width:480px;
-  max-height:75vh;
+  height:70vh;
   background:#fff;
   border-radius:14px;
-  overflow:auto;
+  overflow:hidden;
   display:flex;
   flex-direction:column;
 `;
+
 
   const iframe = document.createElement("iframe");
   iframe.src = "../app/tempo.html";
