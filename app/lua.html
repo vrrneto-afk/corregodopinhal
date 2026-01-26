@@ -123,7 +123,7 @@ function fechar(){
   window.parent.postMessage({ tipo:"fechar-lua" }, "*");
 }
 
-/* ===== IDENTIFICA FASE ===== */
+/* ===== FASE POR FRAÇÃO ===== */
 function fasePorFracao(f){
   if (f < 0.125 || f >= 0.875) return "🌑 LUA NOVA";
   if (f < 0.375) return "🌓 LUA CRESCENTE";
@@ -131,7 +131,7 @@ function fasePorFracao(f){
   return "🌗 LUA MINGUANTE";
 }
 
-/* ===== CARREGAR LUAS (ASTRONOMY API) ===== */
+/* ===== CARREGAR LUAS ===== */
 async function carregarLuas(){
 
   const cont = document.getElementById("conteudo");
@@ -147,14 +147,14 @@ async function carregarLuas(){
   const iniStr = hoje.toISOString().split("T")[0];
   const fimStr = fim.toISOString().split("T")[0];
 
-  const url = `
-https://api.open-meteo.com/v1/astronomy
-?latitude=${lat}
-&longitude=${lon}
-&start_date=${iniStr}
-&end_date=${fimStr}
-&timezone=America/Sao_Paulo
-`.replace(/\s+/g,"");
+  const url =
+    `https://api.open-meteo.com/v1/astronomy` +
+    `?latitude=${lat}` +
+    `&longitude=${lon}` +
+    `&daily=moon_phase` +          // 🔴 ESTA LINHA FALTAVA
+    `&start_date=${iniStr}` +
+    `&end_date=${fimStr}` +
+    `&timezone=America/Sao_Paulo`;
 
   const r = await fetch(url);
   const d = await r.json();
@@ -173,10 +173,10 @@ https://api.open-meteo.com/v1/astronomy
     const f = fases[i];
 
     if(
-      f < 0.02 ||                // nova
-      Math.abs(f-0.25)<0.03 ||    // crescente
-      Math.abs(f-0.5)<0.03 ||     // cheia
-      Math.abs(f-0.75)<0.03       // minguante
+      f < 0.02 ||
+      Math.abs(f-0.25)<0.03 ||
+      Math.abs(f-0.5)<0.03 ||
+      Math.abs(f-0.75)<0.03
     ){
       principais.push({
         fase: fasePorFracao(f),
