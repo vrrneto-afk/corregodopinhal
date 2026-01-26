@@ -123,71 +123,51 @@ function fechar(){
   window.parent.postMessage({ tipo:"fechar-lua" }, "*");
 }
 
-/* ===== FASE POR FRAÇÃO ===== */
-function fasePorFracao(f){
-  if (f < 0.125 || f >= 0.875) return "🌑 LUA NOVA";
-  if (f < 0.375) return "🌓 LUA CRESCENTE";
-  if (f < 0.625) return "🌕 LUA CHEIA";
-  return "🌗 LUA MINGUANTE";
+/* ===== CÁLCULO DA FASE DA LUA (SEM API) ===== */
+function calcularFaseLua(data){
+
+  // referência: Lua nova em 06/01/2000
+  const ref = new Date(2000, 0, 6, 18, 14);
+  const msDia = 86400000;
+  const ciclo = 29.53058867;
+
+  const dias = (data - ref) / msDia;
+  const idade = ((dias % ciclo) + ciclo) % ciclo;
+
+  if (idade < 1.84566) return "🌑 LUA NOVA";
+  if (idade < 9.22831) return "🌓 LUA CRESCENTE";
+  if (idade < 16.61096) return "🌕 LUA CHEIA";
+  if (idade < 23.99361) return "🌗 LUA MINGUANTE";
+  return "🌑 LUA NOVA";
 }
 
 /* ===== CARREGAR LUAS ===== */
-async function carregarLuas(){
+function carregarLuas(){
 
   const cont = document.getElementById("conteudo");
   cont.innerHTML = "";
 
-  const lat = -19.9;
-  const lon = -44.5;
-
   const hoje = new Date();
-  const fim = new Date();
-  fim.setDate(hoje.getDate() + 30);
+  const luas = [];
 
-  const iniStr = hoje.toISOString().split("T")[0];
-  const fimStr = fim.toISOString().split("T")[0];
+  // lua atual + próximas 3 mudanças de fase
+  for(let i = 0; i < 40 && luas.length < 4; i++){
+    const d = new Date();
+    d.setDate(hoje.getDate() + i);
 
-  const url =
-    `https://api.open-meteo.com/v1/astronomy` +
-    `?latitude=${lat}` +
-    `&longitude=${lon}` +
-    `&daily=moon_phase` +          // 🔴 ESTA LINHA FALTAVA
-    `&start_date=${iniStr}` +
-    `&end_date=${fimStr}` +
-    `&timezone=America/Sao_Paulo`;
-
-  const r = await fetch(url);
-  const d = await r.json();
-
-  if(!d.daily || !d.daily.moon_phase){
-    cont.innerHTML = "Não foi possível carregar as fases da lua.";
-    return;
-  }
-
-  const fases = d.daily.moon_phase;
-  const datas = d.daily.time;
-
-  const principais = [];
-
-  for(let i=0;i<fases.length && principais.length<4;i++){
-    const f = fases[i];
+    const fase = calcularFaseLua(d);
 
     if(
-      f < 0.02 ||
-      Math.abs(f-0.25)<0.03 ||
-      Math.abs(f-0.5)<0.03 ||
-      Math.abs(f-0.75)<0.03
+      !luas.some(l => l.fase === fase) &&
+      ["🌑 LUA NOVA","🌓 LUA CRESCENTE","🌕 LUA CHEIA","🌗 LUA MINGUANTE"].includes(fase)
     ){
-      principais.push({
-        fase: fasePorFracao(f),
-        data: datas[i]
-      });
+      luas.push({ data: new Date(d), fase });
     }
   }
 
-  principais.forEach(l => {
+  luas.forEach(l => {
 
-    const d = new Date(l.data);
+    const d = l.data;
     const dia = d.toLocaleDateString("pt-BR",{weekday:"short"}).toUpperCase();
     const dataFmt = d.toLocaleDateString("pt-BR");
 
