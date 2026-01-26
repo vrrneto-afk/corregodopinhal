@@ -123,18 +123,15 @@ function fechar(){
   window.parent.postMessage({ tipo:"fechar-lua" }, "*");
 }
 
-/* ===== TRADUÇÃO DAS FASES ===== */
-function traduzirFase(f){
-  switch(f){
-    case "new_moon": return "🌑 LUA NOVA";
-    case "first_quarter": return "🌓 LUA CRESCENTE";
-    case "full_moon": return "🌕 LUA CHEIA";
-    case "last_quarter": return "🌗 LUA MINGUANTE";
-    default: return f.replace("_"," ").toUpperCase();
-  }
+/* ===== IDENTIFICA FASE ===== */
+function fasePorFracao(f){
+  if (f < 0.125 || f >= 0.875) return "🌑 LUA NOVA";
+  if (f < 0.375) return "🌓 LUA CRESCENTE";
+  if (f < 0.625) return "🌕 LUA CHEIA";
+  return "🌗 LUA MINGUANTE";
 }
 
-/* ===== CARREGAR LUAS ===== */
+/* ===== CARREGAR LUAS (ASTRONOMY API) ===== */
 async function carregarLuas(){
 
   const cont = document.getElementById("conteudo");
@@ -143,10 +140,23 @@ async function carregarLuas(){
   const lat = -19.9;
   const lon = -44.5;
 
-  const r = await fetch(
-    `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=moon_phase&forecast_days=16&timezone=America/Sao_Paulo`
-  );
+  const hoje = new Date();
+  const fim = new Date();
+  fim.setDate(hoje.getDate() + 30);
 
+  const iniStr = hoje.toISOString().split("T")[0];
+  const fimStr = fim.toISOString().split("T")[0];
+
+  const url = `
+https://api.open-meteo.com/v1/astronomy
+?latitude=${lat}
+&longitude=${lon}
+&start_date=${iniStr}
+&end_date=${fimStr}
+&timezone=America/Sao_Paulo
+`.replace(/\s+/g,"");
+
+  const r = await fetch(url);
   const d = await r.json();
 
   if(!d.daily || !d.daily.moon_phase){
@@ -160,14 +170,16 @@ async function carregarLuas(){
   const principais = [];
 
   for(let i=0;i<fases.length && principais.length<4;i++){
-    if([
-      "new_moon",
-      "first_quarter",
-      "full_moon",
-      "last_quarter"
-    ].includes(fases[i])){
+    const f = fases[i];
+
+    if(
+      f < 0.02 ||                // nova
+      Math.abs(f-0.25)<0.03 ||    // crescente
+      Math.abs(f-0.5)<0.03 ||     // cheia
+      Math.abs(f-0.75)<0.03       // minguante
+    ){
       principais.push({
-        fase: fases[i],
+        fase: fasePorFracao(f),
         data: datas[i]
       });
     }
@@ -193,7 +205,7 @@ async function carregarLuas(){
         </div>
 
         <div class="fase">
-          ${traduzirFase(l.fase)}
+          ${l.fase}
         </div>
 
         <div class="forca">
