@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fases da Lua</title>
+
+<style>
+:root{
+  --marrom:#7b3f2a;
+  --bege:#f6efe7;
+  --cinza:#666;
+  --borda:#e5e5e5;
+}
+
+*{
+  box-sizing:border-box;
+  font-family:Inter,system-ui,Arial;
+}
+
+body{
+  margin:0;
+  background:#fff;
+  height:100vh;
+  display:flex;
+  flex-direction:column;
+}
+
+/* ===== HEADER ===== */
+.header{
+  padding:14px 16px;
+  border-bottom:1px solid #eee;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  font-weight:800;
+  color:var(--marrom);
+}
+
+.header .fechar{
+  cursor:pointer;
+  font-size:20px;
+}
+
+/* ===== CONTEÚDO ===== */
+.conteudo{
+  flex:1;
+  overflow:auto;
+  padding:12px;
+  background:var(--bege);
+}
+
+/* ===== CARD LUA ===== */
+.card-lua{
+  background:#fff;
+  border-radius:14px;
+  padding:14px;
+  margin-bottom:12px;
+  border:1px solid var(--borda);
+}
+
+.card-topo{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+
+.card-topo strong{
+  color:var(--marrom);
+}
+
+.fase{
+  margin-top:6px;
+  font-weight:800;
+}
+
+.forca{
+  margin-top:4px;
+  font-size:13px;
+  color:var(--cinza);
+}
+
+/* ===== FOOTER ===== */
+.footer{
+  border-top:1px solid #ddd;
+  padding:14px;
+  background:#fff;
+}
+
+.footer button{
+  width:100%;
+  border:1px solid var(--marrom);
+  border-radius:10px;
+  padding:12px;
+  font-weight:700;
+  background:#fff;
+  color:var(--marrom);
+  cursor:pointer;
+}
+</style>
+</head>
+
+<body>
+
+<!-- ===== HEADER ===== -->
+<div class="header">
+  <span>🌙 Fases da Lua</span>
+  <span class="fechar" onclick="fechar()">✕</span>
+</div>
+
+<!-- ===== CONTEÚDO ===== -->
+<div id="conteudo" class="conteudo">
+  ⏳ Carregando fases da lua...
+</div>
+
+<!-- ===== FOOTER ===== -->
+<div class="footer">
+  <button onclick="fechar()">Fechar</button>
+</div>
+
+<script>
+/* ===== FECHAR MODAL ===== */
+function fechar(){
+  window.parent.postMessage({ tipo:"fechar-lua" }, "*");
+}
+
+/* ===== TRADUÇÃO DAS FASES ===== */
+function traduzirFase(f){
+  switch(f){
+    case "New Moon": return "🌑 LUA NOVA";
+    case "First Quarter": return "🌓 LUA CRESCENTE";
+    case "Full Moon": return "🌕 LUA CHEIA";
+    case "Last Quarter": return "🌗 LUA MINGUANTE";
+    default: return f.toUpperCase();
+  }
+}
+
+/* ===== CARREGAR LUAS ===== */
+async function carregarLuas(){
+
+  const cont = document.getElementById("conteudo");
+  cont.innerHTML = "";
+
+  const luas = [];
+  let data = new Date();
+
+  // buscar lua atual + 3 próximas luas principais
+  while (luas.length < 4) {
+
+    const ts = Math.floor(data.getTime() / 1000);
+    const r = await fetch(`https://api.farmsense.net/v1/moonphases/?d=${ts}`);
+    const j = await r.json();
+
+    if (j && j[0]) {
+      const fase = j[0].Phase;
+
+      if (
+        fase === "New Moon" ||
+        fase === "First Quarter" ||
+        fase === "Full Moon" ||
+        fase === "Last Quarter"
+      ) {
+        if (!luas.some(l => l.Date === j[0].Date)) {
+          luas.push(j[0]);
+        }
+      }
+    }
+
+    data.setDate(data.getDate() + 1);
+  }
+
+  luas.forEach(l => {
+
+    const d = new Date(l.Date * 1000);
+
+    const dia = d
+      .toLocaleDateString("pt-BR",{ weekday:"short" })
+      .toUpperCase();
+
+    const dataFmt = d.toLocaleDateString("pt-BR");
+
+    // força da lua: -2 até +2 dias
+    const ini = new Date(d);
+    ini.setDate(d.getDate() - 2);
+
+    const fim = new Date(d);
+    fim.setDate(d.getDate() + 2);
+
+    cont.innerHTML += `
+      <div class="card-lua">
+        <div class="card-topo">
+          <strong>${dia}</strong>
+          <span>📅 ${dataFmt}</span>
+        </div>
+
+        <div class="fase">
+          ${traduzirFase(l.Phase)}
+        </div>
+
+        <div class="forca">
+          Força da Lua: 
+          ${ini.toLocaleDateString("pt-BR")} até ${fim.toLocaleDateString("pt-BR")}
+        </div>
+      </div>
+    `;
+  });
+}
+
+/* ===== START ===== */
+carregarLuas();
+</script>
+
+</body>
+</html>
