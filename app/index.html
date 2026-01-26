@@ -101,14 +101,17 @@ h2{margin:28px 0 12px;color:var(--marrom)}
 <div class="container">
   <div id="clima" class="clima-bar">⏳ Carregando clima...</div>
   <div id="lua" class="clima-bar">🌙 Fases da Lua</div>
+
   <a id="alertaRapido" href="../app/lembretes.html" class="alerta-rapido alerta-ok">
     🔔 Nenhum alerta no momento
   </a>
+
   <div id="conteudo"></div>
 </div>
 
 <script>
 const clima = document.getElementById("clima");
+const luaBtn = document.getElementById("lua");
 const alertaRapido = document.getElementById("alertaRapido");
 const conteudo = document.getElementById("conteudo");
 const db = firebase.firestore();
@@ -136,7 +139,7 @@ function diffDias(a,b){
   return Math.floor((b - a) / 86400000);
 }
 
-/* ========= CACHE GENÉRICO ========= */
+/* ========= CACHE ========= */
 function cacheGet(key, ttl){
   const c = localStorage.getItem(key);
   if(!c) return null;
@@ -166,7 +169,7 @@ fetch("../menu/menu.html")
     document.body.appendChild(s);
   });
 
-/* ================= CLIMA (CACHE 10 MIN) ================= */
+/* ================= CLIMA ================= */
 async function loadClima(){
   const cache = cacheGet("clima_cache",600000);
   if(cache){
@@ -198,7 +201,7 @@ async function loadClima(){
   cacheSet("clima_cache", html);
 }
 
-  /* ================= MODAL CLIMA ================= */
+/* ===== MODAL CLIMA ===== */
 clima.addEventListener("click", () => {
 
   if (document.getElementById("modal-clima")) return;
@@ -223,8 +226,6 @@ clima.addEventListener("click", () => {
     background:#fff;
     border-radius:14px;
     overflow:hidden;
-    display:flex;
-    flex-direction:column;
     position:relative;
   `;
 
@@ -250,14 +251,12 @@ clima.addEventListener("click", () => {
   overlay.appendChild(box);
   document.body.appendChild(overlay);
 
-  overlay.addEventListener("click", e => {
-    if (e.target === overlay) overlay.remove();
+  overlay.addEventListener("click", e=>{
+    if(e.target===overlay) overlay.remove();
   });
 });
 
-  /* ===== MODAL LUA ===== */
-  const luaBtn = document.getElementById("lua");
-
+/* ===== MODAL LUA (HTML EXTERNO) ===== */
 luaBtn.addEventListener("click", () => {
 
   if (document.getElementById("modal-lua")) return;
@@ -282,69 +281,53 @@ luaBtn.addEventListener("click", () => {
     background:#fff;
     border-radius:14px;
     overflow:hidden;
-    display:flex;
-    flex-direction:column;
+    position:relative;
   `;
 
-  box.innerHTML = `
-    <div style="
-      padding:14px 16px;
-      border-bottom:1px solid #eee;
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-      font-weight:800;
-      color:#7b3f2a;
-    ">
-      <span>🌙 Fases da Lua</span>
-      <span id="fechar-lua" style="cursor:pointer;font-size:20px">✕</span>
-    </div>
-
-    <div id="lua-conteudo" style="
-      flex:1;
-      overflow:auto;
-      padding:12px;
-      background:#f6efe7;
-    ">
-      ⏳ Carregando fases da lua...
-    </div>
-
-    <button id="btn-fechar-lua" style="
-      border:none;
-      border-top:1px solid #ddd;
-      padding:14px;
-      background:#fff;
-      font-weight:700;
-      color:#7b3f2a;
-      cursor:pointer;
-    ">Fechar</button>
+  const fechar = document.createElement("div");
+  fechar.innerHTML = "✕";
+  fechar.style.cssText = `
+    position:absolute;
+    top:10px;
+    right:14px;
+    font-size:22px;
+    font-weight:800;
+    cursor:pointer;
+    z-index:10;
   `;
+  fechar.onclick = () => overlay.remove();
 
+  const iframe = document.createElement("iframe");
+  iframe.src = "../app/lua.html";
+  iframe.style.cssText = "width:100%;height:100%;border:none";
+
+  box.appendChild(fechar);
+  box.appendChild(iframe);
   overlay.appendChild(box);
   document.body.appendChild(overlay);
 
-  document.getElementById("fechar-lua").onclick =
-  document.getElementById("btn-fechar-lua").onclick = () => overlay.remove();
-
-  overlay.addEventListener("click", e => {
-    if (e.target === overlay) overlay.remove();
+  overlay.addEventListener("click", e=>{
+    if(e.target===overlay) overlay.remove();
   });
-
-  carregarLuas();
 });
 
-/* ===== RECEBE MENSAGEM DO IFRAME (FECHAR CLIMA) ===== */
+/* ===== FECHAR VIA postMessage ===== */
 window.addEventListener("message", e => {
   if (e.data?.tipo === "fechar-clima") {
     document.getElementById("modal-clima")?.remove();
   }
+  if (e.data?.tipo === "fechar-lua") {
+    document.getElementById("modal-lua")?.remove();
+  }
 });
-  
+
 /* ================= ALERTAS ================= */
 async function loadAlertas(){
   const s = await db.collection("lembretes").get();
   alertaRapido.className = s.size ? "alerta-rapido alerta-on" : "alerta-rapido alerta-ok";
-  alertaRapido.innerText = s.size ? `🔔 ${s.size} itens pendentes para comprar` : "🔔 Nenhum alerta no momento";
+  alertaRapido.innerText = s.size
+    ? `🔔 ${s.size} itens pendentes para comprar`
+    : "🔔 Nenhum alerta no momento";
 }
 
 /* ================= INDEX ================= */
@@ -404,16 +387,16 @@ async function loadIndex(){
       </div>`;
     });
 
-  html+="<h2>💉 Vacinas pendentes</h2>";
+  html += "<h2>💉 Vacinas pendentes</h2>";
 
   vacinas
     .filter(v=>v.data_aplicacao && Number(v.repeticao_dias)>0)
     .forEach(v=>{
-      const reap=parseData(v.data_aplicacao);
+      const reap = parseData(v.data_aplicacao);
       reap.setDate(reap.getDate()+Number(v.repeticao_dias));
-      const dias=diffDias(hojeZ,reap);
-      const animal=animais.find(a=>a._id===v.id_animal);
-      const status=dias<0?"atrasada":"pendente";
+      const dias = diffDias(hojeZ,reap);
+      const animal = animais.find(a=>a._id===v.id_animal);
+      const status = dias<0 ? "atrasada" : "pendente";
 
       html+=`
       <div class="card ${status}">
@@ -425,92 +408,6 @@ async function loadIndex(){
     });
 
   conteudo.innerHTML = html;
-}
-  
-  /* ================= LUAS ================= */
-async function carregarLuas(){
-
-  const cont = document.getElementById("lua-conteudo");
-  cont.innerHTML = "";
-
-  const fasesPrincipais = [];
-  let data = new Date();
-
-  // Buscar até encontrar 4 luas principais
-  while (fasesPrincipais.length < 4) {
-
-    const ts = Math.floor(data.getTime() / 1000);
-    const r = await fetch(`https://api.farmsense.net/v1/moonphases/?d=${ts}`);
-    const j = await r.json();
-
-    if (j && j[0]) {
-      const fase = j[0].Phase;
-
-      if (
-        fase === "New Moon" ||
-        fase === "First Quarter" ||
-        fase === "Full Moon" ||
-        fase === "Last Quarter"
-      ) {
-        // evita duplicar a mesma lua
-        if (!fasesPrincipais.some(f => f.date === j[0].Date)) {
-          fasesPrincipais.push(j[0]);
-        }
-      }
-    }
-
-    data.setDate(data.getDate() + 1);
-  }
-
-  fasesPrincipais.forEach(f => {
-
-    const d = new Date(f.Date * 1000);
-    const dia = d.toLocaleDateString("pt-BR", { weekday:"short" }).toUpperCase();
-    const dataFmt = d.toLocaleDateString("pt-BR");
-
-    const inicioForca = new Date(d);
-    inicioForca.setDate(d.getDate() - 2);
-
-    const fimForca = new Date(d);
-    fimForca.setDate(d.getDate() + 2);
-
-    const fasePT = traduzirFase(f.Phase);
-
-    cont.innerHTML += `
-      <div style="
-        background:#fff;
-        border-radius:14px;
-        padding:14px;
-        margin-bottom:12px;
-        border:1px solid #e5e5e5;
-      ">
-        <div style="display:flex;justify-content:space-between;align-items:center">
-          <strong style="color:#7b3f2a">${dia}</strong>
-          <span>📅 ${dataFmt}</span>
-        </div>
-
-        <div style="margin-top:6px;font-weight:800">
-          🌕 ${fasePT}
-        </div>
-
-        <div style="margin-top:4px;font-size:13px;color:#666">
-          Força da Lua: 
-          ${inicioForca.toLocaleDateString("pt-BR")} até ${fimForca.toLocaleDateString("pt-BR")}
-        </div>
-      </div>
-    `;
-  });
-}
-
-/* ===== TRADUÇÃO DAS FASES ===== */
-function traduzirFase(f){
-  switch(f){
-    case "New Moon": return "LUA NOVA";
-    case "First Quarter": return "LUA CRESCENTE";
-    case "Full Moon": return "LUA CHEIA";
-    case "Last Quarter": return "LUA MINGUANTE";
-    default: return f.toUpperCase();
-  }
 }
 
 /* ================= START ================= */
