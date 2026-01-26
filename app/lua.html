@@ -119,12 +119,11 @@ body{
 </div>
 
 <script>
-/* ===== FECHAR MODAL ===== */
 function fechar(){
   window.parent.postMessage({ tipo:"fechar-lua" }, "*");
 }
 
-/* ===== TRADUÇÃO DAS FASES ===== */
+/* ===== MAPA DE FASES ===== */
 function traduzirFase(f){
   switch(f){
     case "New Moon": return "🌑 LUA NOVA";
@@ -135,56 +134,59 @@ function traduzirFase(f){
   }
 }
 
-/* ===== CARREGAR LUAS ===== */
+/* ===== CARREGAR LUAS (SEM CORS) ===== */
 async function carregarLuas(){
 
   const cont = document.getElementById("conteudo");
   cont.innerHTML = "";
 
-  const luas = [];
-  let data = new Date();
+  // ⚠️ use sua latitude/longitude real
+  const lat = -19.9;
+  const lon = -44.5;
 
-  // buscar lua atual + 3 próximas luas principais
-  while (luas.length < 4) {
+  const r = await fetch(
+    `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=moon_phase&timezone=America/Sao_Paulo`
+  );
+  const d = await r.json();
 
-    const ts = Math.floor(data.getTime() / 1000);
-    const r = await fetch(`https://api.farmsense.net/v1/moonphases/?d=${ts}`);
-    const j = await r.json();
-
-    if (j && j[0]) {
-      const fase = j[0].Phase;
-
-      if (
-        fase === "New Moon" ||
-        fase === "First Quarter" ||
-        fase === "Full Moon" ||
-        fase === "Last Quarter"
-      ) {
-        if (!luas.some(l => l.Date === j[0].Date)) {
-          luas.push(j[0]);
-        }
-      }
-    }
-
-    data.setDate(data.getDate() + 1);
+  if(!d.daily || !d.daily.moon_phase){
+    cont.innerHTML = "Não foi possível carregar as fases da lua.";
+    return;
   }
 
-  luas.forEach(l => {
+  const fases = d.daily.moon_phase;
+  const datas = d.daily.time;
 
-    const d = new Date(l.Date * 1000);
+  const principais = [];
+  const mapa = {
+    0: "New Moon",
+    1: "Waxing Crescent",
+    2: "First Quarter",
+    3: "Waxing Gibbous",
+    4: "Full Moon",
+    5: "Waning Gibbous",
+    6: "Last Quarter",
+    7: "Waning Crescent"
+  };
 
-    const dia = d
-      .toLocaleDateString("pt-BR",{ weekday:"short" })
-      .toUpperCase();
+  for(let i=0;i<fases.length && principais.length<4;i++){
+    const fase = mapa[Math.round(fases[i])];
+    if(["New Moon","First Quarter","Full Moon","Last Quarter"].includes(fase)){
+      principais.push({ fase, data: datas[i] });
+    }
+  }
 
+  principais.forEach(l => {
+
+    const d = new Date(l.data);
+    const dia = d.toLocaleDateString("pt-BR",{weekday:"short"}).toUpperCase();
     const dataFmt = d.toLocaleDateString("pt-BR");
 
-    // força da lua: -2 até +2 dias
     const ini = new Date(d);
-    ini.setDate(d.getDate() - 2);
+    ini.setDate(d.getDate()-2);
 
     const fim = new Date(d);
-    fim.setDate(d.getDate() + 2);
+    fim.setDate(d.getDate()+2);
 
     cont.innerHTML += `
       <div class="card-lua">
@@ -194,11 +196,11 @@ async function carregarLuas(){
         </div>
 
         <div class="fase">
-          ${traduzirFase(l.Phase)}
+          ${traduzirFase(l.fase)}
         </div>
 
         <div class="forca">
-          Força da Lua: 
+          Força da Lua:
           ${ini.toLocaleDateString("pt-BR")} até ${fim.toLocaleDateString("pt-BR")}
         </div>
       </div>
@@ -206,7 +208,6 @@ async function carregarLuas(){
   });
 }
 
-/* ===== START ===== */
 carregarLuas();
 </script>
 
