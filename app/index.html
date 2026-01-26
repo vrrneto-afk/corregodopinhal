@@ -135,6 +135,18 @@ function diffDias(a,b){
   return Math.floor((b - a) / 86400000);
 }
 
+/* ========= CACHE GENÉRICO ========= */
+function cacheGet(key, ttl){
+  const c = localStorage.getItem(key);
+  if(!c) return null;
+  const o = JSON.parse(c);
+  if(Date.now() - o.time > ttl) return null;
+  return o.data;
+}
+function cacheSet(key, data){
+  localStorage.setItem(key, JSON.stringify({ time:Date.now(), data }));
+}
+
 /* ================= MENU ================= */
 fetch("../menu/menu.html")
   .then(r => r.text())
@@ -155,15 +167,10 @@ fetch("../menu/menu.html")
 
 /* ================= CLIMA (CACHE 10 MIN) ================= */
 async function loadClima(){
-  const cache = localStorage.getItem("clima_cache");
-  const agora = Date.now();
-
+  const cache = cacheGet("clima_cache",600000);
   if(cache){
-    const c = JSON.parse(cache);
-    if(agora - c.time < 600000){
-      clima.innerHTML = c.html;
-      return;
-    }
+    clima.innerHTML = cache;
+    return;
   }
 
   const snap = await db.collection("config").doc("clima").get();
@@ -187,63 +194,8 @@ async function loadClima(){
 
   const html = `☀️ ${cfg.cidade} – ${cfg.regiao} • ${Math.round(d.current_weather.temperature)}°C<br>${texto}`;
   clima.innerHTML = html;
-  localStorage.setItem("clima_cache", JSON.stringify({time:agora, html}));
+  cacheSet("clima_cache", html);
 }
-
-/* ================= MODAL CLIMA ================= */
-clima.addEventListener("click",()=>{
-  if(document.getElementById("modal-clima")) return;
-
-  const overlay=document.createElement("div");
-  overlay.id="modal-clima";
-  overlay.style.cssText="position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9999;display:flex;align-items:center;justify-content:center";
-
-  const box = document.createElement("div");
-  box.style.cssText = `
-    width:92%;
-    max-width:480px;
-    height:70vh;
-    background:#fff;
-    border-radius:14px;
-    overflow:hidden;
-    display:flex;
-    flex-direction:column;
-    position:relative;
-  `;
-
-  const fechar = document.createElement("div");
-  fechar.innerHTML = "✕";
-  fechar.style.cssText = `
-    position:absolute;
-    top:10px;
-    right:14px;
-    font-size:22px;
-    font-weight:800;
-    cursor:pointer;
-    z-index:10;
-  `;
-  fechar.onclick = () => overlay.remove();
-
-  const iframe=document.createElement("iframe");
-  iframe.src="../app/tempo.html";
-  iframe.style.cssText="width:100%;height:100%;border:none";
-
-  box.appendChild(fechar);   // ✅ agora sim
-  box.appendChild(iframe);
-  overlay.appendChild(box);
-  document.body.appendChild(overlay);
-
-  overlay.addEventListener("click",e=>{
-    if(e.target===overlay) overlay.remove();
-  });
-});
-
-/* ===== RECEBE MENSAGEM DO IFRAME (FECHAR CLIMA) ===== */
-window.addEventListener("message", e => {
-  if (e.data?.tipo === "fechar-clima") {
-    document.getElementById("modal-clima")?.remove();
-  }
-});
 
 /* ================= ALERTAS ================= */
 async function loadAlertas(){
@@ -254,105 +206,90 @@ async function loadAlertas(){
 
 /* ================= INDEX ================= */
 async function loadIndex(){
-  conteudo.innerHTML="";
+  conteudo.innerHTML = "";
 
-  const [
-    cfgVacasSnap,
-    cfgVacinasSnap,
-    animaisSnap,
-    eventosSnap,
-    vacinasSnap
-  ] = await Promise.all([
-    db.collection("config").doc("vacas").get(),
-    db.collection("config").doc("vacinas").get(),
-    db.collection("animais").get(),
-    db.collection("eventos").get(),
-    db.collection("vacinas").get()
-  ]);
+  const cfgVacas = cacheGet("cfg_vacas",1800000) ||
+    (await db.collection("config").doc("vacas").get()).data();
+  cacheSet("cfg_vacas",cfgVacas);
 
-  const cfgVacas = cfgVacasSnap.data();
-  const cfgVacinas = cfgVacinasSnap.data();
-  const animais = animaisSnap.docs.map(d=>({_id:d.id,...d.data()}));
-  const eventos = eventosSnap.docs.map(d=>d.data());
-  const vacinas = vacinasSnap.docs.map(d=>d.data());
+  const cfgVacinas = cacheGet("cfg_vacinas",1800000) ||
+    (await db.collection("config").doc("vacinas").get()).data();
+  cacheSet("cfg_vacinas",cfgVacinas);
+
+  const animais = cacheGet("animais",1800000) ||
+    (await db.collection("animais").get()).docs.map(d=>({_id:d.id,...d.data()}));
+  cacheSet("animais",animais);
+
+  const eventos = (await db.collection("eventos")
+    .where("tipo_evento","==","cobertura").get())
+    .docs.map(d=>d.data());
+
+  const vacinas = (await db.collection("vacinas")
+    .where("status","!=","Finalizada").get())
+    .docs.map(d=>d.data());
 
   let html = "<h2>🐄 Vacas a Criar</h2>";
 
   eventos
-  .filter(e => e.tipo_evento === "cobertura")
-  .map(c => {
-    const animal = animais.find(a => a._id === c.id_animal);
-    if (!animal) return null;
+    .map(c=>{
+      const animal = animais.find(a=>a._id===c.id_animal);
+      if(!animal) return null;
 
-    const prev = addMeses(parseData(c.data_evento), cfgVacas.gestacao_meses);
-    const dias = diffDias(hojeZ, prev);
+      const prev = addMeses(parseData(c.data_evento), cfgVacas.gestacao_meses);
+      const dias = diffDias(hojeZ, prev);
+      return { animal, prev, dias };
+    })
+    .filter(Boolean)
+    .sort((a,b)=>a.dias-b.dias)
+    .forEach(v=>{
+      const abs = Math.abs(v.dias);
+      const regra = cfgVacas.prenhez_intervalos
+        .filter(r=>r.ativa!==false && abs>=r.dias_de && abs<=r.dias_ate)
+        .sort((a,b)=>a.dias_de-b.dias_de)[0];
 
-    return {
-      animal,
-      prev,
-      dias,
-      evento: c
-    };
-  })
-  .filter(Boolean)
-  .sort((a, b) => a.dias - b.dias)   // 👈 AQUI ESTÁ A CHAVE
-  .forEach(v => {
+      let texto="";
+      if(v.dias>0) texto=cfgVacas.prenhez_textos?.antes_parto?.replace("{{dias}}",v.dias);
+      else if(v.dias===0) texto=cfgVacas.prenhez_textos?.parto_hoje;
+      else texto=cfgVacas.prenhez_textos?.parto_atrasado?.replace("{{dias}}",abs);
 
-    const abs = Math.abs(v.dias);
-
-    const regra = cfgVacas.prenhez_intervalos
-      .filter(r =>
-        r.ativa !== false &&
-        abs >= r.dias_de &&
-        abs <= r.dias_ate
-      )
-      .sort((a, b) => a.dias_de - b.dias_de)[0];
-
-    let texto = "";
-    if (v.dias > 0)
-      texto = cfgVacas.prenhez_textos?.antes_parto?.replace("{{dias}}", v.dias);
-    else if (v.dias === 0)
-      texto = cfgVacas.prenhez_textos?.parto_hoje;
-    else
-      texto = cfgVacas.prenhez_textos?.parto_atrasado?.replace("{{dias}}", abs);
-
-    html += `
-      <div class="card ${regra?.classe || "ok"}">
+      html+=`
+      <div class="card ${regra?.classe||"ok"}">
         <strong>🐄 ${v.animal.nome.toUpperCase()}</strong>
         <p class="dias">${texto}</p>
         <p class="data">📅 ${v.prev.toLocaleDateString("pt-BR")}</p>
-        ${regra?.mensagem ? `<p class="msg">${regra.mensagem}</p>` : ""}
-      </div>
-    `;
-  });
+        ${regra?.mensagem?`<p class="msg">${regra.mensagem}</p>`:""}
+      </div>`;
+    });
 
   html+="<h2>💉 Vacinas pendentes</h2>";
 
-  vacinas.filter(v=>v.data_aplicacao && Number(v.repeticao_dias)>0 && v.status!=="Finalizada").forEach(v=>{
-    const reap=parseData(v.data_aplicacao);
-    reap.setDate(reap.getDate()+Number(v.repeticao_dias));
-    const dias=diffDias(hojeZ,reap);
-    const animal=animais.find(a=>a._id===v.id_animal);
-    const status=dias<0?"atrasada":"pendente";
+  vacinas
+    .filter(v=>v.data_aplicacao && Number(v.repeticao_dias)>0)
+    .forEach(v=>{
+      const reap=parseData(v.data_aplicacao);
+      reap.setDate(reap.getDate()+Number(v.repeticao_dias));
+      const dias=diffDias(hojeZ,reap);
+      const animal=animais.find(a=>a._id===v.id_animal);
+      const status=dias<0?"atrasada":"pendente";
 
-    html+=`
+      html+=`
       <div class="card ${status}">
         <strong>💉 ${v.nome_vacina}</strong>
         <p class="dias">${cfgVacinas.status?.[status]} ${Math.abs(dias)} dias</p>
         <p class="data">🐄 ${(animal?.nome||"-").toUpperCase()}</p>
         <p class="data">📅 ${reap.toLocaleDateString("pt-BR")}</p>
       </div>`;
-  });
+    });
 
   conteudo.innerHTML = html;
 }
 
 /* ================= START ================= */
-setTimeout(()=>{
-  loadClima();
-  loadAlertas();
-  loadIndex();
-},0);
+(async ()=>{
+  await loadClima();
+  await loadAlertas();
+  await loadIndex();
+})();
 </script>
 
 <script src="../login/logout.js"></script>
