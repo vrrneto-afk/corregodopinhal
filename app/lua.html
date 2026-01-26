@@ -123,24 +123,27 @@ function fechar(){
   window.parent.postMessage({ tipo:"fechar-lua" }, "*");
 }
 
-/* ===== MAPA DE FASES ===== */
+/* ===== TRADUÇÃO DAS FASES ===== */
 function traduzirFase(f){
   switch(f){
-    case "New Moon": return "🌑 LUA NOVA";
-    case "First Quarter": return "🌓 LUA CRESCENTE";
-    case "Full Moon": return "🌕 LUA CHEIA";
-    case "Last Quarter": return "🌗 LUA MINGUANTE";
+    case "new_moon": return "🌑 LUA NOVA";
+    case "waxing_crescent": return "🌒 LUA CRESCENTE";
+    case "first_quarter": return "🌓 LUA CRESCENTE";
+    case "waxing_gibbous": return "🌔 LUA CRESCENTE";
+    case "full_moon": return "🌕 LUA CHEIA";
+    case "waning_gibbous": return "🌖 LUA MINGUANTE";
+    case "last_quarter": return "🌗 LUA MINGUANTE";
+    case "waning_crescent": return "🌘 LUA MINGUANTE";
     default: return f.toUpperCase();
   }
 }
 
-/* ===== CARREGAR LUAS (SEM CORS) ===== */
+/* ===== CARREGAR LUAS (OPEN-METEO CORRETO) ===== */
 async function carregarLuas(){
 
   const cont = document.getElementById("conteudo");
   cont.innerHTML = "";
 
-  // ⚠️ use sua latitude/longitude real
   const lat = -19.9;
   const lon = -44.5;
 
@@ -158,21 +161,18 @@ async function carregarLuas(){
   const datas = d.daily.time;
 
   const principais = [];
-  const mapa = {
-    0: "New Moon",
-    1: "Waxing Crescent",
-    2: "First Quarter",
-    3: "Waxing Gibbous",
-    4: "Full Moon",
-    5: "Waning Gibbous",
-    6: "Last Quarter",
-    7: "Waning Crescent"
-  };
 
-  for(let i=0;i<fases.length && principais.length<4;i++){
-    const fase = mapa[Math.round(fases[i])];
-    if(["New Moon","First Quarter","Full Moon","Last Quarter"].includes(fase)){
-      principais.push({ fase, data: datas[i] });
+  for(let i = 0; i < fases.length && principais.length < 4; i++){
+    if([
+      "new_moon",
+      "first_quarter",
+      "full_moon",
+      "last_quarter"
+    ].includes(fases[i])){
+      principais.push({
+        fase: fases[i],
+        data: datas[i]
+      });
     }
   }
 
@@ -183,10 +183,10 @@ async function carregarLuas(){
     const dataFmt = d.toLocaleDateString("pt-BR");
 
     const ini = new Date(d);
-    ini.setDate(d.getDate()-2);
+    ini.setDate(d.getDate() - 2);
 
     const fim = new Date(d);
-    fim.setDate(d.getDate()+2);
+    fim.setDate(d.getDate() + 2);
 
     cont.innerHTML += `
       <div class="card-lua">
