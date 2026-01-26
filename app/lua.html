@@ -13,10 +13,7 @@
   --borda:#e5e5e5;
 }
 
-*{
-  box-sizing:border-box;
-  font-family:Inter,system-ui,Arial;
-}
+*{ box-sizing:border-box; font-family:Inter,system-ui,Arial }
 
 body{
   margin:0;
@@ -26,7 +23,7 @@ body{
   flex-direction:column;
 }
 
-/* ===== HEADER ===== */
+/* HEADER */
 .header{
   padding:14px 16px;
   border-bottom:1px solid #eee;
@@ -36,13 +33,9 @@ body{
   font-weight:800;
   color:var(--marrom);
 }
+.header .fechar{ cursor:pointer; font-size:20px }
 
-.header .fechar{
-  cursor:pointer;
-  font-size:20px;
-}
-
-/* ===== CONTEÚDO ===== */
+/* CONTEÚDO */
 .conteudo{
   flex:1;
   overflow:auto;
@@ -50,7 +43,7 @@ body{
   background:var(--bege);
 }
 
-/* ===== CARD LUA ===== */
+/* CARD */
 .card-lua{
   background:#fff;
   border-radius:14px;
@@ -65,28 +58,17 @@ body{
   align-items:center;
 }
 
-.card-topo strong{
-  color:var(--marrom);
-}
+.card-topo strong{ color:var(--marrom) }
 
-.fase{
-  margin-top:6px;
-  font-weight:800;
-}
+.fase{ margin-top:6px; font-weight:800 }
+.forca{ margin-top:4px; font-size:13px; color:var(--cinza) }
 
-.forca{
-  margin-top:4px;
-  font-size:13px;
-  color:var(--cinza);
-}
-
-/* ===== FOOTER ===== */
+/* FOOTER */
 .footer{
   border-top:1px solid #ddd;
   padding:14px;
   background:#fff;
 }
-
 .footer button{
   width:100%;
   border:1px solid var(--marrom);
@@ -102,18 +84,15 @@ body{
 
 <body>
 
-<!-- ===== HEADER ===== -->
 <div class="header">
   <span>🌙 Fases da Lua</span>
   <span class="fechar" onclick="fechar()">✕</span>
 </div>
 
-<!-- ===== CONTEÚDO ===== -->
 <div id="conteudo" class="conteudo">
   ⏳ Carregando fases da lua...
 </div>
 
-<!-- ===== FOOTER ===== -->
 <div class="footer">
   <button onclick="fechar()">Fechar</button>
 </div>
@@ -123,130 +102,33 @@ function fechar(){
   window.parent.postMessage({ tipo:"fechar-lua" }, "*");
 }
 
-/* ================= UTIL ================= */
-const DEG2RAD = Math.PI / 180;
-
-function sin(d){ return Math.sin(d * DEG2RAD); }
-function cos(d){ return Math.cos(d * DEG2RAD); }
-
-/* ===== CONVERTE JD PARA DATE ===== */
-function jdToDate(jd){
-  const Z = Math.floor(jd + 0.5);
-  const F = (jd + 0.5) - Z;
-  let A = Z;
-  if (Z >= 2299161) {
-    const alpha = Math.floor((Z - 1867216.25) / 36524.25);
-    A = Z + 1 + alpha - Math.floor(alpha / 4);
-  }
-  const B = A + 1524;
-  const C = Math.floor((B - 122.1) / 365.25);
-  const D = Math.floor(365.25 * C);
-  const E = Math.floor((B - D) / 30.6001);
-
-  const day = B - D - Math.floor(30.6001 * E) + F;
-  const month = (E < 14) ? E - 1 : E - 13;
-  const year = (month > 2) ? C - 4716 : C - 4715;
-
-  const dayInt = Math.floor(day);
-  const frac = day - dayInt;
-
-  const h = frac * 24;
-  const m = (h - Math.floor(h)) * 60;
-
-  return new Date(
-    year,
-    month - 1,
-    dayInt,
-    Math.floor(h),
-    Math.floor(m)
-  );
-}
-
-/* ===== FASES DA LUA (MEEUS) ===== */
-function faseLuaMeeus(k, fase){
-  const T = k / 1236.85;
-  const T2 = T*T;
-  const T3 = T2*T;
-
-  let jd = 2451550.09765 +
-    29.530588853 * k +
-    0.0001337 * T2 -
-    0.000000150 * T3 +
-    0.00000000073 * T*T3;
-
-  const M  = 2.5534 + 29.10535669 * k - 0.0000218 * T2;
-  const M1 = 201.5643 + 385.81693528 * k + 0.0107438 * T2;
-  const F  = 160.7108 + 390.67050284 * k - 0.0016341 * T2;
-  const Ω  = 124.7746 - 1.56375588 * k + 0.0020672 * T2;
-
-  const E = 1 - 0.002516 * T - 0.0000074 * T2;
-
-  if (fase === "nova" || fase === "cheia") {
-    jd +=
-      -0.40720 * sin(M1) +
-       0.17241 * E * sin(M) +
-       0.01608 * sin(2*M1) +
-       0.01039 * sin(2*F) +
-       0.00739 * E * sin(M1 - M) -
-       0.00514 * E * sin(M1 + M);
-
-    if (fase === "cheia") jd += 0.5;
-  }
-
-  if (fase === "crescente" || fase === "minguante") {
-    jd +=
-      -0.62801 * sin(M1) +
-       0.17172 * E * sin(M) -
-       0.01183 * E * sin(M1 + M) +
-       0.00862 * sin(2*M1);
-
-    jd += (fase === "crescente" ? 0.25 : 0.75);
-  }
-
-  return jd;
-}
-
 /* ===== CARREGAR LUAS ===== */
-function carregarLuas(){
+async function carregarLuas(){
 
   const cont = document.getElementById("conteudo");
   cont.innerHTML = "";
 
+  const r = await fetch("./luas.json");
+  const dados = await r.json();
+
   const hoje = new Date();
-  const ano = hoje.getFullYear();
-  const k0 = Math.floor((ano - 2000) * 12.3685);
+  hoje.setHours(0,0,0,0);
 
-  const fases = [];
-  let k = k0;
+  const futuras = dados
+    .map(l => ({ ...l, d:new Date(l.data) }))
+    .filter(l => l.d >= hoje)
+    .slice(0,4);
 
-  while (fases.length < 4) {
-    ["nova","crescente","cheia","minguante"].forEach(f => {
-      const d = jdToDate(faseLuaMeeus(k, f));
-      if (d >= hoje && fases.length < 4) {
-        fases.push({ data:d, fase:f });
-      }
-    });
-    k++;
-  }
+  futuras.forEach(l => {
 
-  const nomeFase = {
-    nova: "🌑 LUA NOVA",
-    crescente: "🌓 LUA CRESCENTE",
-    cheia: "🌕 LUA CHEIA",
-    minguante: "🌗 LUA MINGUANTE"
-  };
+    const dia = l.d.toLocaleDateString("pt-BR",{weekday:"short"}).toUpperCase();
+    const dataFmt = l.d.toLocaleDateString("pt-BR");
 
-  fases.forEach(l => {
+    const ini = new Date(l.d);
+    ini.setDate(l.d.getDate()-2);
 
-    const d = l.data;
-    const dia = d.toLocaleDateString("pt-BR",{weekday:"short"}).toUpperCase();
-    const dataFmt = d.toLocaleDateString("pt-BR");
-
-    const ini = new Date(d);
-    ini.setDate(d.getDate() - 2);
-
-    const fim = new Date(d);
-    fim.setDate(d.getDate() + 2);
+    const fim = new Date(l.d);
+    fim.setDate(l.d.getDate()+2);
 
     cont.innerHTML += `
       <div class="card-lua">
@@ -256,7 +138,7 @@ function carregarLuas(){
         </div>
 
         <div class="fase">
-          ${nomeFase[l.fase]}
+          ${l.fase}
         </div>
 
         <div class="forca">
