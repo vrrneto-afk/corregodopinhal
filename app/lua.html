@@ -127,18 +127,14 @@ function fechar(){
 function traduzirFase(f){
   switch(f){
     case "new_moon": return "🌑 LUA NOVA";
-    case "waxing_crescent": return "🌒 LUA CRESCENTE";
     case "first_quarter": return "🌓 LUA CRESCENTE";
-    case "waxing_gibbous": return "🌔 LUA CRESCENTE";
     case "full_moon": return "🌕 LUA CHEIA";
-    case "waning_gibbous": return "🌖 LUA MINGUANTE";
     case "last_quarter": return "🌗 LUA MINGUANTE";
-    case "waning_crescent": return "🌘 LUA MINGUANTE";
-    default: return f.toUpperCase();
+    default: return f.replace("_"," ").toUpperCase();
   }
 }
 
-/* ===== CARREGAR LUAS (OPEN-METEO CORRETO) ===== */
+/* ===== CARREGAR LUAS ===== */
 async function carregarLuas(){
 
   const cont = document.getElementById("conteudo");
@@ -148,8 +144,9 @@ async function carregarLuas(){
   const lon = -44.5;
 
   const r = await fetch(
-    `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=moon_phase&timezone=America/Sao_Paulo`
+    `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=moon_phase&forecast_days=16&timezone=America/Sao_Paulo`
   );
+
   const d = await r.json();
 
   if(!d.daily || !d.daily.moon_phase){
@@ -162,7 +159,7 @@ async function carregarLuas(){
 
   const principais = [];
 
-  for(let i = 0; i < fases.length && principais.length < 4; i++){
+  for(let i=0;i<fases.length && principais.length<4;i++){
     if([
       "new_moon",
       "first_quarter",
