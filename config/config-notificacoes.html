@@ -71,16 +71,11 @@ header h2{margin:0;color:var(--marrom)}
 
 .linha{margin-bottom:10px}
 
-input, textarea, select{
+input, textarea{
   width:100%;
   padding:8px;
   border-radius:8px;
   border:1px solid #ccc;
-}
-
-.checkbox-group label{
-  margin-right:12px;
-  font-weight:600;
 }
 
 button{
@@ -100,44 +95,17 @@ button.primario{background:var(--marrom);color:#fff}
   padding:10px;
   border-radius:10px;
   margin-bottom:8px;
+  cursor:pointer;
 }
 </style>
 </head>
-  <!-- MODAL HORÁRIO -->
-<div id="modalHorario" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.55);align-items:center;justify-content:center">
-  <div style="background:#fff;width:92%;max-width:420px;border-radius:14px;padding:16px">
 
-    <h3 style="margin-top:0;color:#7b3f2a">⏰ Horário</h3>
-
-    <div class="linha">
-      <label>Nome do horário</label>
-      <input id="hNome" placeholder="Ex: Manhã cedo">
-    </div>
-
-    <div class="linha">
-      <label>Hora de envio</label>
-      <input type="time" id="hHora">
-    </div>
-
-    <div class="linha">
-      <label>
-        <input type="checkbox" id="hAtivo"> Horário ativo
-      </label>
-    </div>
-
-    <div style="display:flex;gap:8px;margin-top:12px">
-      <button class="primario" onclick="salvarHorario()">💾 Salvar</button>
-      <button onclick="fecharModalHorario()">Cancelar</button>
-    </div>
-
-  </div>
-</div>
-  
 <body>
 
 <header>
   <h2>🔔 Configuração de Notificações</h2>
 </header>
+
 <div id="menu"></div>
 
 <div class="container">
@@ -180,12 +148,6 @@ button.primario{background:var(--marrom);color:#fff}
         <textarea id="manMsg"></textarea>
       </div>
 
-      <div class="linha checkbox-group">
-        <label><input type="checkbox" value="admin"> Admin</label>
-        <label><input type="checkbox" value="gerente"> Gerente</label>
-        <label><input type="checkbox" value="leitor"> Leitor</label>
-      </div>
-
       <div class="linha">
         <label>Enviar em</label>
         <input type="date" id="manData">
@@ -198,47 +160,71 @@ button.primario{background:var(--marrom);color:#fff}
 
 </div>
 
+<!-- MODAL HORÁRIO -->
+<div id="modalHorario" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.55);align-items:center;justify-content:center">
+  <div style="background:#fff;width:92%;max-width:420px;border-radius:14px;padding:16px">
+    <h3 style="margin-top:0;color:#7b3f2a">⏰ Horário</h3>
+
+    <div class="linha">
+      <label>Nome do horário</label>
+      <input id="hNome">
+    </div>
+
+    <div class="linha">
+      <label>Hora</label>
+      <input type="time" id="hHora">
+    </div>
+
+    <div class="linha">
+      <label>
+        <input type="checkbox" id="hAtivo"> Horário ativo
+      </label>
+    </div>
+
+    <div style="display:flex;gap:8px">
+      <button class="primario" onclick="salvarHorario()">💾 Salvar</button>
+      <button onclick="fecharModalHorario()">Cancelar</button>
+    </div>
+  </div>
+</div>
+
 <script>
 const db = firebase.firestore();
+let horarioEditandoId = null;
 
-/* ================= MENU ADM – PADRÃO DEFINITIVO ================= */
+/* ================= MENU ================= */
 fetch("../menu/menu-adm.html")
   .then(r => r.text())
   .then(html => {
     document.getElementById("menu").innerHTML = html;
 
-    // marca link ativo
     document.querySelectorAll(".menu-link").forEach(a=>{
       if(a.getAttribute("href")?.includes("config.html")){
         a.classList.add("ativo");
       }
     });
 
-    // injeta permissões SOMENTE após menu no DOM
     const s = document.createElement("script");
     s.src = "../menu/menu-permissoes.js";
     s.onload = () => {
       document.body.style.display = "block";
+      carregarHorarios();
+      carregarAutomaticas();
     };
     document.body.appendChild(s);
   });
-</script>
 
-<script>
-/* TABS */
-document.querySelectorAll('.tab').forEach(t=>{
-  t.onclick=()=>{
-    document.querySelectorAll('.tab').forEach(x=>x.classList.remove('ativo'));
-    t.classList.add('ativo');
-    document.querySelectorAll('[id^=tab-]').forEach(d=>d.style.display='none');
-    document.getElementById('tab-'+t.dataset.tab).style.display='block';
-  }
+/* ================= TABS ================= */
+document.querySelectorAll(".tab").forEach(t=>{
+  t.onclick = () => {
+    document.querySelectorAll(".tab").forEach(x=>x.classList.remove("ativo"));
+    t.classList.add("ativo");
+    document.querySelectorAll("[id^=tab-]").forEach(d=>d.style.display="none");
+    document.getElementById("tab-"+t.dataset.tab).style.display="block";
+  };
 });
 
-/* ===== HORÁRIOS ===== */
-let horarioEditandoId = null;
-
-/* ===== HORÁRIOS ===== */
+/* ================= HORÁRIOS ================= */
 async function carregarHorarios(){
   const snap = await db.collection("config").doc("notificacoes_horarios").get();
   if(!snap.exists) return;
@@ -247,18 +233,16 @@ async function carregarHorarios(){
   const div = document.getElementById("listaHorarios");
   div.innerHTML = "";
 
-  lista.forEach(h => {
+  lista.forEach(h=>{
     div.innerHTML += `
       <div class="horario-item" onclick="editarHorario('${h.id}')">
         <strong>${h.nome}</strong><br>
-        ⏰ ${h.hora} |
-        ${h.ativo ? "🟢 Ativo" : "🔴 Inativo"}
+        ⏰ ${h.hora} | ${h.ativo ? "🟢 Ativo" : "🔴 Inativo"}
       </div>
     `;
   });
 }
 
-/* ===== NOVO HORÁRIO ===== */
 function novoHorario(){
   horarioEditandoId = null;
   hNome.value = "";
@@ -267,25 +251,21 @@ function novoHorario(){
   abrirModalHorario();
 }
 
-/* ===== EDITAR ===== */
 async function editarHorario(id){
   const snap = await db.collection("config").doc("notificacoes_horarios").get();
   if(!snap.exists) return;
 
-  const h = snap.data().lista.find(x => x.id === id);
+  const h = snap.data().lista.find(x=>x.id===id);
   if(!h) return;
 
   horarioEditandoId = id;
   hNome.value = h.nome;
   hHora.value = h.hora;
   hAtivo.checked = h.ativo;
-
   abrirModalHorario();
 }
 
-/* ===== SALVAR ===== */
 async function salvarHorario(){
-
   const nome = hNome.value.trim();
   const hora = hHora.value;
   const ativo = hAtivo.checked;
@@ -297,91 +277,50 @@ async function salvarHorario(){
 
   const ref = db.collection("config").doc("notificacoes_horarios");
   const snap = await ref.get();
-
-  let lista = snap.exists ? (snap.data().lista || []) : [];
+  let lista = snap.exists ? snap.data().lista || [] : [];
 
   if(horarioEditandoId){
-    // editar
-    lista = lista.map(h =>
-      h.id === horarioEditandoId
-        ? { ...h, nome, hora, ativo }
-        : h
-    );
+    lista = lista.map(h=>h.id===horarioEditandoId ? {...h,nome,hora,ativo} : h);
   }else{
-    // novo
     lista.push({
       id: nome.toLowerCase().replace(/\s+/g,"-"),
-      nome,
-      hora,
-      ativo
+      nome, hora, ativo
     });
   }
 
   await ref.set({ ativo:true, lista }, { merge:true });
-
   fecharModalHorario();
   carregarHorarios();
 }
 
-/* ===== MODAL ===== */
 function abrirModalHorario(){
-  document.getElementById("modalHorario").style.display = "flex";
+  document.getElementById("modalHorario").style.display="flex";
 }
 function fecharModalHorario(){
-  document.getElementById("modalHorario").style.display = "none";
+  document.getElementById("modalHorario").style.display="none";
 }
 
-function novoHorario(){
-  alert('Modal de novo horário (próximo passo)');
-}
-
-/* ===== AUTOMÁTICAS ===== */
+/* ================= AUTOMÁTICAS ================= */
 async function carregarAutomaticas(){
-  const snap = await db.collection('config').doc('notificacoes_automaticas').get();
+  const snap = await db.collection("config").doc("notificacoes_automaticas").get();
   if(!snap.exists) return;
+
   const tipos = snap.data().tipos || {};
-  const div = document.getElementById('listaAutomaticas');
-  div.innerHTML='';
+  const div = document.getElementById("listaAutomaticas");
+  div.innerHTML = "";
 
   Object.keys(tipos).forEach(k=>{
     const t = tipos[k];
     div.innerHTML += `
       <div class="horario-item">
         <strong>${k.toUpperCase()}</strong><br>
-        Ativo: ${t.ativo?"Sim":"Não"}<br>
-        Grupos: ${t.grupos.join(', ')}<br>
-        Horários: ${t.horarios.join(', ')}
-      </div>`;
+        Ativo: ${t.ativo ? "Sim" : "Não"}<br>
+        Grupos: ${t.grupos.join(", ")}<br>
+        Horários: ${t.horarios.join(", ")}
+      </div>
+    `;
   });
 }
-
-/* ===== MANUAL ===== */
-async function enviarManual(){
-  const titulo = manTitulo.value;
-  const mensagem = manMsg.value;
-  const data = manData.value;
-  const hora = manHora.value;
-
-  const grupos = [...document.querySelectorAll('#tab-manuais input[type=checkbox]:checked')]
-    .map(c=>c.value);
-
-  if(!titulo || !mensagem || !grupos.length) return alert('Preencha tudo');
-
-  await db.collection('notificacoes_manuais').add({
-    titulo,
-    mensagem,
-    grupos,
-    data_envio: data,
-    hora_envio: hora,
-    enviada:false,
-    criado_em: firebase.firestore.FieldValue.serverTimestamp()
-  });
-
-  alert('Notificação manual cadastrada');
-}
-
-carregarHorarios();
-carregarAutomaticas();
 </script>
 
 <script src="../login/logout.js"></script>
