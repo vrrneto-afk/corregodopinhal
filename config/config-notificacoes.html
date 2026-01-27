@@ -418,4 +418,136 @@ function fecharModalHorario() {
   </div>
 </div>
 
+<script>
+/* ======================================================
+   ABA 📦 TIPOS — SCRIPT COMPLETO E ISOLADO
+   ====================================================== */
+
+let tipoEditandoId = null;
+
+/* ===== INIT ===== */
+function initTipos() {
+  carregarTipos();
+}
+
+/* ===== LISTAR ===== */
+async function carregarTipos() {
+  const ref = db.collection("config").doc("notificacoes_tipos");
+  const snap = await ref.get();
+
+  const lista = snap.exists ? snap.data().lista || [] : [];
+  const container = document.getElementById("listaTipos");
+
+  if (!container) return;
+
+  container.innerHTML = "";
+
+  if (lista.length === 0) {
+    container.innerHTML =
+      `<div class="placeholder">Nenhum tipo cadastrado.</div>`;
+    return;
+  }
+
+  lista.forEach(t => {
+    container.innerHTML += `
+      <div class="item" style="margin-bottom:10px">
+        <strong>${t.nome}</strong><br>
+        ${t.descricao || ""}<br>
+        ${t.ativo ? "🟢 Ativo" : "🔴 Inativo"}<br><br>
+
+        <button onclick="editarTipo('${t.id}')">✏️ Editar</button>
+        <button onclick="excluirTipo('${t.id}')">🗑️ Excluir</button>
+      </div>
+    `;
+  });
+}
+
+/* ===== NOVO ===== */
+function novoTipo() {
+  tipoEditandoId = null;
+
+  document.getElementById("tNome").value = "";
+  document.getElementById("tDesc").value = "";
+  document.getElementById("tAtivo").checked = true;
+
+  document.getElementById("modalTipo").style.display = "flex";
+}
+
+/* ===== EDITAR ===== */
+async function editarTipo(id) {
+  const ref = db.collection("config").doc("notificacoes_tipos");
+  const snap = await ref.get();
+  if (!snap.exists) return;
+
+  const t = snap.data().lista.find(x => x.id === id);
+  if (!t) return;
+
+  tipoEditandoId = id;
+
+  document.getElementById("tNome").value = t.nome;
+  document.getElementById("tDesc").value = t.descricao || "";
+  document.getElementById("tAtivo").checked = t.ativo;
+
+  document.getElementById("modalTipo").style.display = "flex";
+}
+
+/* ===== SALVAR ===== */
+async function salvarTipo() {
+  const nome = document.getElementById("tNome").value.trim();
+  const descricao = document.getElementById("tDesc").value.trim();
+  const ativo = document.getElementById("tAtivo").checked;
+
+  if (!nome) {
+    alert("Informe o nome do tipo.");
+    return;
+  }
+
+  const ref = db.collection("config").doc("notificacoes_tipos");
+  const snap = await ref.get();
+
+  let lista = snap.exists ? snap.data().lista || [] : [];
+
+  if (tipoEditandoId) {
+    lista = lista.map(t =>
+      t.id === tipoEditandoId
+        ? { ...t, nome, descricao, ativo }
+        : t
+    );
+  } else {
+    lista.push({
+      id: crypto.randomUUID(),
+      nome,
+      descricao,
+      ativo
+    });
+  }
+
+  await ref.set({ lista }, { merge: true });
+
+  fecharModalTipo();
+  carregarTipos();
+}
+
+/* ===== EXCLUIR ===== */
+async function excluirTipo(id) {
+  if (!confirm("Deseja realmente excluir este tipo?")) return;
+
+  const ref = db.collection("config").doc("notificacoes_tipos");
+  const snap = await ref.get();
+  if (!snap.exists) return;
+
+  const lista = snap.data().lista.filter(t => t.id !== id);
+
+  await ref.set({ lista }, { merge: true });
+  carregarTipos();
+}
+
+/* ===== FECHAR MODAL ===== */
+function fecharModalTipo() {
+  document.getElementById("modalTipo").style.display = "none";
+}
+</script>
+
 <script src="../login/logout.js"></script>
+</body>
+</html>
