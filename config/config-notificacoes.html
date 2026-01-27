@@ -259,11 +259,12 @@ fetch("../menu/menu-adm.html")
     const s = document.createElement("script");
     s.src = "../menu/menu-permissoes.js";
     s.onload = () => {
-      document.body.style.display = "block";
-      carregarHorarios();
-      carregarTipos();
-      carregarAutomaticas();
-    };
+    document.body.style.display = "block";
+    inicializarTabs();     // ✅ AQUI
+    carregarHorarios();
+    carregarTipos();
+    carregarAutomaticas();
+  };
 
     document.body.appendChild(s);
   });
@@ -288,6 +289,23 @@ document.querySelectorAll(".tab").forEach(t => {
   };
 });
 
+  function inicializarTabs() {
+  document.querySelectorAll(".tab").forEach(t => {
+    t.onclick = () => {
+
+      document.querySelectorAll(".tab")
+        .forEach(x => x.classList.remove("ativo"));
+
+      t.classList.add("ativo");
+
+      document.querySelectorAll("[id^=tab-]")
+        .forEach(d => d.style.display = "none");
+
+      document.getElementById("tab-" + t.dataset.tab)
+        .style.display = "block";
+    };
+  });
+}
 /* ================= HORÁRIOS ================= */
 async function carregarHorarios() {
   const snap = await db
