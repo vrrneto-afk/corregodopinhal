@@ -243,12 +243,12 @@ let horarioEditandoId = null;
 let tipoEditandoId = null;
 let automaticaEditandoId = null;
 
-
 /* ================= MENU ================= */
 fetch("../menu/menu-adm.html")
   .then(r => r.text())
   .then(html => {
-    menu.innerHTML = html;
+
+    document.getElementById("menu").innerHTML = html;
 
     document.querySelectorAll(".menu-link").forEach(a => {
       if (a.getAttribute("href")?.includes("config.html")) {
@@ -264,19 +264,10 @@ fetch("../menu/menu-adm.html")
       carregarTipos();
       carregarAutomaticas();
     };
-    document.body.appendChild(s);
-  });
-
-    s.onload = () => {
-      document.body.style.display = "block";
-      carregarHorarios();
-      carregarTipos();
-      carregarAutomaticas();
-    };
 
     document.body.appendChild(s);
   });
-<script>
+</script>
 
 <script>
 
