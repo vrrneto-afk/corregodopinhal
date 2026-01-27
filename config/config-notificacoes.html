@@ -8,6 +8,7 @@
 <link rel="manifest" href="../manifest.json">
 <meta name="theme-color" content="#7b3f2a">
 
+<!-- MENU GLOBAL -->
 <link rel="stylesheet" href="../menu/menu.css">
 
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
@@ -177,16 +178,15 @@ fetch("../menu/menu-adm.html")
   .then(html => {
     document.getElementById("menu-adm").innerHTML = html;
 
+    // ✅ MARCA O LINK ATIVO (ERA O QUE FALTAVA)
     document.querySelectorAll(".menu-link").forEach(a=>{
       if(a.getAttribute("href")?.includes("config.html")){
         a.classList.add("ativo");
       }
     });
+  <script>
 
-    const s = document.createElement("script");
-    s.src = "../menu/menu-permissoes.js";
-    s.onload = () => {
-
+<script>
 /* TABS */
 document.querySelectorAll('.tab').forEach(t=>{
   t.onclick=()=>{
