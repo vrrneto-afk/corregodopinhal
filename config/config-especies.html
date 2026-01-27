@@ -245,8 +245,151 @@ fetch("../menu/menu-adm.html")
     };
     document.body.appendChild(s);
   });
+
 </script>
 
+<script>
+/* ======================================================
+   ABA ⏰ HORÁRIOS — SCRIPT COMPLETO E ISOLADO
+   ====================================================== */
+
+const db = firebase.firestore();
+
+/* ===== ESTADO ===== */
+let horarioEditandoId = null;
+
+/* ======================================================
+   INIT — chamado após menu carregar
+   ====================================================== */
+document.addEventListener("DOMContentLoaded", () => {
+  carregarHorarios();
+});
+
+/* ======================================================
+   LISTAR HORÁRIOS
+   ====================================================== */
+async function carregarHorarios() {
+  const ref  = db.collection("config").doc("notificacoes_horarios");
+  const snap = await ref.get();
+
+  const lista = snap.exists ? snap.data().lista || [] : [];
+
+  const container = document.getElementById("listaHorarios");
+  container.innerHTML = "";
+
+  if (lista.length === 0) {
+    container.innerHTML = "<p>Nenhum horário cadastrado.</p>";
+    return;
+  }
+
+  lista.forEach(h => {
+    container.innerHTML += `
+      <div class="item">
+        <strong>${h.nome}</strong><br>
+        ⏰ ${h.hora} | ${h.ativo ? "🟢 Ativo" : "🔴 Inativo"}<br><br>
+
+        <button onclick="editarHorario('${h.id}')">✏️ Editar</button>
+        <button onclick="excluirHorario('${h.id}')">🗑️ Excluir</button>
+      </div>
+    `;
+  });
+}
+
+/* ======================================================
+   NOVO HORÁRIO
+   ====================================================== */
+function novoHorario() {
+  horarioEditandoId = null;
+
+  document.getElementById("hNome").value = "";
+  document.getElementById("hHora").value = "";
+  document.getElementById("hAtivo").checked = true;
+
+  document.getElementById("modalHorario").style.display = "flex";
+}
+
+/* ======================================================
+   EDITAR HORÁRIO
+   ====================================================== */
+async function editarHorario(id) {
+  const ref  = db.collection("config").doc("notificacoes_horarios");
+  const snap = await ref.get();
+  if (!snap.exists) return;
+
+  const h = snap.data().lista.find(x => x.id === id);
+  if (!h) return;
+
+  horarioEditandoId = id;
+
+  document.getElementById("hNome").value  = h.nome;
+  document.getElementById("hHora").value  = h.hora;
+  document.getElementById("hAtivo").checked = h.ativo;
+
+  document.getElementById("modalHorario").style.display = "flex";
+}
+
+/* ======================================================
+   SALVAR HORÁRIO
+   ====================================================== */
+async function salvarHorario() {
+  const nome  = document.getElementById("hNome").value.trim();
+  const hora  = document.getElementById("hHora").value;
+  const ativo = document.getElementById("hAtivo").checked;
+
+  if (!nome || !hora) {
+    alert("Informe o nome e a hora.");
+    return;
+  }
+
+  const ref  = db.collection("config").doc("notificacoes_horarios");
+  const snap = await ref.get();
+
+  let lista = snap.exists ? snap.data().lista || [] : [];
+
+  if (horarioEditandoId) {
+    lista = lista.map(h =>
+      h.id === horarioEditandoId
+        ? { ...h, nome, hora, ativo }
+        : h
+    );
+  } else {
+    lista.push({
+      id: crypto.randomUUID(),
+      nome,
+      hora,
+      ativo
+    });
+  }
+
+  await ref.set({ lista }, { merge: true });
+
+  fecharModalHorario();
+  carregarHorarios();
+}
+
+/* ======================================================
+   EXCLUIR HORÁRIO
+   ====================================================== */
+async function excluirHorario(id) {
+  if (!confirm("Deseja realmente excluir este horário?")) return;
+
+  const ref  = db.collection("config").doc("notificacoes_horarios");
+  const snap = await ref.get();
+  if (!snap.exists) return;
+
+  const lista = snap.data().lista.filter(h => h.id !== id);
+
+  await ref.set({ lista }, { merge: true });
+  carregarHorarios();
+}
+
+/* ======================================================
+   FECHAR MODAL
+   ====================================================== */
+function fecharModalHorario() {
+  document.getElementById("modalHorario").style.display = "none";
+}
+</script>
 <script src="../login/logout.js"></script>
 
 </body>
