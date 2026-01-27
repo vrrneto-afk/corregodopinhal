@@ -12,503 +12,196 @@
 <!-- MENU GLOBAL -->
 <link rel="stylesheet" href="../menu/menu.css">
 
-<!-- FIREBASE -->
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-
-<script>
-if (!firebase.apps.length) {
-  firebase.initializeApp({
-    apiKey: "AIzaSyCW-CuFDrOLO-dteckl_GrPTocmyS-IrzY",
-    authDomain: "sitio-corrego-do-pinhal.firebaseapp.com",
-    projectId: "sitio-corrego-do-pinhal"
-  });
-}
-</script>
-
-<script>
-window.PERMISSAO_PAGINA = { area:"config", chave:"config-notificacoes" };
-</script>
-
-<script src="../login/auth-guard.js"></script>
-
 <style>
 :root{
   --marrom:#7b3f2a;
   --bege:#f6efe7;
   --borda:#e5e5e5;
+  --texto:#333;
 }
 
-*{box-sizing:border-box;font-family:Inter,system-ui,Arial}
-body{margin:0;background:var(--bege);color:#333}
+/* RESET */
+*{
+  box-sizing:border-box;
+  font-family:Inter,system-ui,Arial;
+}
+
+body{
+  margin:0;
+  background:var(--bege);
+  color:var(--texto);
+}
 
 /* HEADER */
-header{background:#D0B485;padding:16px;text-align:center}
-header h2{margin:0;color:var(--marrom)}
+header{
+  background:#D0B485;
+  padding:16px;
+  text-align:center;
+}
 
-/* CONTAINER */
-.container{max-width:900px;margin:20px auto;padding:0 14px}
+header h2{
+  margin:0;
+  color:var(--marrom);
+}
+
+/* CONTAINER PRINCIPAL */
+.container{
+  max-width:900px;
+  margin:20px auto;
+  padding:0 14px;
+}
 
 /* TABS */
-.tabs{display:flex;gap:10px;margin:14px 0}
-.tab{
-  flex:1;background:#fff;border-radius:14px;padding:10px 6px;
-  text-align:center;cursor:pointer;font-weight:700;
-  border:1px solid var(--borda)
+.tabs{
+  display:flex;
+  gap:10px;
+  margin:16px 0;
 }
-.tab span{display:block;font-size:22px}
-.tab small{display:block;margin-top:4px}
-.tab.ativo{background:var(--marrom);color:#fff}
+
+.tab{
+  flex:1;
+  background:#fff;
+  border-radius:14px;
+  padding:10px 6px;
+  text-align:center;
+  cursor:pointer;
+  font-weight:700;
+  border:1px solid var(--borda);
+}
+
+.tab span{
+  display:block;
+  font-size:22px;
+}
+
+.tab small{
+  display:block;
+  margin-top:4px;
+  font-size:13px;
+}
+
+.tab.ativo{
+  background:var(--marrom);
+  color:#fff;
+}
 
 /* CARD */
 .card{
-  background:#fff;border-radius:16px;padding:14px;
-  border:1px solid var(--borda);margin-bottom:14px
+  background:#fff;
+  border-radius:16px;
+  padding:14px;
+  border:1px solid var(--borda);
+  margin-bottom:14px;
 }
-.card h3{margin:0 0 10px;color:var(--marrom)}
 
-/* LISTAS */
-.item{
-  border:1px dashed var(--borda);
-  border-radius:12px;padding:10px;margin-bottom:8px
+.card h3{
+  margin:0 0 10px;
+  color:var(--marrom);
 }
 
 /* BOTÕES */
 button{
-  padding:8px 12px;border-radius:10px;
+  padding:8px 12px;
+  border-radius:10px;
   border:1px solid var(--marrom);
-  background:#fff;color:var(--marrom);
-  font-weight:700;cursor:pointer
+  background:#fff;
+  color:var(--marrom);
+  font-weight:700;
+  cursor:pointer;
 }
-button.primario{background:var(--marrom);color:#fff}
 
-/* FORM */
-.linha{margin-bottom:10px}
-input,textarea,select{
-  width:100%;padding:8px;border-radius:8px;border:1px solid #ccc
+button.primario{
+  background:var(--marrom);
+  color:#fff;
 }
-.checkbox{display:flex;align-items:center;gap:8px}
 
-/* MODAL */
-.modal{
-  position:fixed;inset:0;background:rgba(0,0,0,.55);
-  display:none;align-items:center;justify-content:center;z-index:9999
+/* PLACEHOLDER */
+.placeholder{
+  color:#999;
+  font-style:italic;
+  padding:10px 0;
 }
-.modal-box{
-  background:#fff;width:95%;max-width:520px;
-  border-radius:16px;padding:16px
-}
-.modal-footer{display:flex;gap:8px;margin-top:10px}
 </style>
 </head>
 
 <body>
 
+<!-- HEADER -->
 <header>
   <h2>🔔 Configuração de Notificações</h2>
 </header>
 
+<!-- MENU (SERÁ CARREGADO DEPOIS) -->
 <div id="menu"></div>
 
+<!-- CONTEÚDO -->
 <div class="container">
 
-<div class="tabs">
-  <div class="tab ativo" data-tab="horarios"><span>⏰</span><small>Horários</small></div>
-  <div class="tab" data-tab="tipos"><span>📦</span><small>Tipos</small></div>
-  <div class="tab" data-tab="automaticas"><span>⚙️</span><small>Automáticas</small></div>
-  <div class="tab" data-tab="manuais"><span>✍️</span><small>Manuais</small></div>
-</div>
-
-<!-- ================= ABA HORÁRIOS ================= -->
-<div id="tab-horarios">
-
-  <div class="card">
-    <h3>Horários</h3>
-
-    <div id="listaHorarios"></div>
-
-    <button onclick="novoHorario()">➕ Novo horário</button>
-  </div>
-
-</div>
-
-<!-- TIPOS -->
-<div id="tab-tipos" style="display:none">
-  <div class="card">
-    <h3>Tipos</h3>
-    <div id="listaTipos"></div>
-    <button onclick="abrirTipo()">➕ Novo tipo</button>
-  </div>
-</div>
-
-<!-- AUTOMÁTICAS -->
-<div id="tab-automaticas" style="display:none">
-  <div class="card">
-    <h3>Automáticas</h3>
-    <div id="listaAutomaticas"></div>
-    <button onclick="abrirAutomatica()">➕ Nova automática</button>
-  </div>
-</div>
-
-<!-- MANUAIS -->
-<div id="tab-manuais" style="display:none">
-  <div class="card">
-    <h3>Manual</h3>
-    <div class="linha"><input id="mTitulo" placeholder="Título"></div>
-    <div class="linha"><textarea id="mMsg" placeholder="Mensagem"></textarea></div>
-    <div class="linha">
-      <input type="date" id="mData">
-      <input type="time" id="mHora">
+  <!-- TABS -->
+  <div class="tabs">
+    <div class="tab ativo" data-tab="horarios">
+      <span>⏰</span>
+      <small>Horários</small>
     </div>
-    <button class="primario" onclick="salvarManual()">💾 Salvar</button>
-  </div>
-</div>
-
-</div>
-
-<!-- MODAL HORÁRIO -->
-<div class="modal" id="modalHorario">
-  <div class="modal-box">
-    <h3>Horário</h3>
-    <input id="hNome" placeholder="Nome">
-    <input id="hHora" type="time">
-    <label class="checkbox"><input type="checkbox" id="hAtivo"> Ativo</label>
-    <div class="modal-footer">
-      <button class="primario" onclick="salvarHorario()">Salvar</button>
-      <button onclick="fechar('modalHorario')">Cancelar</button>
+    <div class="tab" data-tab="tipos">
+      <span>📦</span>
+      <small>Tipos</small>
+    </div>
+    <div class="tab" data-tab="automaticas">
+      <span>⚙️</span>
+      <small>Automáticas</small>
+    </div>
+    <div class="tab" data-tab="manuais">
+      <span>✍️</span>
+      <small>Manuais</small>
     </div>
   </div>
-</div>
 
-<!-- MODAL TIPO -->
-<div class="modal" id="modalTipo">
-  <div class="modal-box">
-    <h3>Tipo</h3>
-    <input id="tNome" placeholder="Nome">
-    <textarea id="tDesc" placeholder="Descrição"></textarea>
-    <label class="checkbox"><input type="checkbox" id="tAtivo"> Ativo</label>
-    <div class="modal-footer">
-      <button class="primario" onclick="salvarTipo()">Salvar</button>
-      <button onclick="fechar('modalTipo')">Cancelar</button>
-    </div>
-  </div>
-</div>
-
-<!-- MODAL AUTOMÁTICA -->
-<div class="modal" id="modalAutomatica">
-  <div class="modal-box">
-    <h3>Automática</h3>
-    <label class="checkbox"><input type="checkbox" id="aAtivo"> Ativa</label>
-    <select id="aTipo"></select>
-    <input id="aTitulo" placeholder="Título">
-    <textarea id="aMsg" placeholder="Mensagem"></textarea>
-    <label class="checkbox"><input type="checkbox" class="aGrupo" value="admin"> Admin</label>
-    <label class="checkbox"><input type="checkbox" class="aGrupo" value="gerente"> Gerente</label>
-    <label class="checkbox"><input type="checkbox" class="aGrupo" value="leitor"> Leitor</label>
-    <div id="aHorarios"></div>
-    <div class="modal-footer">
-      <button class="primario" onclick="salvarAutomatica()">Salvar</button>
-      <button onclick="fechar('modalAutomatica')">Cancelar</button>
-    </div>
-  </div>
-</div>
-
-<script>
-const db = firebase.firestore();
-let editH=null,editT=null,editA=null;
-
-/* MENU */
-fetch("../menu/menu-adm.html")
-  .then(r => r.text())
-  .then(html => {
-    document.getElementById("menu").innerHTML = html;
-
-    document.querySelectorAll(".menu-link").forEach(a=>{
-      if(a.getAttribute("href")?.includes("config.html")){
-        a.classList.add("ativo");
-      }
-    });
-
-    const s = document.createElement("script");
-    s.src = "../menu/menu-permissoes.js";
-    document.body.appendChild(s);
-
-    inicializarTela();
-    carregarHorarios();
-  });
-
-/* TABS */
-document.addEventListener("click",e=>{
-  const t=e.target.closest(".tab");if(!t)return;
-  document.querySelectorAll(".tab").forEach(x=>x.classList.remove("ativo"));
-  t.classList.add("ativo");
-  document.querySelectorAll("[id^=tab-]").forEach(d=>d.style.display="none");
-  document.getElementById("tab-"+t.dataset.tab).style.display="block";
-});
-
-function fechar(id){document.getElementById(id).style.display="none"}
-
-/* INIT */
-function init(){
-  carregarHorarios();
-  carregarTipos();
-  carregarAutomaticas();
-}
-
-/* ======================================================
-   HORÁRIOS — CRUD COMPLETO
-   ====================================================== */
-
-let horarioEditandoId = null;
-
-/* -------- CARREGAR -------- */
-async function carregarHorarios() {
-  const ref  = db.collection("config").doc("notificacoes_horarios");
-  const snap = await ref.get();
-
-  const lista = snap.exists ? snap.data().lista || [] : [];
-  listaHorarios.innerHTML = "";
-
-  lista.forEach(h => {
-    listaHorarios.innerHTML += `
-      <div class="horario-item">
-        <strong>${h.nome}</strong><br>
-        ⏰ ${h.hora} | ${h.ativo ? "🟢 Ativo" : "🔴 Inativo"}<br><br>
-
-        <button onclick="editarHorario('${h.id}')">✏️ Editar</button>
-        <button onclick="excluirHorario('${h.id}')">🗑️ Excluir</button>
+  <!-- ABA HORÁRIOS -->
+  <div id="tab-horarios">
+    <div class="card">
+      <h3>Horários</h3>
+      <div class="placeholder">
+        Aqui serão listados os horários cadastrados.
       </div>
-    `;
-  });
-}
-
-/* -------- NOVO -------- */
-function novoHorario() {
-  horarioEditandoId = null;
-  hNome.value = "";
-  hHora.value = "";
-  hAtivo.checked = true;
-  modalHorario.style.display = "flex";
-}
-
-/* -------- EDITAR -------- */
-async function editarHorario(id) {
-  const snap = await db
-    .collection("config")
-    .doc("notificacoes_horarios")
-    .get();
-
-  const h = snap.data().lista.find(x => x.id === id);
-  if (!h) return;
-
-  horarioEditandoId = id;
-  hNome.value  = h.nome;
-  hHora.value  = h.hora;
-  hAtivo.checked = h.ativo;
-
-  modalHorario.style.display = "flex";
-}
-
-/* -------- SALVAR -------- */
-async function salvarHorario() {
-  if (!hNome.value || !hHora.value) {
-    alert("Nome e hora são obrigatórios");
-    return;
-  }
-
-  const ref  = db.collection("config").doc("notificacoes_horarios");
-  const snap = await ref.get();
-
-  let lista = snap.exists ? snap.data().lista || [] : [];
-
-  if (horarioEditandoId) {
-    lista = lista.map(h =>
-      h.id === horarioEditandoId
-        ? { ...h, nome: hNome.value, hora: hHora.value, ativo: hAtivo.checked }
-        : h
-    );
-  } else {
-    lista.push({
-      id: crypto.randomUUID(),
-      nome: hNome.value,
-      hora: hHora.value,
-      ativo: hAtivo.checked
-    });
-  }
-
-  await ref.set({ ativo: true, lista }, { merge: true });
-
-  modalHorario.style.display = "none";
-  carregarHorarios();
-}
-
-/* -------- EXCLUIR -------- */
-async function excluirHorario(id) {
-  if (!confirm("Excluir este horário?")) return;
-
-  const ref  = db.collection("config").doc("notificacoes_horarios");
-  const snap = await ref.get();
-
-  let lista = snap.data().lista || [];
-  lista = lista.filter(h => h.id !== id);
-
-  await ref.set({ lista }, { merge: true });
-  carregarHorarios();
-}
-
-/* -------- FECHAR MODAL -------- */
-function fecharModalHorario() {
-  modalHorario.style.display = "none";
-}
-
-/* TIPOS */
-async function carregarTipos(){
-  const d=await db.doc("config/notificacoes_tipos").get();
-  const l=d.exists?d.data().lista||[]:[];
-  listaTipos.innerHTML="";
-  aTipo.innerHTML="<option value=''>Tipo</option>";
-  l.forEach(t=>{
-    listaTipos.innerHTML+=`
-      <div class="item"><b>${t.nome}</b>
-      <button onclick="editarTipo('${t.id}')">✏️</button>
-      <button onclick="excluirTipo('${t.id}')">🗑️</button></div>`;
-    if(t.ativo)aTipo.innerHTML+=`<option value="${t.id}">${t.nome}</option>`;
-  });
-}
-function abrirTipo(){editT=null;tNome.value="";tDesc.value="";tAtivo.checked=true;modalTipo.style.display="flex"}
-async function editarTipo(id){
-  const d=await db.doc("config/notificacoes_tipos").get();
-  const t=d.data().lista.find(x=>x.id===id);
-  editT=id;tNome.value=t.nome;tDesc.value=t.descricao||"";tAtivo.checked=t.ativo;
-  modalTipo.style.display="flex";
-}
-async function salvarTipo(){
-  const ref=db.doc("config/notificacoes_tipos");
-  const d=await ref.get();let l=d.exists?d.data().lista||[]:[];
-  const obj={id:editT||crypto.randomUUID(),nome:tNome.value,descricao:tDesc.value,ativo:tAtivo.checked};
-  l=editT?l.map(x=>x.id===editT?obj:x):[...l,obj];
-  await ref.set({lista:l},{merge:true});
-  fechar("modalTipo");carregarTipos();
-}
-async function excluirTipo(id){
-  if(!confirm("Excluir?"))return;
-  const ref=db.doc("config/notificacoes_tipos");
-  const d=await ref.get();
-  await ref.set({lista:d.data().lista.filter(x=>x.id!==id)},{merge:true});
-  carregarTipos();
-}
-
-/* AUTOMÁTICAS */
-async function carregarAutomaticas(){
-  const d=await db.doc("config/notificacoes_automaticas").get();
-  const l=d.exists?d.data().lista||[]:[];
-  listaAutomaticas.innerHTML="";
-  l.forEach(a=>{
-    listaAutomaticas.innerHTML+=`
-      <div class="item"><b>${a.titulo}</b>
-      <button onclick="editarAutomatica('${a.id}')">✏️</button>
-      <button onclick="excluirAutomatica('${a.id}')">🗑️</button></div>`;
-  });
-}
-async function abrirAutomatica(){
-  editA=null;aTitulo.value="";aMsg.value="";aAtivo.checked=true;
-  document.querySelectorAll(".aGrupo").forEach(x=>x.checked=false);
-  const d=await db.doc("config/notificacoes_horarios").get();
-  aHorarios.innerHTML="";
-  (d.exists?d.data().lista:[]).forEach(h=>{
-    aHorarios.innerHTML+=`<label class="checkbox"><input type="checkbox" class="aHorario" value="${h.id}">${h.nome}</label>`;
-  });
-  modalAutomatica.style.display="flex";
-}
-async function editarAutomatica(id){
-  const d=await db.doc("config/notificacoes_automaticas").get();
-  const a=d.data().lista.find(x=>x.id===id);
-  editA=id;aTitulo.value=a.titulo;aMsg.value=a.mensagem;aAtivo.checked=a.ativo;
-  abrirAutomatica();
-  aTipo.value=a.tipo;
-}
-async function salvarAutomatica(){
-  const ref=db.doc("config/notificacoes_automaticas");
-  const d=await ref.get();let l=d.exists?d.data().lista||[]:[];
-  const obj={
-    id:editA||crypto.randomUUID(),
-    tipo:aTipo.value,
-    titulo:aTitulo.value,
-    mensagem:aMsg.value,
-    ativo:aAtivo.checked,
-    grupos:[...document.querySelectorAll(".aGrupo:checked")].map(x=>x.value),
-    horarios:[...document.querySelectorAll(".aHorario:checked")].map(x=>x.value)
-  };
-  l=editA?l.map(x=>x.id===editA?obj:x):[...l,obj];
-  await ref.set({lista:l},{merge:true});
-  fechar("modalAutomatica");carregarAutomaticas();
-}
-async function excluirAutomatica(id){
-  if(!confirm("Excluir?"))return;
-  const ref=db.doc("config/notificacoes_automaticas");
-  const d=await ref.get();
-  await ref.set({lista:d.data().lista.filter(x=>x.id!==id)},{merge:true});
-  carregarAutomaticas();
-}
-
-/* MANUAL */
-async function salvarManual(){
-  if(!mTitulo.value||!mMsg.value)return alert("Preencha");
-  await db.collection("notificacoes_manuais").add({
-    titulo:mTitulo.value,mensagem:mMsg.value,
-    data:mData.value,hora:mHora.value,
-    criado_em:firebase.firestore.FieldValue.serverTimestamp()
-  });
-  alert("Salvo");
-  mTitulo.value="";mMsg.value="";
-}
-</script>
-
-<!-- ================= MODAL HORÁRIO ================= -->
-<div id="modalHorario" style="
-  display:none;
-  position:fixed;
-  inset:0;
-  background:rgba(0,0,0,.55);
-  z-index:9999;
-  align-items:center;
-  justify-content:center;
-">
-
-  <div style="
-    background:#fff;
-    width:95%;
-    max-width:420px;
-    border-radius:16px;
-    padding:16px;
-  ">
-
-    <h3 style="color:#7b3f2a">⏰ Horário</h3>
-
-    <div class="linha">
-      <label>Nome</label>
-      <input id="hNome">
+      <button>➕ Novo horário</button>
     </div>
-
-    <div class="linha">
-      <label>Hora</label>
-      <input type="time" id="hHora">
-    </div>
-
-    <label class="checkbox-linha">
-      <input type="checkbox" id="hAtivo" checked>
-      Ativo
-    </label>
-
-    <div style="display:flex;gap:8px;margin-top:14px">
-      <button class="primario" onclick="salvarHorario()">💾 Salvar</button>
-      <button onclick="fecharModalHorario()">Cancelar</button>
-    </div>
-
   </div>
+
+  <!-- ABA TIPOS -->
+  <div id="tab-tipos" style="display:none">
+    <div class="card">
+      <h3>Tipos de notificação</h3>
+      <div class="placeholder">
+        Aqui serão listados os tipos de notificação.
+      </div>
+      <button>➕ Novo tipo</button>
+    </div>
+  </div>
+
+  <!-- ABA AUTOMÁTICAS -->
+  <div id="tab-automaticas" style="display:none">
+    <div class="card">
+      <h3>Notificações automáticas</h3>
+      <div class="placeholder">
+        Aqui serão listadas as notificações automáticas.
+      </div>
+      <button>➕ Nova automática</button>
+    </div>
+  </div>
+
+  <!-- ABA MANUAIS -->
+  <div id="tab-manuais" style="display:none">
+    <div class="card">
+      <h3>Notificação manual</h3>
+      <div class="placeholder">
+        Aqui será criado o envio manual de notificações.
+      </div>
+      <button class="primario">💾 Salvar</button>
+    </div>
+  </div>
+
 </div>
 
-<script src="../login/logout.js"></script>
 </body>
 </html>
