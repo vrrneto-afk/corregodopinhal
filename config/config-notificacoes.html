@@ -133,13 +133,25 @@ button.primario{background:var(--marrom);color:#fff}
     </div>
   </div>
 
-  <!-- AUTOMÁTICAS -->
-  <div id="tab-automaticas" style="display:none">
-    <div class="card">
-      <h3>Notificações automáticas</h3>
-      <div id="listaAutomaticas"></div>
-    </div>
+ <!-- AUTOMÁTICAS -->
+<div id="tab-automaticas" style="display:none">
+
+  <div class="card">
+    <h3>⚙️ Notificações automáticas</h3>
+
+    <label style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
+      <input type="checkbox" id="autoSistemaAtivo">
+      Sistema de notificações automáticas ativo
+    </label>
   </div>
+
+  <div class="card">
+    <h3>Configurações</h3>
+    <div id="listaAutomaticas"></div>
+    <button onclick="novaAutomatica()">➕ Adicionar notificação automática</button>
+  </div>
+
+</div>
 
   <!-- MANUAIS -->
   <div id="tab-manuais" style="display:none">
@@ -217,6 +229,60 @@ button.primario{background:var(--marrom);color:#fff}
       <button class="primario" onclick="salvarTipo()">💾 Salvar</button>
       <button onclick="fecharModalTipo()">Cancelar</button>
     </div>
+  </div>
+</div>
+
+<!-- MODAL HORÁRIO -->
+<div id="modalAutomatica" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9999;align-items:center;justify-content:center">
+  <div style="background:#fff;width:95%;max-width:520px;border-radius:14px;padding:16px">
+
+    <h3 style="color:#7b3f2a">⚙️ Notificação automática</h3>
+
+    <label>
+      <input type="checkbox" id="aAtivo"> Ativa
+    </label>
+
+    <div class="linha">
+      <label>Tipo</label>
+      <select id="aTipo"></select>
+    </div>
+
+    <div class="linha">
+      <label>Título</label>
+      <input id="aTitulo">
+    </div>
+
+    <div class="linha">
+      <label>Mensagem</label>
+      <textarea id="aMensagem"></textarea>
+      <small>Use variáveis como {{animal}}, {{dias}}</small>
+    </div>
+
+    <div class="linha">
+      <label>Grupos</label><br>
+      <label><input type="checkbox" value="admin" class="aGrupo"> Admin</label>
+      <label><input type="checkbox" value="gerente" class="aGrupo"> Gerente</label>
+      <label><input type="checkbox" value="leitor" class="aGrupo"> Leitor</label>
+    </div>
+
+    <div class="linha">
+      <label>Horários</label><br>
+      <div id="aHorarios"></div>
+    </div>
+
+    <div class="linha">
+      <label>Máx. por dia</label>
+      <input type="number" id="aMaxDia" value="1">
+      <label>
+        <input type="checkbox" id="aEvitarRep"> Evitar repetição
+      </label>
+    </div>
+
+    <div style="display:flex;gap:8px">
+      <button class="primario" onclick="salvarAutomatica()">💾 Salvar</button>
+      <button onclick="fecharModalAutomatica()">Cancelar</button>
+    </div>
+
   </div>
 </div>
 
@@ -390,23 +456,83 @@ function fecharModalTipo(){
 }
 
 /* ================= AUTOMÁTICAS ================= */
+let automaticaEditandoId = null;
+
+/* ===== CARREGAR AUTOMÁTICAS ===== */
 async function carregarAutomaticas(){
   const snap = await db.collection("config").doc("notificacoes_automaticas").get();
   if(!snap.exists) return;
 
-  const tipos = snap.data().tipos || {};
-  listaAutomaticas.innerHTML = "";
+  const lista = snap.data().lista || [];
+  const div = document.getElementById("listaAutomaticas");
+  div.innerHTML = "";
 
-  Object.keys(tipos).forEach(k=>{
-    const t = tipos[k];
-    listaAutomaticas.innerHTML += `
-      <div class="horario-item">
-        <strong>${k.toUpperCase()}</strong><br>
-        Ativo: ${t.ativo ? "Sim" : "Não"}<br>
-        Grupos: ${t.grupos.join(", ")}<br>
-        Horários: ${t.horarios.join(", ")}
-      </div>`;
+  lista.forEach(a=>{
+    div.innerHTML += `
+      <div class="horario-item" onclick="editarAutomatica('${a.id}')">
+        <strong>${a.titulo}</strong><br>
+        Grupos: ${a.grupos.join(", ")}<br>
+        Horários: ${a.horarios.join(", ")}<br>
+        ${a.ativo ? "🟢 Ativa" : "🔴 Inativa"}
+      </div>
+    `;
   });
+}
+
+/* ===== NOVA ===== */
+async function novaAutomatica(){
+  automaticaEditandoId = null;
+  aTitulo.value = "";
+  aMensagem.value = "";
+  aAtivo.checked = true;
+  aMaxDia.value = 1;
+  aEvitarRep.checked = true;
+
+  await carregarTipos();
+  await carregarHorariosCheckbox();
+
+  abrirModalAutomatica();
+}
+
+/* ===== SALVAR ===== */
+async function salvarAutomatica(){
+  const ref = db.collection("config").doc("notificacoes_automaticas");
+  const snap = await ref.get();
+  let lista = snap.exists ? snap.data().lista || [] : [];
+
+  const grupos = [...document.querySelectorAll(".aGrupo:checked")].map(x=>x.value);
+  const horarios = [...document.querySelectorAll(".aHorario:checked")].map(x=>x.value);
+
+  const obj = {
+    id: automaticaEditandoId || aTitulo.value.toLowerCase().replace(/\s+/g,"-"),
+    tipo: aTipo.value,
+    ativo: aAtivo.checked,
+    grupos,
+    horarios,
+    titulo: aTitulo.value,
+    mensagem: aMensagem.value,
+    controle:{
+      max_por_dia: Number(aMaxDia.value),
+      evitar_repeticao: aEvitarRep.checked
+    }
+  };
+
+  if(automaticaEditandoId){
+    lista = lista.map(x=>x.id===automaticaEditandoId?obj:x);
+  }else{
+    lista.push(obj);
+  }
+
+  await ref.set({ ativo:true, lista }, { merge:true });
+  fecharModalAutomatica();
+  carregarAutomaticas();
+}
+
+function abrirModalAutomatica(){
+  document.getElementById("modalAutomatica").style.display="flex";
+}
+function fecharModalAutomatica(){
+  document.getElementById("modalAutomatica").style.display="none";
 }
 </script>
 
