@@ -171,20 +171,28 @@ button.primario{background:var(--marrom);color:#fff}
 <script>
 const db = firebase.firestore();
 
-<!-- MENU ADM – PADRÃO GLOBAL DEFINITIVO -->
-<script>
+/* ================= MENU ADM – PADRÃO DEFINITIVO ================= */
 fetch("../menu/menu-adm.html")
   .then(r => r.text())
   .then(html => {
-    document.getElementById("menu-adm").innerHTML = html;
+    document.getElementById("menu").innerHTML = html;
 
-    // ✅ MARCA O LINK ATIVO (ERA O QUE FALTAVA)
+    // marca link ativo
     document.querySelectorAll(".menu-link").forEach(a=>{
-      if(a.getAttribute("href")?.includes("config.html")){
+      if(a.getAttribute("href")?.includes("config-notificacoes.html")){
         a.classList.add("ativo");
       }
     });
-  <script>
+
+    // injeta permissões SOMENTE após menu no DOM
+    const s = document.createElement("script");
+    s.src = "../menu/menu-permissoes.js";
+    s.onload = () => {
+      document.body.style.display = "block";
+    };
+    document.body.appendChild(s);
+  });
+</script>
 
 <script>
 /* TABS */
