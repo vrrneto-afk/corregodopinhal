@@ -3,22 +3,19 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Configuração de Notificações</title>
+<title>Configuração – Espécies</title>
 
-<!-- PWA -->
 <link rel="manifest" href="../manifest.json">
 <meta name="theme-color" content="#7b3f2a">
 
-<!-- MENU GLOBAL (CSS APENAS) -->
 <link rel="stylesheet" href="../menu/menu.css">
+<link rel="stylesheet" href="./config.css">
 
-<!-- FIREBASE -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
 <script>
-/* ================= FIREBASE INIT ================= */
 if (!firebase.apps.length) {
   firebase.initializeApp({
     apiKey: "AIzaSyCW-CuFDrOLO-dteckl_GrPTocmyS-IrzY",
@@ -29,368 +26,254 @@ if (!firebase.apps.length) {
 </script>
 
 <script>
-/* ================= PERMISSÃO DA PÁGINA ================= */
 window.PERMISSAO_PAGINA = {
   area: "config",
-  chave: "config-notificacoes"
+  chave: "config-especies"
 };
 </script>
 
-<!-- AUTH GUARD -->
 <script src="../login/auth-guard.js"></script>
 
 <style>
-:root{
-  --marrom:#7b3f2a;
-  --bege:#f6efe7;
-  --borda:#e5e5e5;
-  --texto:#333;
-}
-
-/* RESET */
-*{
-  box-sizing:border-box;
-  font-family:Inter,system-ui,Arial;
-}
-
-body{
-  margin:0;
-  background:var(--bege);
-  color:var(--texto);
-  display:none; /* 🔒 liberado só após menu */
-}
-
-/* HEADER */
-header{
-  background:#D0B485;
-  padding:16px;
-  text-align:center;
-}
-
-header h2{
-  margin:0;
-  color:var(--marrom);
-}
-
-/* CONTAINER */
-.container{
-  max-width:900px;
-  margin:20px auto;
-  padding:0 14px;
-}
-
-/* TABS */
-.tabs{
+.check-row{
   display:flex;
-  gap:10px;
-  margin:16px 0;
+  align-items:center;
+  gap:8px;
+  margin-top:12px;
+  font-weight:600;
 }
-
-.tab{
-  flex:1;
-  background:#fff;
-  border-radius:14px;
-  padding:10px 6px;
-  text-align:center;
-  cursor:pointer;
-  font-weight:700;
-  border:1px solid var(--borda);
-}
-
-.tab span{
-  display:block;
-  font-size:22px;
-}
-
-.tab small{
-  display:block;
-  margin-top:4px;
-  font-size:13px;
-}
-
-.tab.ativo{
-  background:var(--marrom);
-  color:#fff;
-}
-
-/* CARD */
-.card{
-  background:#fff;
-  border-radius:16px;
-  padding:14px;
-  border:1px solid var(--borda);
-  margin-bottom:14px;
-}
-
-.card h3{
-  margin:0 0 10px;
-  color:var(--marrom);
-}
-
-/* BOTÕES */
-button{
-  padding:8px 12px;
-  border-radius:10px;
-  border:1px solid var(--marrom);
-  background:#fff;
-  color:var(--marrom);
-  font-weight:700;
-  cursor:pointer;
-}
-
-button.primario{
-  background:var(--marrom);
-  color:#fff;
-}
-
-/* PLACEHOLDER */
-.placeholder{
-  color:#999;
-  font-style:italic;
-  padding:10px 0;
-}
+.check-row input{margin:0;}
 </style>
 </head>
 
-<body>
+<body style="display:none">
 
-<!-- HEADER -->
-<header>
-  <h2>🔔 Configuração de Notificações</h2>
-</header>
+<header>⚙️ Configurações</header>
 
-<!-- MENU (INJETADO VIA FETCH) -->
-<div id="menu"></div>
+<div id="menu-adm"></div>
 
-<!-- CONTEÚDO -->
 <div class="container">
 
-  <!-- TABS -->
-  <div class="tabs">
-    <div class="tab ativo" data-tab="horarios">
-      <span>⏰</span>
-      <small>Horários</small>
-    </div>
-    <div class="tab" data-tab="tipos">
-      <span>📦</span>
-      <small>Tipos</small>
-    </div>
-    <div class="tab" data-tab="automaticas">
-      <span>⚙️</span>
-      <small>Automáticas</small>
-    </div>
-    <div class="tab" data-tab="manuais">
-      <span>✍️</span>
-      <small>Manuais</small>
-    </div>
-  </div>
+<h2>Configuração – Espécies</h2>
 
-  <!-- ABA HORÁRIOS -->
-  <div id="tab-horarios">
-    <div class="card">
-      <h3>Horários</h3>
-      <div class="placeholder">Estrutura pronta.</div>
-      <button>➕ Novo horário</button>
-    </div>
-  </div>
+<div class="cards-grid" id="lista-especies"></div>
 
-  <!-- ABA TIPOS -->
-  <div id="tab-tipos" style="display:none">
-    <div class="card">
-      <h3>Tipos de notificação</h3>
-      <div class="placeholder">Estrutura pronta.</div>
-      <button>➕ Novo tipo</button>
-    </div>
-  </div>
+<div id="editor" class="hidden">
+<fieldset>
 
-  <!-- ABA AUTOMÁTICAS -->
-  <div id="tab-automaticas" style="display:none">
-    <div class="card">
-      <h3>Notificações automáticas</h3>
-      <div class="placeholder">Estrutura pronta.</div>
-      <button>➕ Nova automática</button>
-    </div>
-  </div>
+<label>Nome da espécie</label>
+<input type="text" id="esp_id">
 
-  <!-- ABA MANUAIS -->
-  <div id="tab-manuais" style="display:none">
-    <div class="card">
-      <h3>Notificação manual</h3>
-      <div class="placeholder">Estrutura pronta.</div>
-      <button class="primario">💾 Salvar</button>
-    </div>
-  </div>
+<label>Ícone da espécie (emoji)</label>
+<input type="text" id="esp_icone">
+
+<div class="check-row">
+  <input type="checkbox" id="esp_ativo" checked>
+  <label>Espécie ativa</label>
+</div>
+
+<div class="check-row">
+  <input type="checkbox" id="possui_gestacao">
+  <label>Possui gestação</label>
+</div>
+
+<div class="check-row">
+  <input type="checkbox" id="possui_incubacao">
+  <label>Possui incubação</label>
+</div>
+
+<div id="campo_gestacao" class="hidden">
+  <label>Gestação (meses)</label>
+  <input type="number" id="gestacao_meses" min="0">
+</div>
+
+<div id="campo_incubacao" class="hidden">
+  <label>Incubação (dias)</label>
+  <input type="number" id="incubacao_dias" min="0">
+</div>
+
+</fieldset>
+
+<button class="salvar" onclick="salvarEspecie()">💾 Salvar</button>
+
+<button class="voltar" id="btnExcluir" style="background:#b03a2e;color:#fff" onclick="excluirEspecie()">
+🗑 Excluir espécie
+</button>
+
+<button class="voltar" onclick="cancelarEdicao()">❌ Cancelar</button>
+</div>
+
+<button class="voltar" onclick="location.href='config.html'">
+⬅ Voltar para Configurações
+</button>
 
 </div>
 
 <script>
-/* ================= MENU ADM – PADRÃO DEFINITIVO ================= */
 fetch("../menu/menu-adm.html")
-  .then(r => r.text())
-  .then(html => {
-    document.getElementById("menu").innerHTML = html;
+.then(r=>r.text())
+.then(html=>{
+  document.getElementById("menu-adm").innerHTML = html;
 
-    /* marca link ativo */
-    document.querySelectorAll(".menu-link").forEach(a=>{
-      if(a.getAttribute("href")?.includes("config.html")){
-        a.classList.add("ativo");
-      }
-    });
-
-    /* injeta permissões */
-    const s = document.createElement("script");
-    s.src = "../menu/menu-permissoes.js";
-    s.onload = () => {
-      document.body.style.display = "block";
-    };
-    document.body.appendChild(s);
+  document.querySelectorAll(".menu-link").forEach(a=>{
+    if(a.getAttribute("href")?.includes("config.html")){
+      a.classList.add("ativo");
+    }
   });
 
+  const s=document.createElement("script");
+  s.src="../menu/menu-permissoes.js";
+  s.onload=()=>{
+    document.body.style.display="block";
+    carregar();
+  };
+  document.body.appendChild(s);
+});
 </script>
 
 <script>
-/* ======================================================
-   ABA ⏰ HORÁRIOS — SCRIPT COMPLETO E ISOLADO
-   ====================================================== */
-
 const db = firebase.firestore();
 
-/* ===== ESTADO ===== */
-let horarioEditandoId = null;
+/* ELEMENTOS */
+const listaEspecies = document.getElementById("lista-especies");
+const editor = document.getElementById("editor");
+const btnExcluir = document.getElementById("btnExcluir");
 
-/* ======================================================
-   INIT — chamado após menu carregar
-   ====================================================== */
-document.addEventListener("DOMContentLoaded", () => {
-  carregarHorarios();
-});
+const esp_id = document.getElementById("esp_id");
+const esp_icone = document.getElementById("esp_icone");
+const esp_ativo = document.getElementById("esp_ativo");
+const possui_gestacao = document.getElementById("possui_gestacao");
+const possui_incubacao = document.getElementById("possui_incubacao");
+const gestacao_meses = document.getElementById("gestacao_meses");
+const incubacao_dias = document.getElementById("incubacao_dias");
+const campo_gestacao = document.getElementById("campo_gestacao");
+const campo_incubacao = document.getElementById("campo_incubacao");
 
-/* ======================================================
-   LISTAR HORÁRIOS
-   ====================================================== */
-async function carregarHorarios() {
-  const ref  = db.collection("config").doc("notificacoes_horarios");
-  const snap = await ref.get();
+let especies = [];
+let indiceEditando = null;
 
-  const lista = snap.exists ? snap.data().lista || [] : [];
+/* CARREGAR */
+async function carregar(){
+  const snap = await db.collection("config").doc("especies").get();
+  especies = snap.exists ? snap.data().lista || [] : [];
+  renderizarCards();
+}
 
-  const container = document.getElementById("listaHorarios");
-  container.innerHTML = "";
+/* RENDER */
+function renderizarCards(){
+  listaEspecies.innerHTML="";
 
-  if (lista.length === 0) {
-    container.innerHTML = "<p>Nenhum horário cadastrado.</p>";
-    return;
-  }
+  especies.forEach((e,i)=>{
+    const btn=document.createElement("button");
+    btn.className="config-card";
+    btn.onclick=()=>editarEspecie(i);
 
-  lista.forEach(h => {
-    container.innerHTML += `
-      <div class="item">
-        <strong>${h.nome}</strong><br>
-        ⏰ ${h.hora} | ${h.ativo ? "🟢 Ativo" : "🔴 Inativo"}<br><br>
+    if(e.ativo===false) btn.style.opacity="0.5";
 
-        <button onclick="editarHorario('${h.id}')">✏️ Editar</button>
-        <button onclick="excluirHorario('${h.id}')">🗑️ Excluir</button>
-      </div>
-    `;
+    let desc="";
+    if(e.possui_gestacao) desc=`Gestação: ${e.gestacao_meses} meses`;
+    if(e.possui_incubacao) desc=`Incubação: ${e.incubacao_dias} dias`;
+
+    btn.innerHTML=`<strong>${e.icone||"🐾"} ${e.id}</strong><span>${desc}</span>`;
+    listaEspecies.appendChild(btn);
   });
+
+  const novo=document.createElement("button");
+  novo.className="config-card";
+  novo.innerHTML="➕ Nova espécie";
+  novo.onclick=novaEspecie;
+  listaEspecies.appendChild(novo);
 }
 
-/* ======================================================
-   NOVO HORÁRIO
-   ====================================================== */
-function novoHorario() {
-  horarioEditandoId = null;
-
-  document.getElementById("hNome").value = "";
-  document.getElementById("hHora").value = "";
-  document.getElementById("hAtivo").checked = true;
-
-  document.getElementById("modalHorario").style.display = "flex";
+/* AÇÕES */
+function novaEspecie(){
+  indiceEditando=null;
+  limparFormulario();
+  btnExcluir.style.display="none";
+  editor.classList.remove("hidden");
 }
 
-/* ======================================================
-   EDITAR HORÁRIO
-   ====================================================== */
-async function editarHorario(id) {
-  const ref  = db.collection("config").doc("notificacoes_horarios");
-  const snap = await ref.get();
-  if (!snap.exists) return;
+function editarEspecie(i){
+  indiceEditando=i;
+  const e=especies[i];
 
-  const h = snap.data().lista.find(x => x.id === id);
-  if (!h) return;
+  esp_id.value=e.id||"";
+  esp_icone.value=e.icone||"";
+  esp_ativo.checked=e.ativo!==false;
+  possui_gestacao.checked=!!e.possui_gestacao;
+  possui_incubacao.checked=!!e.possui_incubacao;
+  gestacao_meses.value=e.gestacao_meses||"";
+  incubacao_dias.value=e.incubacao_dias||"";
 
-  horarioEditandoId = id;
-
-  document.getElementById("hNome").value  = h.nome;
-  document.getElementById("hHora").value  = h.hora;
-  document.getElementById("hAtivo").checked = h.ativo;
-
-  document.getElementById("modalHorario").style.display = "flex";
+  ajustarCampos();
+  btnExcluir.style.display="block";
+  editor.classList.remove("hidden");
 }
 
-/* ======================================================
-   SALVAR HORÁRIO
-   ====================================================== */
-async function salvarHorario() {
-  const nome  = document.getElementById("hNome").value.trim();
-  const hora  = document.getElementById("hHora").value;
-  const ativo = document.getElementById("hAtivo").checked;
+function ajustarCampos(){
+  campo_gestacao.classList.toggle("hidden",!possui_gestacao.checked);
+  campo_incubacao.classList.toggle("hidden",!possui_incubacao.checked);
+}
 
-  if (!nome || !hora) {
-    alert("Informe o nome e a hora.");
+/* SALVAR */
+async function salvarEspecie(){
+  const obj={
+    id:esp_id.value.trim(),
+    icone:esp_icone.value.trim(),
+    ativo:esp_ativo.checked
+  };
+
+  if(!obj.id){
+    alert("Informe o nome da espécie.");
     return;
   }
 
-  const ref  = db.collection("config").doc("notificacoes_horarios");
-  const snap = await ref.get();
-
-  let lista = snap.exists ? snap.data().lista || [] : [];
-
-  if (horarioEditandoId) {
-    lista = lista.map(h =>
-      h.id === horarioEditandoId
-        ? { ...h, nome, hora, ativo }
-        : h
-    );
-  } else {
-    lista.push({
-      id: crypto.randomUUID(),
-      nome,
-      hora,
-      ativo
-    });
+  if(possui_gestacao.checked){
+    obj.possui_gestacao=true;
+    obj.gestacao_meses=Number(gestacao_meses.value||0);
   }
 
-  await ref.set({ lista }, { merge: true });
+  if(possui_incubacao.checked){
+    obj.possui_incubacao=true;
+    obj.incubacao_dias=Number(incubacao_dias.value||0);
+  }
 
-  fecharModalHorario();
-  carregarHorarios();
+  if(indiceEditando===null) especies.push(obj);
+  else especies[indiceEditando]=obj;
+
+  await db.collection("config").doc("especies").set({lista:especies},{merge:true});
+
+  alert("Configuração salva com sucesso.");
+  location.reload();
 }
 
-/* ======================================================
-   EXCLUIR HORÁRIO
-   ====================================================== */
-async function excluirHorario(id) {
-  if (!confirm("Deseja realmente excluir este horário?")) return;
+/* EXCLUIR */
+async function excluirEspecie(){
+  if(!confirm("Excluir definitivamente esta espécie?")) return;
 
-  const ref  = db.collection("config").doc("notificacoes_horarios");
-  const snap = await ref.get();
-  if (!snap.exists) return;
+  especies.splice(indiceEditando,1);
+  await db.collection("config").doc("especies").set({lista:especies},{merge:true});
 
-  const lista = snap.data().lista.filter(h => h.id !== id);
-
-  await ref.set({ lista }, { merge: true });
-  carregarHorarios();
+  alert("Espécie excluída com sucesso.");
+  location.reload();
 }
 
-/* ======================================================
-   FECHAR MODAL
-   ====================================================== */
-function fecharModalHorario() {
-  document.getElementById("modalHorario").style.display = "none";
+function cancelarEdicao(){
+  editor.classList.add("hidden");
+}
+
+function limparFormulario(){
+  esp_id.value="";
+  esp_icone.value="";
+  esp_ativo.checked=true;
+  possui_gestacao.checked=false;
+  possui_incubacao.checked=false;
+  gestacao_meses.value="";
+  incubacao_dias.value="";
+  ajustarCampos();
 }
 </script>
-<script src="../login/logout.js"></script>
 
+<script src="../login/logout.js"></script>
 </body>
 </html>
