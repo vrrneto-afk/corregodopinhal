@@ -197,13 +197,15 @@ button.primario{
 </div>
 
   <!-- ABA TIPOS -->
-  <div id="tab-tipos" style="display:none">
-    <div class="card">
-      <h3>Tipos de notificação</h3>
-      <div class="placeholder">Estrutura pronta.</div>
-      <button>➕ Novo tipo</button>
-    </div>
+<div id="tab-tipos" style="display:none">
+  <div class="card">
+    <h3>Tipos de notificação</h3>
+
+    <div id="listaTipos"></div>
+
+    <button onclick="novoTipo()">➕ Novo tipo</button>
   </div>
+</div>
 
   <!-- ABA AUTOMÁTICAS -->
   <div id="tab-automaticas" style="display:none">
@@ -250,6 +252,31 @@ fetch("../menu/menu-adm.html")
     };
     document.body.appendChild(s);
   });
+</script>
+
+<script>
+/* ================= CONTROLE DE ABAS ================= */
+document.querySelectorAll(".tab").forEach(tab => {
+  tab.addEventListener("click", () => {
+
+    /* ativa aba */
+    document.querySelectorAll(".tab").forEach(t => t.classList.remove("ativo"));
+    tab.classList.add("ativo");
+
+    /* esconde todas */
+    document.querySelectorAll("[id^='tab-']").forEach(c => {
+      c.style.display = "none";
+    });
+
+    /* mostra a selecionada */
+    const alvo = "tab-" + tab.dataset.tab;
+    document.getElementById(alvo).style.display = "block";
+
+    /* init específico */
+    if (tab.dataset.tab === "horarios") initHorarios();
+    if (tab.dataset.tab === "tipos") initTipos();
+  });
+});
 </script>
 
 <script>
@@ -549,5 +576,5 @@ function fecharModalTipo() {
 </script>
 
 <script src="../login/logout.js"></script>
-<body>
-<html>
+</body>
+</html>
