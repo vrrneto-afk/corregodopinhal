@@ -33,7 +33,10 @@ body{
   font-weight:800;
   color:var(--marrom);
 }
-.header .fechar{ cursor:pointer; font-size:20px }
+.header .fechar{
+  cursor:pointer;
+  font-size:20px;
+}
 
 /* CONTEÚDO */
 .conteudo{
@@ -41,26 +44,6 @@ body{
   overflow:auto;
   padding:12px;
   background:var(--bege);
-}
-
-/* LUA VIGENTE */
-.lua-vigente{
-  background:#fff;
-  border:1px solid var(--borda);
-  border-radius:14px;
-  padding:14px;
-  margin-bottom:12px;
-}
-
-.lua-vigente .titulo{
-  font-weight:800;
-  color:var(--marrom);
-  margin-bottom:6px;
-}
-
-.lua-vigente .atual{
-  font-weight:700;
-  color:#333;
 }
 
 /* CARD */
@@ -76,21 +59,26 @@ body{
   display:flex;
   justify-content:space-between;
   align-items:center;
+  margin-bottom:6px;
 }
 
-.card-topo strong{
-  color:var(--marrom);
+.card-topo .dia{
   font-weight:800;
+  color:var(--marrom);
+}
+
+.card-topo .data{
+  font-size:14px;
+  color:#333;
 }
 
 .fase{
-  margin-top:6px;
   font-weight:800;
   font-size:15px;
+  margin-bottom:4px;
 }
 
 .forca{
-  margin-top:4px;
   font-size:13px;
   color:var(--cinza);
 }
@@ -146,51 +134,23 @@ async function carregarLuas(){
   const hoje = new Date();
   hoje.setHours(0,0,0,0);
 
-  const luas = dados.map(l => {
-    const [dia, mes, ano] = l.Data.split("/");
-    return {
-      ...l,
-      d: new Date(`${ano}-${mes}-${dia}`)
-    };
-  });
-
-  /* LUA VIGENTE */
-  const passadas = luas
-    .filter(l => l.d <= hoje)
-    .sort((a,b) => b.d - a.d);
-
-  const atual = passadas[0];
-
-  if(atual){
-    const emoji = {
-      "Lua Nova":"🌑",
-      "Lua Crescente":"🌒",
-      "Lua Cheia":"🌕",
-      "Lua Minguante":"🌗",
-      "NOVA":"🌑",
-      "CRESCENTE":"🌒",
-      "CHEIA":"🌕",
-      "MINGUANTE":"🌗"
-    }[atual.Fase] || "🌙";
-
-    cont.innerHTML += `
-      <div class="lua-vigente">
-        <div class="titulo">🌙 Fases da Lua</div>
-        <div class="atual">
-          Lua vigente: ${emoji} ${atual.Fase} • ${atual.d.toLocaleDateString("pt-BR")}
-        </div>
-      </div>
-    `;
-  }
-
-  /* PRÓXIMAS FASES */
-  const futuras = luas
+  const futuras = dados
+    .map(l => {
+      const [dia, mes, ano] = l.Data.split("/");
+      return {
+        ...l,
+        d: new Date(`${ano}-${mes}-${dia}`)
+      };
+    })
     .filter(l => l.d >= hoje)
     .slice(0,4);
 
   futuras.forEach(l => {
 
-    const dia = l.d.toLocaleDateString("pt-BR",{weekday:"short"}).toUpperCase();
+    const diaSemana = l.d
+      .toLocaleDateString("pt-BR",{ weekday:"short" })
+      .toUpperCase();
+
     const dataFmt = l.d.toLocaleDateString("pt-BR");
 
     const ini = new Date(l.d);
@@ -199,15 +159,24 @@ async function carregarLuas(){
     const fim = new Date(l.d);
     fim.setDate(l.d.getDate()+2);
 
+    const faseTexto = l.Fase.toUpperCase();
+
+    const emoji = {
+      "LUA NOVA":"🌑",
+      "LUA CRESCENTE":"🌒",
+      "LUA CHEIA":"🌕",
+      "LUA MINGUANTE":"🌗"
+    }[faseTexto] || "🌙";
+
     cont.innerHTML += `
       <div class="card-lua">
         <div class="card-topo">
-          <strong>${dia}</strong>
-          <span>📅 ${dataFmt}</span>
+          <div class="dia">${diaSemana}</div>
+          <div class="data">📅 ${dataFmt}</div>
         </div>
 
         <div class="fase">
-          ${l.Fase}
+          ${emoji} ${faseTexto}
         </div>
 
         <div class="forca">
