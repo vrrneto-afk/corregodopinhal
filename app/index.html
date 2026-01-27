@@ -90,6 +90,11 @@ h2{margin:28px 0 12px;color:var(--marrom)}
 .card .dias{font-size:18px;font-weight:800;margin:6px 0}
 .card .data{font-size:13px;color:var(--cinza)}
 .card .msg{font-weight:700}
+
+#clima{
+  margin-bottom:10px;
+}
+  
 </style>
 </head>
 
@@ -228,19 +233,6 @@ clima.addEventListener("click", () => {
     overflow:hidden;
     position:relative;
   `;
-
-  const fechar = document.createElement("div");
-  fechar.innerHTML = "✕";
-  fechar.style.cssText = `
-    position:absolute;
-    top:10px;
-    right:14px;
-    font-size:22px;
-    font-weight:800;
-    cursor:pointer;
-    z-index:10;
-  `;
-  fechar.onclick = () => overlay.remove();
 
   const iframe = document.createElement("iframe");
   iframe.src = "../app/tempo.html";
@@ -410,9 +402,58 @@ async function loadIndex(){
   conteudo.innerHTML = html;
 }
 
+/* ================= LUA VIGENTE ================= */
+async function loadLuaVigente(){
+
+  const r = await fetch("../app/luas.json");
+  const dados = await r.json();
+
+  const hoje = new Date();
+  hoje.setHours(0,0,0,0);
+
+  const luas = dados.map(l => {
+    const [dia, mes, ano] = l.Data.split("/");
+    return {
+      ...l,
+      d: new Date(Number(ano), Number(mes)-1, Number(dia))
+    };
+  });
+
+  // 👉 lua vigente = última lua com data <= hoje
+  const vigente = luas
+    .filter(l => l.d <= hoje)
+    .sort((a,b) => b.d - a.d)[0];
+
+  if(!vigente) return;
+
+  const fase = vigente.Fase.toUpperCase();
+
+  const emoji = {
+    "NOVA":"🌑",
+    "CRESCENTE":"🌙",
+    "CHEIA":"🌕",
+    "MINGUANTE":"🌗"
+  }[fase] || "🌙";
+
+  const ini = new Date(vigente.d);
+  ini.setDate(ini.getDate() - 2);
+
+  const fim = new Date(vigente.d);
+  fim.setDate(fim.getDate() + 2);
+
+  luaBtn.innerHTML = `
+    🌙 Fases da Lua<br>
+    <strong>
+      Lua vigente: ${emoji} ${fase} • ${vigente.d.toLocaleDateString("pt-BR")}
+      - Força da lua: ${ini.toLocaleDateString("pt-BR")} até ${fim.toLocaleDateString("pt-BR")}
+    </strong>
+  `;
+}
+
 /* ================= START ================= */
 (async ()=>{
   await loadClima();
+  await loadLuaVigente();
   await loadAlertas();
   await loadIndex();
 })();
