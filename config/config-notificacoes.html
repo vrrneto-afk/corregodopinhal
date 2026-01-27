@@ -7,8 +7,6 @@
 
 <link rel="manifest" href="../manifest.json">
 <meta name="theme-color" content="#7b3f2a">
-
-<!-- MENU GLOBAL -->
 <link rel="stylesheet" href="../menu/menu.css">
 
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
@@ -90,7 +88,7 @@ button{
 
 button.primario{background:var(--marrom);color:#fff}
 
-.horario-item{
+.horario-item, .tipo-item{
   border:1px dashed var(--borda);
   padding:10px;
   border-radius:10px;
@@ -112,6 +110,7 @@ button.primario{background:var(--marrom);color:#fff}
 
   <div class="tabs">
     <div class="tab ativo" data-tab="horarios">⏰ Horários</div>
+    <div class="tab" data-tab="tipos">📦 Tipos</div>
     <div class="tab" data-tab="automaticas">⚙️ Automáticas</div>
     <div class="tab" data-tab="manuais">✍️ Manuais</div>
   </div>
@@ -122,6 +121,15 @@ button.primario{background:var(--marrom);color:#fff}
       <h3>Horários de envio</h3>
       <div id="listaHorarios"></div>
       <button onclick="novoHorario()">➕ Adicionar horário</button>
+    </div>
+  </div>
+
+  <!-- TIPOS -->
+  <div id="tab-tipos" style="display:none">
+    <div class="card">
+      <h3>Tipos de notificação</h3>
+      <div id="listaTipos"></div>
+      <button onclick="novoTipo()">➕ Adicionar tipo</button>
     </div>
   </div>
 
@@ -176,9 +184,7 @@ button.primario{background:var(--marrom);color:#fff}
     </div>
 
     <div class="linha">
-      <label>
-        <input type="checkbox" id="hAtivo"> Horário ativo
-      </label>
+      <label><input type="checkbox" id="hAtivo"> Horário ativo</label>
     </div>
 
     <div style="display:flex;gap:8px">
@@ -188,18 +194,45 @@ button.primario{background:var(--marrom);color:#fff}
   </div>
 </div>
 
+<!-- MODAL TIPO -->
+<div id="modalTipo" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.55);align-items:center;justify-content:center">
+  <div style="background:#fff;width:92%;max-width:420px;border-radius:14px;padding:16px">
+    <h3 style="margin-top:0;color:#7b3f2a">📦 Tipo de notificação</h3>
+
+    <div class="linha">
+      <label>Nome</label>
+      <input id="tNome">
+    </div>
+
+    <div class="linha">
+      <label>Descrição</label>
+      <textarea id="tDesc"></textarea>
+    </div>
+
+    <div class="linha">
+      <label><input type="checkbox" id="tAtivo"> Tipo ativo</label>
+    </div>
+
+    <div style="display:flex;gap:8px">
+      <button class="primario" onclick="salvarTipo()">💾 Salvar</button>
+      <button onclick="fecharModalTipo()">Cancelar</button>
+    </div>
+  </div>
+</div>
+
 <script>
 const db = firebase.firestore();
 let horarioEditandoId = null;
+let tipoEditandoId = null;
 
 /* ================= MENU ================= */
 fetch("../menu/menu-adm.html")
   .then(r => r.text())
   .then(html => {
-    document.getElementById("menu").innerHTML = html;
+    menu.innerHTML = html;
 
     document.querySelectorAll(".menu-link").forEach(a=>{
-      if(a.getAttribute("href")?.includes("config.html")){
+      if(a.getAttribute("href")?.includes("config-notificacoes")){
         a.classList.add("ativo");
       }
     });
@@ -209,6 +242,7 @@ fetch("../menu/menu-adm.html")
     s.onload = () => {
       document.body.style.display = "block";
       carregarHorarios();
+      carregarTipos();
       carregarAutomaticas();
     };
     document.body.appendChild(s);
@@ -230,16 +264,14 @@ async function carregarHorarios(){
   if(!snap.exists) return;
 
   const lista = snap.data().lista || [];
-  const div = document.getElementById("listaHorarios");
-  div.innerHTML = "";
+  listaHorarios.innerHTML = "";
 
   lista.forEach(h=>{
-    div.innerHTML += `
+    listaHorarios.innerHTML += `
       <div class="horario-item" onclick="editarHorario('${h.id}')">
         <strong>${h.nome}</strong><br>
         ⏰ ${h.hora} | ${h.ativo ? "🟢 Ativo" : "🔴 Inativo"}
-      </div>
-    `;
+      </div>`;
   });
 }
 
@@ -248,13 +280,11 @@ function novoHorario(){
   hNome.value = "";
   hHora.value = "";
   hAtivo.checked = true;
-  abrirModalHorario();
+  modalHorario.style.display = "flex";
 }
 
 async function editarHorario(id){
   const snap = await db.collection("config").doc("notificacoes_horarios").get();
-  if(!snap.exists) return;
-
   const h = snap.data().lista.find(x=>x.id===id);
   if(!h) return;
 
@@ -262,18 +292,14 @@ async function editarHorario(id){
   hNome.value = h.nome;
   hHora.value = h.hora;
   hAtivo.checked = h.ativo;
-  abrirModalHorario();
+  modalHorario.style.display = "flex";
 }
 
 async function salvarHorario(){
   const nome = hNome.value.trim();
   const hora = hHora.value;
   const ativo = hAtivo.checked;
-
-  if(!nome || !hora){
-    alert("Preencha nome e hora");
-    return;
-  }
+  if(!nome || !hora) return alert("Preencha nome e hora");
 
   const ref = db.collection("config").doc("notificacoes_horarios");
   const snap = await ref.get();
@@ -282,22 +308,85 @@ async function salvarHorario(){
   if(horarioEditandoId){
     lista = lista.map(h=>h.id===horarioEditandoId ? {...h,nome,hora,ativo} : h);
   }else{
+    lista.push({ id:nome.toLowerCase().replace(/\s+/g,"-"), nome, hora, ativo });
+  }
+
+  await ref.set({ ativo:true, lista }, { merge:true });
+  modalHorario.style.display = "none";
+  carregarHorarios();
+}
+
+function fecharModalHorario(){
+  modalHorario.style.display = "none";
+}
+
+/* ================= TIPOS ================= */
+async function carregarTipos(){
+  const snap = await db.collection("config").doc("notificacoes_tipos").get();
+  if(!snap.exists) return;
+
+  const lista = snap.data().lista || [];
+  listaTipos.innerHTML = "";
+
+  lista.forEach(t=>{
+    listaTipos.innerHTML += `
+      <div class="tipo-item" onclick="editarTipo('${t.id}')">
+        <strong>${t.nome}</strong><br>
+        ${t.descricao || ""}<br>
+        ${t.ativo ? "🟢 Ativo" : "🔴 Inativo"}
+      </div>`;
+  });
+}
+
+function novoTipo(){
+  tipoEditandoId = null;
+  tNome.value = "";
+  tDesc.value = "";
+  tAtivo.checked = true;
+  modalTipo.style.display = "flex";
+}
+
+async function editarTipo(id){
+  const snap = await db.collection("config").doc("notificacoes_tipos").get();
+  const t = snap.data().lista.find(x=>x.id===id);
+  if(!t) return;
+
+  tipoEditandoId = id;
+  tNome.value = t.nome;
+  tDesc.value = t.descricao || "";
+  tAtivo.checked = t.ativo;
+  modalTipo.style.display = "flex";
+}
+
+async function salvarTipo(){
+  const nome = tNome.value.trim();
+  if(!nome) return alert("Nome obrigatório");
+
+  const ref = db.collection("config").doc("notificacoes_tipos");
+  const snap = await ref.get();
+  let lista = snap.exists ? snap.data().lista || [] : [];
+
+  if(tipoEditandoId){
+    lista = lista.map(t=>t.id===tipoEditandoId
+      ? {...t, nome, descricao:tDesc.value, ativo:tAtivo.checked}
+      : t
+    );
+  }else{
     lista.push({
       id: nome.toLowerCase().replace(/\s+/g,"-"),
-      nome, hora, ativo
+      nome,
+      descricao: tDesc.value,
+      ativo: tAtivo.checked
     });
   }
 
   await ref.set({ ativo:true, lista }, { merge:true });
-  fecharModalHorario();
-  carregarHorarios();
+  modalTipo.style.display = "none";
+  carregarTipos();
 }
 
-function abrirModalHorario(){
-  document.getElementById("modalHorario").style.display="flex";
-}
-function fecharModalHorario(){
-  document.getElementById("modalHorario").style.display="none";
+function fecharModalTipo(){
+  modalTipo.style.display = "none";
 }
 
 /* ================= AUTOMÁTICAS ================= */
@@ -306,19 +395,17 @@ async function carregarAutomaticas(){
   if(!snap.exists) return;
 
   const tipos = snap.data().tipos || {};
-  const div = document.getElementById("listaAutomaticas");
-  div.innerHTML = "";
+  listaAutomaticas.innerHTML = "";
 
   Object.keys(tipos).forEach(k=>{
     const t = tipos[k];
-    div.innerHTML += `
+    listaAutomaticas.innerHTML += `
       <div class="horario-item">
         <strong>${k.toUpperCase()}</strong><br>
         Ativo: ${t.ativo ? "Sim" : "Não"}<br>
         Grupos: ${t.grupos.join(", ")}<br>
         Horários: ${t.horarios.join(", ")}
-      </div>
-    `;
+      </div>`;
   });
 }
 </script>
