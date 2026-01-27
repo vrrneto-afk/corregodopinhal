@@ -115,7 +115,13 @@ async function carregarLuas(){
   hoje.setHours(0,0,0,0);
 
   const futuras = dados
-    .map(l => ({ ...l, d:new Date(l.data) }))
+    .map(l => {
+      const [dia, mes, ano] = l.Data.split("/");
+      return {
+        ...l,
+        d: new Date(`${ano}-${mes}-${dia}`)
+      };
+    })
     .filter(l => l.d >= hoje)
     .slice(0,4);
 
@@ -138,7 +144,7 @@ async function carregarLuas(){
         </div>
 
         <div class="fase">
-          ${l.fase}
+          ${l.Fase}
         </div>
 
         <div class="forca">
