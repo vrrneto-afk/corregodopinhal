@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Configuração de Notificações</title>
+
+<link rel="manifest" href="../manifest.json">
+<meta name="theme-color" content="#7b3f2a">
+
+<link rel="stylesheet" href="../menu/menu.css">
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+<script>
+if (!firebase.apps.length) {
+  firebase.initializeApp({
+    apiKey: "AIzaSyCW-CuFDrOLO-dteckl_GrPTocmyS-IrzY",
+    authDomain: "sitio-corrego-do-pinhal.firebaseapp.com",
+    projectId: "sitio-corrego-do-pinhal"
+  });
+}
+</script>
+
+<script>
+window.PERMISSAO_PAGINA = { area:"config", chave:"config-notificacoes" };
+</script>
+
+<script src="../login/auth-guard.js"></script>
+
+<style>
+:root{
+  --marrom:#7b3f2a;
+  --bege:#f6efe7;
+  --cinza:#666;
+  --borda:#e5e5e5;
+}
+
+*{box-sizing:border-box;font-family:Inter,system-ui,Arial}
+body{margin:0;background:var(--bege);display:none;color:#333}
+
+header{background:#D0B485;padding:16px;text-align:center}
+header h2{margin:0;color:var(--marrom)}
+
+.container{max-width:900px;margin:20px auto;padding:0 15px}
+
+.tabs{display:flex;gap:8px;margin-bottom:14px}
+.tab{
+  flex:1;
+  text-align:center;
+  padding:10px;
+  background:#fff;
+  border-radius:10px;
+  font-weight:700;
+  cursor:pointer;
+}
+.tab.ativo{background:var(--marrom);color:#fff}
+
+.card{
+  background:#fff;
+  border-radius:14px;
+  padding:14px;
+  margin-bottom:12px;
+  border:1px solid var(--borda);
+}
+
+.card h3{margin:0 0 10px;color:var(--marrom)}
+
+.linha{margin-bottom:10px}
+
+input, textarea, select{
+  width:100%;
+  padding:8px;
+  border-radius:8px;
+  border:1px solid #ccc;
+}
+
+.checkbox-group label{
+  margin-right:12px;
+  font-weight:600;
+}
+
+button{
+  padding:10px 14px;
+  border-radius:10px;
+  border:1px solid var(--marrom);
+  background:#fff;
+  color:var(--marrom);
+  font-weight:700;
+  cursor:pointer;
+}
+
+button.primario{background:var(--marrom);color:#fff}
+
+.horario-item{
+  border:1px dashed var(--borda);
+  padding:10px;
+  border-radius:10px;
+  margin-bottom:8px;
+}
+</style>
+</head>
+<body>
+
+<header>
+  <h2>🔔 Configuração de Notificações</h2>
+</header>
+<div id="menu"></div>
+
+<div class="container">
+
+  <div class="tabs">
+    <div class="tab ativo" data-tab="horarios">⏰ Horários</div>
+    <div class="tab" data-tab="automaticas">⚙️ Automáticas</div>
+    <div class="tab" data-tab="manuais">✍️ Manuais</div>
+  </div>
+
+  <!-- HORÁRIOS -->
+  <div id="tab-horarios">
+    <div class="card">
+      <h3>Horários de envio</h3>
+      <div id="listaHorarios"></div>
+      <button onclick="novoHorario()">➕ Adicionar horário</button>
+    </div>
+  </div>
+
+  <!-- AUTOMÁTICAS -->
+  <div id="tab-automaticas" style="display:none">
+    <div class="card">
+      <h3>Notificações automáticas</h3>
+      <div id="listaAutomaticas"></div>
+    </div>
+  </div>
+
+  <!-- MANUAIS -->
+  <div id="tab-manuais" style="display:none">
+    <div class="card">
+      <h3>Nova notificação manual</h3>
+
+      <div class="linha">
+        <label>Título</label>
+        <input id="manTitulo">
+      </div>
+
+      <div class="linha">
+        <label>Mensagem</label>
+        <textarea id="manMsg"></textarea>
+      </div>
+
+      <div class="linha checkbox-group">
+        <label><input type="checkbox" value="admin"> Admin</label>
+        <label><input type="checkbox" value="gerente"> Gerente</label>
+        <label><input type="checkbox" value="leitor"> Leitor</label>
+      </div>
+
+      <div class="linha">
+        <label>Enviar em</label>
+        <input type="date" id="manData">
+        <input type="time" id="manHora">
+      </div>
+
+      <button class="primario" onclick="enviarManual()">📢 Enviar</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const db = firebase.firestore();
+
+<!-- MENU ADM – PADRÃO GLOBAL DEFINITIVO -->
+<script>
+fetch("../menu/menu-adm.html")
+  .then(r => r.text())
+  .then(html => {
+    document.getElementById("menu-adm").innerHTML = html;
+
+    document.querySelectorAll(".menu-link").forEach(a=>{
+      if(a.getAttribute("href")?.includes("config.html")){
+        a.classList.add("ativo");
+      }
+    });
+
+    const s = document.createElement("script");
+    s.src = "../menu/menu-permissoes.js";
+    s.onload = () => {
+
+/* TABS */
+document.querySelectorAll('.tab').forEach(t=>{
+  t.onclick=()=>{
+    document.querySelectorAll('.tab').forEach(x=>x.classList.remove('ativo'));
+    t.classList.add('ativo');
+    document.querySelectorAll('[id^=tab-]').forEach(d=>d.style.display='none');
+    document.getElementById('tab-'+t.dataset.tab).style.display='block';
+  }
+});
+
+/* ===== HORÁRIOS ===== */
+async function carregarHorarios(){
+  const snap = await db.collection('config').doc('notificacoes_horarios').get();
+  if(!snap.exists) return;
+  const lista = snap.data().lista || [];
+  const div = document.getElementById('listaHorarios');
+  div.innerHTML = '';
+
+  lista.forEach(h=>{
+    div.innerHTML += `
+      <div class="horario-item">
+        <strong>${h.nome}</strong><br>
+        Hora: ${h.hora} | Ativo: ${h.ativo?"Sim":"Não"}
+      </div>`;
+  });
+}
+
+function novoHorario(){
+  alert('Modal de novo horário (próximo passo)');
+}
+
+/* ===== AUTOMÁTICAS ===== */
+async function carregarAutomaticas(){
+  const snap = await db.collection('config').doc('notificacoes_automaticas').get();
+  if(!snap.exists) return;
+  const tipos = snap.data().tipos || {};
+  const div = document.getElementById('listaAutomaticas');
+  div.innerHTML='';
+
+  Object.keys(tipos).forEach(k=>{
+    const t = tipos[k];
+    div.innerHTML += `
+      <div class="horario-item">
+        <strong>${k.toUpperCase()}</strong><br>
+        Ativo: ${t.ativo?"Sim":"Não"}<br>
+        Grupos: ${t.grupos.join(', ')}<br>
+        Horários: ${t.horarios.join(', ')}
+      </div>`;
+  });
+}
+
+/* ===== MANUAL ===== */
+async function enviarManual(){
+  const titulo = manTitulo.value;
+  const mensagem = manMsg.value;
+  const data = manData.value;
+  const hora = manHora.value;
+
+  const grupos = [...document.querySelectorAll('#tab-manuais input[type=checkbox]:checked')]
+    .map(c=>c.value);
+
+  if(!titulo || !mensagem || !grupos.length) return alert('Preencha tudo');
+
+  await db.collection('notificacoes_manuais').add({
+    titulo,
+    mensagem,
+    grupos,
+    data_envio: data,
+    hora_envio: hora,
+    enviada:false,
+    criado_em: firebase.firestore.FieldValue.serverTimestamp()
+  });
+
+  alert('Notificação manual cadastrada');
+}
+
+carregarHorarios();
+carregarAutomaticas();
+</script>
+
+<script src="../login/logout.js"></script>
+</body>
+</html>
