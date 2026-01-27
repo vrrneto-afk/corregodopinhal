@@ -120,13 +120,17 @@ input,textarea,select{
   <div class="tab" data-tab="manuais"><span>✍️</span><small>Manuais</small></div>
 </div>
 
-<!-- HORÁRIOS -->
+<!-- ================= ABA HORÁRIOS ================= -->
 <div id="tab-horarios">
+
   <div class="card">
     <h3>Horários</h3>
+
     <div id="listaHorarios"></div>
-    <button onclick="abrirHorario()">➕ Novo horário</button>
+
+    <button onclick="novoHorario()">➕ Novo horário</button>
   </div>
+
 </div>
 
 <!-- TIPOS -->
@@ -231,6 +235,7 @@ fetch("../menu/menu-adm.html")
     document.body.appendChild(s);
 
     inicializarTela();
+    carregarHorarios();
   });
 
 /* TABS */
@@ -251,39 +256,110 @@ function init(){
   carregarAutomaticas();
 }
 
-/* HORÁRIOS */
-async function carregarHorarios(){
-  const d=await db.doc("config/notificacoes_horarios").get();
-  const l=d.exists?d.data().lista||[]:[];
-  listaHorarios.innerHTML="";
-  l.forEach(h=>{
-    listaHorarios.innerHTML+=`
-      <div class="item"><b>${h.nome}</b> ${h.hora}
-      <button onclick="editarHorario('${h.id}')">✏️</button>
-      <button onclick="excluirHorario('${h.id}')">🗑️</button></div>`;
+/* ======================================================
+   HORÁRIOS — CRUD COMPLETO
+   ====================================================== */
+
+let horarioEditandoId = null;
+
+/* -------- CARREGAR -------- */
+async function carregarHorarios() {
+  const ref  = db.collection("config").doc("notificacoes_horarios");
+  const snap = await ref.get();
+
+  const lista = snap.exists ? snap.data().lista || [] : [];
+  listaHorarios.innerHTML = "";
+
+  lista.forEach(h => {
+    listaHorarios.innerHTML += `
+      <div class="horario-item">
+        <strong>${h.nome}</strong><br>
+        ⏰ ${h.hora} | ${h.ativo ? "🟢 Ativo" : "🔴 Inativo"}<br><br>
+
+        <button onclick="editarHorario('${h.id}')">✏️ Editar</button>
+        <button onclick="excluirHorario('${h.id}')">🗑️ Excluir</button>
+      </div>
+    `;
   });
 }
-function abrirHorario(){editH=null;hNome.value="";hHora.value="";hAtivo.checked=true;modalHorario.style.display="flex"}
-async function editarHorario(id){
-  const d=await db.doc("config/notificacoes_horarios").get();
-  const h=d.data().lista.find(x=>x.id===id);
-  editH=id;hNome.value=h.nome;hHora.value=h.hora;hAtivo.checked=h.ativo;
-  modalHorario.style.display="flex";
+
+/* -------- NOVO -------- */
+function novoHorario() {
+  horarioEditandoId = null;
+  hNome.value = "";
+  hHora.value = "";
+  hAtivo.checked = true;
+  modalHorario.style.display = "flex";
 }
-async function salvarHorario(){
-  const ref=db.doc("config/notificacoes_horarios");
-  const d=await ref.get();let l=d.exists?d.data().lista||[]:[];
-  const obj={id:editH||crypto.randomUUID(),nome:hNome.value,hora:hHora.value,ativo:hAtivo.checked};
-  l=editH?l.map(x=>x.id===editH?obj:x):[...l,obj];
-  await ref.set({lista:l},{merge:true});
-  fechar("modalHorario");carregarHorarios();
+
+/* -------- EDITAR -------- */
+async function editarHorario(id) {
+  const snap = await db
+    .collection("config")
+    .doc("notificacoes_horarios")
+    .get();
+
+  const h = snap.data().lista.find(x => x.id === id);
+  if (!h) return;
+
+  horarioEditandoId = id;
+  hNome.value  = h.nome;
+  hHora.value  = h.hora;
+  hAtivo.checked = h.ativo;
+
+  modalHorario.style.display = "flex";
 }
-async function excluirHorario(id){
-  if(!confirm("Excluir?"))return;
-  const ref=db.doc("config/notificacoes_horarios");
-  const d=await ref.get();
-  const l=d.data().lista.filter(x=>x.id!==id);
-  await ref.set({lista:l},{merge:true});carregarHorarios();
+
+/* -------- SALVAR -------- */
+async function salvarHorario() {
+  if (!hNome.value || !hHora.value) {
+    alert("Nome e hora são obrigatórios");
+    return;
+  }
+
+  const ref  = db.collection("config").doc("notificacoes_horarios");
+  const snap = await ref.get();
+
+  let lista = snap.exists ? snap.data().lista || [] : [];
+
+  if (horarioEditandoId) {
+    lista = lista.map(h =>
+      h.id === horarioEditandoId
+        ? { ...h, nome: hNome.value, hora: hHora.value, ativo: hAtivo.checked }
+        : h
+    );
+  } else {
+    lista.push({
+      id: crypto.randomUUID(),
+      nome: hNome.value,
+      hora: hHora.value,
+      ativo: hAtivo.checked
+    });
+  }
+
+  await ref.set({ ativo: true, lista }, { merge: true });
+
+  modalHorario.style.display = "none";
+  carregarHorarios();
+}
+
+/* -------- EXCLUIR -------- */
+async function excluirHorario(id) {
+  if (!confirm("Excluir este horário?")) return;
+
+  const ref  = db.collection("config").doc("notificacoes_horarios");
+  const snap = await ref.get();
+
+  let lista = snap.data().lista || [];
+  lista = lista.filter(h => h.id !== id);
+
+  await ref.set({ lista }, { merge: true });
+  carregarHorarios();
+}
+
+/* -------- FECHAR MODAL -------- */
+function fecharModalHorario() {
+  modalHorario.style.display = "none";
 }
 
 /* TIPOS */
@@ -388,6 +464,50 @@ async function salvarManual(){
   mTitulo.value="";mMsg.value="";
 }
 </script>
+
+<!-- ================= MODAL HORÁRIO ================= -->
+<div id="modalHorario" style="
+  display:none;
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.55);
+  z-index:9999;
+  align-items:center;
+  justify-content:center;
+">
+
+  <div style="
+    background:#fff;
+    width:95%;
+    max-width:420px;
+    border-radius:16px;
+    padding:16px;
+  ">
+
+    <h3 style="color:#7b3f2a">⏰ Horário</h3>
+
+    <div class="linha">
+      <label>Nome</label>
+      <input id="hNome">
+    </div>
+
+    <div class="linha">
+      <label>Hora</label>
+      <input type="time" id="hHora">
+    </div>
+
+    <label class="checkbox-linha">
+      <input type="checkbox" id="hAtivo" checked>
+      Ativo
+    </label>
+
+    <div style="display:flex;gap:8px;margin-top:14px">
+      <button class="primario" onclick="salvarHorario()">💾 Salvar</button>
+      <button onclick="fecharModalHorario()">Cancelar</button>
+    </div>
+
+  </div>
+</div>
 
 <script src="../login/logout.js"></script>
 </body>
