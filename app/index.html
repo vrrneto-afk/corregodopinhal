@@ -441,13 +441,11 @@ async function loadLuaVigente(){
   const fim = new Date(vigente.d);
   fim.setDate(fim.getDate() + 2);
 
-  luaBtn.innerHTML = `
-    🌙 Fases da Lua<br>
-    <strong>
-      Lua vigente: ${emoji} ${fase} • ${vigente.d.toLocaleDateString("pt-BR")}
-      - Força da lua: ${ini.toLocaleDateString("pt-BR")} até ${fim.toLocaleDateString("pt-BR")}
-    </strong>
-  `;
+ luaBtn.innerHTML = `
+  🌙 Fases da Lua<br>
+  Lua vigente: <strong>${emoji} ${fase}</strong> • ${vigente.d.toLocaleDateString("pt-BR")}<br>
+  Força da lua: <small>${ini.toLocaleDateString("pt-BR")} até ${fim.toLocaleDateString("pt-BR")}</small>
+`;
 }
 
 /* ================= START ================= */
