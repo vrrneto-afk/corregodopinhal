@@ -378,8 +378,9 @@ async function salvarHorario() {
       ativo
     });
   }
-
+  if (!confirm("Deseja salvar este horário?")) return;
   await ref.set({ lista }, { merge: true });
+  alert("✅ Horário salvo com sucesso.");
   fecharModalHorario();
   carregarHorarios();
 }
@@ -394,6 +395,7 @@ async function excluirHorario(id) {
 
   const lista = snap.data().lista.filter(h => h.id !== id);
   await ref.set({ lista }, { merge: true });
+  alert("🗑️ Horário excluído com sucesso.");
   carregarHorarios();
 }
 
@@ -548,9 +550,9 @@ async function salvarTipo() {
       ativo
     });
   }
-
+  if (!confirm("Deseja salvar este tipo de notificação?")) return;
   await ref.set({ lista }, { merge: true });
-
+  alert("✅ Tipo salvo com sucesso.");
   fecharModalTipo();
   carregarTipos();
 }
@@ -566,6 +568,7 @@ async function excluirTipo(id) {
   const lista = snap.data().lista.filter(t => t.id !== id);
 
   await ref.set({ lista }, { merge: true });
+  alert("🗑️ Tipo excluído com sucesso.");
   carregarTipos();
 }
 
@@ -574,6 +577,49 @@ function fecharModalTipo() {
   document.getElementById("modalTipo").style.display = "none";
 }
 </script>
+
+<!-- ======================================================
+     MODAL 📦 TIPO — HTML
+     ====================================================== -->
+<div id="modalTipo" style="
+  display:none;
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.55);
+  z-index:9999;
+  align-items:center;
+  justify-content:center;
+">
+  <div style="
+    background:#fff;
+    width:95%;
+    max-width:420px;
+    border-radius:16px;
+    padding:16px;
+  ">
+    <h3 style="color:#7b3f2a">📦 Tipo de notificação</h3>
+
+    <div style="margin-bottom:10px">
+      <label>Nome</label>
+      <input id="tNome">
+    </div>
+
+    <div style="margin-bottom:10px">
+      <label>Descrição</label>
+      <textarea id="tDesc" rows="3"></textarea>
+    </div>
+
+    <label>
+      <input type="checkbox" id="tAtivo" checked>
+      Ativo
+    </label>
+
+    <div style="display:flex;gap:8px;margin-top:14px">
+      <button class="primario" onclick="salvarTipo()">💾 Salvar</button>
+      <button onclick="fecharModalTipo()">Cancelar</button>
+    </div>
+  </div>
+</div>
 
 <script src="../login/logout.js"></script>
 </body>
