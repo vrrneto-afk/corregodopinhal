@@ -139,7 +139,7 @@ async function carregarLuas(){
       const [dia, mes, ano] = l.Data.split("/");
       return {
         ...l,
-        d: new Date(`${ano}-${mes}-${dia}`)
+        d: new Date(Number(ano), Number(mes) - 1, Number(dia)) // ✅ FIX DEFINITIVO
       };
     })
     .filter(l => l.d >= hoje)
