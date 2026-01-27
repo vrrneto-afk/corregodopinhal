@@ -225,68 +225,69 @@ button.primario{
 
 </div>
 
-<script>
-/* ================= MENU ADM – PADRÃO DEFINITIVO ================= */
+ <script>
+/* ======================================================
+   MENU ADM – PADRÃO DEFINITIVO (OFICIAL DO PROJETO)
+   ====================================================== */
 fetch("../menu/menu-adm.html")
   .then(r => r.text())
   .then(html => {
     document.getElementById("menu").innerHTML = html;
 
     /* marca link ativo */
-    document.querySelectorAll(".menu-link").forEach(a=>{
-      if(a.getAttribute("href")?.includes("config.html")){
+    document.querySelectorAll(".menu-link").forEach(a => {
+      if (a.getAttribute("href")?.includes("config.html")) {
         a.classList.add("ativo");
       }
     });
 
     /* injeta permissões */
     const s = document.createElement("script");
-s.src = "../menu/menu-permissoes.js";
-s.onload = () => {
-  document.body.style.display = "block";
-  initHorarios();
-};
-document.body.appendChild(s);
+    s.src = "../menu/menu-permissoes.js";
+    s.onload = () => {
+      document.body.style.display = "block";
+      initHorarios(); // 🔥 CHAMA HORÁRIOS SOMENTE AQUI
+    };
+    document.body.appendChild(s);
   });
-
 </script>
 
 <script>
 /* ======================================================
    ABA ⏰ HORÁRIOS — SCRIPT COMPLETO E ISOLADO
-   Padrão definitivo do projeto
    ====================================================== */
 
 const db = firebase.firestore();
 
-/* ================= ESTADO ================= */
+/* ===== ESTADO ===== */
 let horarioEditandoId = null;
 
-/* ================= INIT =================
-   Chamado somente APÓS o menu existir
-   ======================================== */
-function initHorarios(){
+/* ===== INIT ===== */
+function initHorarios() {
   carregarHorarios();
 }
 
-/* ================= LISTAR HORÁRIOS ================= */
+/* ===== LISTAR ===== */
 async function carregarHorarios() {
-  const ref  = db.collection("config").doc("notificacoes_horarios");
+  const ref = db.collection("config").doc("notificacoes_horarios");
   const snap = await ref.get();
 
   const lista = snap.exists ? snap.data().lista || [] : [];
   const container = document.getElementById("listaHorarios");
 
+  if (!container) return;
+
   container.innerHTML = "";
 
   if (lista.length === 0) {
-    container.innerHTML = `<div class="placeholder">Nenhum horário cadastrado.</div>`;
+    container.innerHTML =
+      `<div class="placeholder">Nenhum horário cadastrado.</div>`;
     return;
   }
 
   lista.forEach(h => {
     container.innerHTML += `
-      <div class="item">
+      <div class="item" style="margin-bottom:10px">
         <strong>${h.nome}</strong><br>
         ⏰ ${h.hora} — ${h.ativo ? "🟢 Ativo" : "🔴 Inativo"}<br><br>
 
@@ -297,20 +298,18 @@ async function carregarHorarios() {
   });
 }
 
-/* ================= NOVO HORÁRIO ================= */
+/* ===== NOVO ===== */
 function novoHorario() {
   horarioEditandoId = null;
-
-  document.getElementById("hNome").value  = "";
-  document.getElementById("hHora").value  = "";
+  document.getElementById("hNome").value = "";
+  document.getElementById("hHora").value = "";
   document.getElementById("hAtivo").checked = true;
-
   document.getElementById("modalHorario").style.display = "flex";
 }
 
-/* ================= EDITAR HORÁRIO ================= */
+/* ===== EDITAR ===== */
 async function editarHorario(id) {
-  const ref  = db.collection("config").doc("notificacoes_horarios");
+  const ref = db.collection("config").doc("notificacoes_horarios");
   const snap = await ref.get();
   if (!snap.exists) return;
 
@@ -318,18 +317,17 @@ async function editarHorario(id) {
   if (!h) return;
 
   horarioEditandoId = id;
-
-  document.getElementById("hNome").value  = h.nome;
-  document.getElementById("hHora").value  = h.hora;
+  document.getElementById("hNome").value = h.nome;
+  document.getElementById("hHora").value = h.hora;
   document.getElementById("hAtivo").checked = h.ativo;
 
   document.getElementById("modalHorario").style.display = "flex";
 }
 
-/* ================= SALVAR HORÁRIO ================= */
+/* ===== SALVAR ===== */
 async function salvarHorario() {
-  const nome  = document.getElementById("hNome").value.trim();
-  const hora  = document.getElementById("hHora").value;
+  const nome = document.getElementById("hNome").value.trim();
+  const hora = document.getElementById("hHora").value;
   const ativo = document.getElementById("hAtivo").checked;
 
   if (!nome || !hora) {
@@ -337,16 +335,13 @@ async function salvarHorario() {
     return;
   }
 
-  const ref  = db.collection("config").doc("notificacoes_horarios");
+  const ref = db.collection("config").doc("notificacoes_horarios");
   const snap = await ref.get();
-
   let lista = snap.exists ? snap.data().lista || [] : [];
 
   if (horarioEditandoId) {
     lista = lista.map(h =>
-      h.id === horarioEditandoId
-        ? { ...h, nome, hora, ativo }
-        : h
+      h.id === horarioEditandoId ? { ...h, nome, hora, ativo } : h
     );
   } else {
     lista.push({
@@ -358,31 +353,32 @@ async function salvarHorario() {
   }
 
   await ref.set({ lista }, { merge: true });
-
   fecharModalHorario();
   carregarHorarios();
 }
 
-/* ================= EXCLUIR HORÁRIO ================= */
+/* ===== EXCLUIR ===== */
 async function excluirHorario(id) {
   if (!confirm("Deseja realmente excluir este horário?")) return;
 
-  const ref  = db.collection("config").doc("notificacoes_horarios");
+  const ref = db.collection("config").doc("notificacoes_horarios");
   const snap = await ref.get();
   if (!snap.exists) return;
 
   const lista = snap.data().lista.filter(h => h.id !== id);
-
   await ref.set({ lista }, { merge: true });
   carregarHorarios();
 }
 
-/* ================= FECHAR MODAL ================= */
+/* ===== FECHAR MODAL ===== */
 function fecharModalHorario() {
   document.getElementById("modalHorario").style.display = "none";
 }
+</script>
 
-<!-- MODAL HORÁRIO -->
+<!-- ======================================================
+     MODAL ⏰ HORÁRIO — HTML (FORA DE SCRIPT)
+     ====================================================== -->
 <div id="modalHorario" style="
   display:none;
   position:fixed;
@@ -392,7 +388,6 @@ function fecharModalHorario() {
   align-items:center;
   justify-content:center;
 ">
-
   <div style="
     background:#fff;
     width:95%;
@@ -400,7 +395,6 @@ function fecharModalHorario() {
     border-radius:16px;
     padding:16px;
   ">
-
     <h3 style="color:#7b3f2a">⏰ Horário</h3>
 
     <div style="margin-bottom:10px">
@@ -414,20 +408,14 @@ function fecharModalHorario() {
     </div>
 
     <label>
-      <input type="checkbox" id="hAtivo" checked>
-      Ativo
+      <input type="checkbox" id="hAtivo" checked> Ativo
     </label>
 
     <div style="display:flex;gap:8px;margin-top:14px">
       <button class="primario" onclick="salvarHorario()">💾 Salvar</button>
       <button onclick="fecharModalHorario()">Cancelar</button>
     </div>
-
   </div>
 </div>
-</script>
 
 <script src="../login/logout.js"></script>
-
-</body>
-</html>
