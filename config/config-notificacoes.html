@@ -246,36 +246,38 @@ fetch("../menu/menu-adm.html")
     document.body.appendChild(s);
   });
 
+</script>
+
+<script>
 /* ======================================================
    ABA ⏰ HORÁRIOS — SCRIPT COMPLETO E ISOLADO
+   Padrão definitivo do projeto
    ====================================================== */
 
 const db = firebase.firestore();
 
-/* ===== ESTADO ===== */
+/* ================= ESTADO ================= */
 let horarioEditandoId = null;
 
-/* ======================================================
-   INIT — chamado após menu carregar
-   ====================================================== */
-document.addEventListener("DOMContentLoaded", () => {
+/* ================= INIT =================
+   Chamado somente APÓS o menu existir
+   ======================================== */
+function initHorarios(){
   carregarHorarios();
-});
+}
 
-/* ======================================================
-   LISTAR HORÁRIOS
-   ====================================================== */
+/* ================= LISTAR HORÁRIOS ================= */
 async function carregarHorarios() {
   const ref  = db.collection("config").doc("notificacoes_horarios");
   const snap = await ref.get();
 
   const lista = snap.exists ? snap.data().lista || [] : [];
-
   const container = document.getElementById("listaHorarios");
+
   container.innerHTML = "";
 
   if (lista.length === 0) {
-    container.innerHTML = "<p>Nenhum horário cadastrado.</p>";
+    container.innerHTML = `<div class="placeholder">Nenhum horário cadastrado.</div>`;
     return;
   }
 
@@ -283,7 +285,7 @@ async function carregarHorarios() {
     container.innerHTML += `
       <div class="item">
         <strong>${h.nome}</strong><br>
-        ⏰ ${h.hora} | ${h.ativo ? "🟢 Ativo" : "🔴 Inativo"}<br><br>
+        ⏰ ${h.hora} — ${h.ativo ? "🟢 Ativo" : "🔴 Inativo"}<br><br>
 
         <button onclick="editarHorario('${h.id}')">✏️ Editar</button>
         <button onclick="excluirHorario('${h.id}')">🗑️ Excluir</button>
@@ -292,22 +294,18 @@ async function carregarHorarios() {
   });
 }
 
-/* ======================================================
-   NOVO HORÁRIO
-   ====================================================== */
+/* ================= NOVO HORÁRIO ================= */
 function novoHorario() {
   horarioEditandoId = null;
 
-  document.getElementById("hNome").value = "";
-  document.getElementById("hHora").value = "";
+  document.getElementById("hNome").value  = "";
+  document.getElementById("hHora").value  = "";
   document.getElementById("hAtivo").checked = true;
 
   document.getElementById("modalHorario").style.display = "flex";
 }
 
-/* ======================================================
-   EDITAR HORÁRIO
-   ====================================================== */
+/* ================= EDITAR HORÁRIO ================= */
 async function editarHorario(id) {
   const ref  = db.collection("config").doc("notificacoes_horarios");
   const snap = await ref.get();
@@ -325,9 +323,7 @@ async function editarHorario(id) {
   document.getElementById("modalHorario").style.display = "flex";
 }
 
-/* ======================================================
-   SALVAR HORÁRIO
-   ====================================================== */
+/* ================= SALVAR HORÁRIO ================= */
 async function salvarHorario() {
   const nome  = document.getElementById("hNome").value.trim();
   const hora  = document.getElementById("hHora").value;
@@ -364,9 +360,7 @@ async function salvarHorario() {
   carregarHorarios();
 }
 
-/* ======================================================
-   EXCLUIR HORÁRIO
-   ====================================================== */
+/* ================= EXCLUIR HORÁRIO ================= */
 async function excluirHorario(id) {
   if (!confirm("Deseja realmente excluir este horário?")) return;
 
@@ -380,13 +374,19 @@ async function excluirHorario(id) {
   carregarHorarios();
 }
 
-/* ======================================================
-   FECHAR MODAL
-   ====================================================== */
+/* ================= FECHAR MODAL ================= */
 function fecharModalHorario() {
   document.getElementById("modalHorario").style.display = "none";
 }
+
+/* ================= GARANTE INIT APÓS MENU =================
+   O menu libera o body → chamamos o init aqui
+   ========================================================== */
+document.addEventListener("DOMContentLoaded", () => {
+  initHorarios();
+});
 </script>
+
 <script src="../login/logout.js"></script>
 
 </body>
