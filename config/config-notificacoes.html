@@ -5,15 +5,20 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Configuração de Notificações</title>
 
+<!-- PWA -->
 <link rel="manifest" href="../manifest.json">
 <meta name="theme-color" content="#7b3f2a">
+
+<!-- MENU GLOBAL -->
 <link rel="stylesheet" href="../menu/menu.css">
 
+<!-- FIREBASE -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
 <script>
+/* ================= FIREBASE INIT ================= */
 if (!firebase.apps.length) {
   firebase.initializeApp({
     apiKey: "AIzaSyCW-CuFDrOLO-dteckl_GrPTocmyS-IrzY",
@@ -24,7 +29,11 @@ if (!firebase.apps.length) {
 </script>
 
 <script>
-window.PERMISSAO_PAGINA = { area:"config", chave:"config-notificacoes" };
+/* ================= PERMISSÃO DA PÁGINA ================= */
+window.PERMISSAO_PAGINA = {
+  area: "config",
+  chave: "config-notificacoes"
+};
 </script>
 
 <script src="../login/auth-guard.js"></script>
@@ -37,15 +46,43 @@ window.PERMISSAO_PAGINA = { area:"config", chave:"config-notificacoes" };
   --borda:#e5e5e5;
 }
 
-*{box-sizing:border-box;font-family:Inter,system-ui,Arial}
-body{margin:0;background:var(--bege);display:none;color:#333}
+*{
+  box-sizing:border-box;
+  font-family:Inter,system-ui,Arial;
+}
 
-header{background:#D0B485;padding:16px;text-align:center}
-header h2{margin:0;color:var(--marrom)}
+body{
+  margin:0;
+  background:var(--bege);
+  color:#333;
+}
 
-.container{max-width:900px;margin:20px auto;padding:0 15px}
+/* HEADER */
+header{
+  background:#D0B485;
+  padding:16px;
+  text-align:center;
+}
 
-.tabs{display:flex;gap:8px;margin-bottom:14px}
+header h2{
+  margin:0;
+  color:var(--marrom);
+}
+
+/* CONTAINER */
+.container{
+  max-width:900px;
+  margin:140px auto 20px; /* espaço para header + menu */
+  padding:0 15px;
+}
+
+/* TABS */
+.tabs{
+  display:flex;
+  gap:8px;
+  margin-bottom:14px;
+}
+
 .tab{
   flex:1;
   text-align:center;
@@ -54,9 +91,15 @@ header h2{margin:0;color:var(--marrom)}
   border-radius:10px;
   font-weight:700;
   cursor:pointer;
+  user-select:none;
 }
-.tab.ativo{background:var(--marrom);color:#fff}
 
+.tab.ativo{
+  background:var(--marrom);
+  color:#fff;
+}
+
+/* CARDS */
 .card{
   background:#fff;
   border-radius:14px;
@@ -65,8 +108,12 @@ header h2{margin:0;color:var(--marrom)}
   border:1px solid var(--borda);
 }
 
-.card h3{margin:0 0 10px;color:var(--marrom)}
+.card h3{
+  margin:0 0 10px;
+  color:var(--marrom);
+}
 
+/* FORM */
 .linha{margin-bottom:10px}
 
 input, textarea, select{
@@ -76,6 +123,7 @@ input, textarea, select{
   border:1px solid #ccc;
 }
 
+/* BOTÕES */
 button{
   padding:10px 14px;
   border-radius:10px;
@@ -86,8 +134,12 @@ button{
   cursor:pointer;
 }
 
-button.primario{background:var(--marrom);color:#fff}
+button.primario{
+  background:var(--marrom);
+  color:#fff;
+}
 
+/* LISTAS */
 .horario-item, .tipo-item{
   border:1px dashed var(--borda);
   padding:10px;
@@ -96,6 +148,7 @@ button.primario{background:var(--marrom);color:#fff}
   cursor:pointer;
 }
 
+/* CHECKBOX */
 .checkbox-linha{
   display:flex;
   align-items:center;
@@ -103,11 +156,11 @@ button.primario{background:var(--marrom);color:#fff}
   margin-bottom:6px;
   font-weight:600;
 }
+
 .checkbox-linha input{
   width:auto;
   margin:0;
 }
-
 </style>
 </head>
 
@@ -117,10 +170,12 @@ button.primario{background:var(--marrom);color:#fff}
   <h2>🔔 Configuração de Notificações</h2>
 </header>
 
+<!-- MENU -->
 <div id="menu"></div>
 
 <div class="container">
 
+  <!-- TABS -->
   <div class="tabs">
     <div class="tab ativo" data-tab="horarios">⏰ Horários</div>
     <div class="tab" data-tab="tipos">📦 Tipos</div>
@@ -128,6 +183,7 @@ button.primario{background:var(--marrom);color:#fff}
     <div class="tab" data-tab="manuais">✍️ Manuais</div>
   </div>
 
+  <!-- HORÁRIOS -->
   <div id="tab-horarios">
     <div class="card">
       <h3>Horários de envio</h3>
@@ -136,6 +192,7 @@ button.primario{background:var(--marrom);color:#fff}
     </div>
   </div>
 
+  <!-- TIPOS -->
   <div id="tab-tipos" style="display:none">
     <div class="card">
       <h3>Tipos de notificação</h3>
@@ -144,6 +201,7 @@ button.primario{background:var(--marrom);color:#fff}
     </div>
   </div>
 
+  <!-- AUTOMÁTICAS -->
   <div id="tab-automaticas" style="display:none">
     <div class="card">
       <h3>⚙️ Notificações automáticas</h3>
@@ -160,6 +218,7 @@ button.primario{background:var(--marrom);color:#fff}
     </div>
   </div>
 
+  <!-- MANUAIS -->
   <div id="tab-manuais" style="display:none">
     <div class="card">
       <h3>Nova notificação manual</h3>
@@ -189,6 +248,7 @@ button.primario{background:var(--marrom);color:#fff}
 <!-- MODAL AUTOMÁTICA -->
 <div id="modalAutomatica" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9999;align-items:center;justify-content:center">
   <div style="background:#fff;width:95%;max-width:520px;border-radius:14px;padding:16px">
+
     <h3 style="color:#7b3f2a">⚙️ Notificação automática</h3>
 
     <label class="checkbox-linha">
@@ -234,63 +294,48 @@ button.primario{background:var(--marrom);color:#fff}
       <button class="primario" onclick="salvarAutomatica()">💾 Salvar</button>
       <button onclick="fecharModalAutomatica()">Cancelar</button>
     </div>
+
   </div>
 </div>
 
 <script>
+/* ================= DB ================= */
 const db = firebase.firestore();
 
-let horarioEditandoId = null;
-let tipoEditandoId = null;
-let automaticaEditandoId = null;
-
-/* ================= MENU ================= */
+/* ================= MENU (PADRÃO DEFINITIVO) ================= */
 fetch("../menu/menu-adm.html")
   .then(r => r.text())
   .then(html => {
-
     document.getElementById("menu").innerHTML = html;
 
-    document.querySelectorAll(".menu-link").forEach(a => {
-      if (a.getAttribute("href")?.includes("config.html")) {
+    document.querySelectorAll(".menu-link").forEach(a=>{
+      if(a.getAttribute("href")?.includes("config.html")){
         a.classList.add("ativo");
       }
     });
 
     const s = document.createElement("script");
     s.src = "../menu/menu-permissoes.js";
-    s.onload = () => {
-    document.body.style.display = "block";
-    inicializarTabs();     // ✅ AQUI
+    document.body.appendChild(s);
+
     carregarHorarios();
     carregarTipos();
     carregarAutomaticas();
-  };
-
-    document.body.appendChild(s);
   });
-</script>
 
-<script>
+/* ================= TABS – EVENT DELEGATION ================= */
+document.addEventListener("click", e=>{
+  const tab = e.target.closest(".tab");
+  if(!tab) return;
 
-/* ================= TABS ================= */
-function inicializarTabs() {
-  document.querySelectorAll(".tab").forEach(t => {
-    t.onclick = () => {
+  document.querySelectorAll(".tab").forEach(t=>t.classList.remove("ativo"));
+  tab.classList.add("ativo");
 
-      document.querySelectorAll(".tab")
-        .forEach(x => x.classList.remove("ativo"));
+  document.querySelectorAll("[id^=tab-]").forEach(d=>d.style.display="none");
 
-      t.classList.add("ativo");
-
-      document.querySelectorAll("[id^=tab-]")
-        .forEach(d => d.style.display = "none");
-
-      document.getElementById("tab-" + t.dataset.tab)
-        .style.display = "block";
-    };
-  });
-}
+  const alvo = document.getElementById("tab-"+tab.dataset.tab);
+  if(alvo) alvo.style.display="block";
+});
 
 /* ================= HORÁRIOS ================= */
 async function carregarHorarios() {
