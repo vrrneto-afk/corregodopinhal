@@ -103,6 +103,36 @@ button.primario{background:var(--marrom);color:#fff}
 }
 </style>
 </head>
+  <!-- MODAL HORÁRIO -->
+<div id="modalHorario" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.55);align-items:center;justify-content:center">
+  <div style="background:#fff;width:92%;max-width:420px;border-radius:14px;padding:16px">
+
+    <h3 style="margin-top:0;color:#7b3f2a">⏰ Horário</h3>
+
+    <div class="linha">
+      <label>Nome do horário</label>
+      <input id="hNome" placeholder="Ex: Manhã cedo">
+    </div>
+
+    <div class="linha">
+      <label>Hora de envio</label>
+      <input type="time" id="hHora">
+    </div>
+
+    <div class="linha">
+      <label>
+        <input type="checkbox" id="hAtivo"> Horário ativo
+      </label>
+    </div>
+
+    <div style="display:flex;gap:8px;margin-top:12px">
+      <button class="primario" onclick="salvarHorario()">💾 Salvar</button>
+      <button onclick="fecharModalHorario()">Cancelar</button>
+    </div>
+
+  </div>
+</div>
+  
 <body>
 
 <header>
@@ -206,20 +236,99 @@ document.querySelectorAll('.tab').forEach(t=>{
 });
 
 /* ===== HORÁRIOS ===== */
-async function carregarHorarios(){
-  const snap = await db.collection('config').doc('notificacoes_horarios').get();
-  if(!snap.exists) return;
-  const lista = snap.data().lista || [];
-  const div = document.getElementById('listaHorarios');
-  div.innerHTML = '';
+let horarioEditandoId = null;
 
-  lista.forEach(h=>{
+/* ===== HORÁRIOS ===== */
+async function carregarHorarios(){
+  const snap = await db.collection("config").doc("notificacoes_horarios").get();
+  if(!snap.exists) return;
+
+  const lista = snap.data().lista || [];
+  const div = document.getElementById("listaHorarios");
+  div.innerHTML = "";
+
+  lista.forEach(h => {
     div.innerHTML += `
-      <div class="horario-item">
+      <div class="horario-item" onclick="editarHorario('${h.id}')">
         <strong>${h.nome}</strong><br>
-        Hora: ${h.hora} | Ativo: ${h.ativo?"Sim":"Não"}
-      </div>`;
+        ⏰ ${h.hora} |
+        ${h.ativo ? "🟢 Ativo" : "🔴 Inativo"}
+      </div>
+    `;
   });
+}
+
+/* ===== NOVO HORÁRIO ===== */
+function novoHorario(){
+  horarioEditandoId = null;
+  hNome.value = "";
+  hHora.value = "";
+  hAtivo.checked = true;
+  abrirModalHorario();
+}
+
+/* ===== EDITAR ===== */
+async function editarHorario(id){
+  const snap = await db.collection("config").doc("notificacoes_horarios").get();
+  if(!snap.exists) return;
+
+  const h = snap.data().lista.find(x => x.id === id);
+  if(!h) return;
+
+  horarioEditandoId = id;
+  hNome.value = h.nome;
+  hHora.value = h.hora;
+  hAtivo.checked = h.ativo;
+
+  abrirModalHorario();
+}
+
+/* ===== SALVAR ===== */
+async function salvarHorario(){
+
+  const nome = hNome.value.trim();
+  const hora = hHora.value;
+  const ativo = hAtivo.checked;
+
+  if(!nome || !hora){
+    alert("Preencha nome e hora");
+    return;
+  }
+
+  const ref = db.collection("config").doc("notificacoes_horarios");
+  const snap = await ref.get();
+
+  let lista = snap.exists ? (snap.data().lista || []) : [];
+
+  if(horarioEditandoId){
+    // editar
+    lista = lista.map(h =>
+      h.id === horarioEditandoId
+        ? { ...h, nome, hora, ativo }
+        : h
+    );
+  }else{
+    // novo
+    lista.push({
+      id: nome.toLowerCase().replace(/\s+/g,"-"),
+      nome,
+      hora,
+      ativo
+    });
+  }
+
+  await ref.set({ ativo:true, lista }, { merge:true });
+
+  fecharModalHorario();
+  carregarHorarios();
+}
+
+/* ===== MODAL ===== */
+function abrirModalHorario(){
+  document.getElementById("modalHorario").style.display = "flex";
+}
+function fecharModalHorario(){
+  document.getElementById("modalHorario").style.display = "none";
 }
 
 function novoHorario(){
