@@ -187,12 +187,14 @@ button.primario{
 
   <!-- ABA HORÁRIOS -->
   <div id="tab-horarios">
-    <div class="card">
-      <h3>Horários</h3>
-      <div class="placeholder">Estrutura pronta.</div>
-      <button>➕ Novo horário</button>
-    </div>
+  <div class="card">
+    <h3>Horários</h3>
+
+    <div id="listaHorarios"></div>
+
+    <button onclick="novoHorario()">➕ Novo horário</button>
   </div>
+</div>
 
   <!-- ABA TIPOS -->
   <div id="tab-tipos" style="display:none">
@@ -239,11 +241,12 @@ fetch("../menu/menu-adm.html")
 
     /* injeta permissões */
     const s = document.createElement("script");
-    s.src = "../menu/menu-permissoes.js";
-    s.onload = () => {
-      document.body.style.display = "block";
-    };
-    document.body.appendChild(s);
+s.src = "../menu/menu-permissoes.js";
+s.onload = () => {
+  document.body.style.display = "block";
+  initHorarios();
+};
+document.body.appendChild(s);
   });
 
 </script>
@@ -379,12 +382,49 @@ function fecharModalHorario() {
   document.getElementById("modalHorario").style.display = "none";
 }
 
-/* ================= GARANTE INIT APÓS MENU =================
-   O menu libera o body → chamamos o init aqui
-   ========================================================== */
-document.addEventListener("DOMContentLoaded", () => {
-  initHorarios();
-});
+<!-- MODAL HORÁRIO -->
+<div id="modalHorario" style="
+  display:none;
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.55);
+  z-index:9999;
+  align-items:center;
+  justify-content:center;
+">
+
+  <div style="
+    background:#fff;
+    width:95%;
+    max-width:420px;
+    border-radius:16px;
+    padding:16px;
+  ">
+
+    <h3 style="color:#7b3f2a">⏰ Horário</h3>
+
+    <div style="margin-bottom:10px">
+      <label>Nome</label>
+      <input id="hNome">
+    </div>
+
+    <div style="margin-bottom:10px">
+      <label>Hora</label>
+      <input type="time" id="hHora">
+    </div>
+
+    <label>
+      <input type="checkbox" id="hAtivo" checked>
+      Ativo
+    </label>
+
+    <div style="display:flex;gap:8px;margin-top:14px">
+      <button class="primario" onclick="salvarHorario()">💾 Salvar</button>
+      <button onclick="fecharModalHorario()">Cancelar</button>
+    </div>
+
+  </div>
+</div>
 </script>
 
 <script src="../login/logout.js"></script>
