@@ -149,6 +149,38 @@ button.primario{
   font-style:italic;
   padding:10px 0;
 }
+
+.manual-card{
+  background:#fff;
+  border:1px solid var(--borda);
+  border-radius:14px;
+  padding:12px;
+  margin-bottom:14px;
+}
+
+.manual-header{
+  font-weight:700;
+  color:var(--marrom);
+  margin-bottom:6px;
+}
+
+.manual-body p{
+  margin:0 0 8px;
+}
+
+.manual-info{
+  display:flex;
+  gap:14px;
+  font-size:13px;
+  color:#666;
+}
+
+.manual-actions{
+  display:flex;
+  gap:8px;
+  margin-top:10px;
+}
+
 </style>
 </head>
 
@@ -682,16 +714,27 @@ async function carregarManuais() {
   }
 
   lista.forEach(m => {
-    container.innerHTML += `
-      <div class="item" style="margin-bottom:12px">
-        <strong>${m.titulo}</strong><br>
-        ${m.mensagem}<br>
-        📅 ${m.data} ⏰ ${m.hora}<br><br>
+   container.innerHTML += `
+  <div class="manual-card">
+    <div class="manual-header">
+      ${m.titulo}
+    </div>
 
-        <button onclick="editarManual('${m.id}')">✏️ Editar</button>
-        <button onclick="excluirManual('${m.id}')">🗑️ Excluir</button>
+    <div class="manual-body">
+      <p>${m.mensagem}</p>
+
+      <div class="manual-info">
+        <span>📅 ${m.data}</span>
+        <span>⏰ ${m.hora}</span>
       </div>
-    `;
+    </div>
+
+    <div class="manual-actions">
+      <button onclick="editarManual('${m.id}')">✏️ Editar</button>
+      <button onclick="excluirManual('${m.id}')">🗑️ Excluir</button>
+    </div>
+  </div>
+`;
   });
 }
 
