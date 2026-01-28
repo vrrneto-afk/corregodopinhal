@@ -277,6 +277,44 @@ button.primario{
   margin-top:10px;
 }
 
+/* ===============================
+   CARDS – TIPOS DE NOTIFICAÇÃO
+   =============================== */
+  .automatica-card{
+  background:#fdfdfd;
+  border:1px solid var(--borda);
+  border-radius:14px;
+  padding:14px;
+  margin-bottom:14px;
+}
+
+.automatica-header{
+  font-weight:700;
+  font-size:16px;
+  color:var(--marrom);
+  margin-bottom:6px;
+}
+
+.automatica-body p{
+  margin:0 0 6px;
+}
+
+.automatica-body .ativo{
+  color:#2f8f2f;
+  font-weight:600;
+}
+
+.automatica-body .inativo{
+  color:#c0392b;
+  font-weight:600;
+}
+
+.automatica-actions{
+  display:flex;
+  gap:8px;
+  margin-top:10px;
+}
+
 </style>
 </head>
 
@@ -337,12 +375,14 @@ button.primario{
 
   <!-- ABA AUTOMÁTICAS -->
   <div id="tab-automaticas" style="display:none">
-    <div class="card">
-      <h3>Notificações automáticas</h3>
-      <div class="placeholder">Estrutura pronta.</div>
-      <button>➕ Nova automática</button>
-    </div>
+  <div class="card">
+    <h3>Notificações automáticas</h3>
+
+    <div id="listaAutomaticas"></div>
+
+    <button onclick="novaAutomatica()">➕ Nova automática</button>
   </div>
+</div>
 
   <!-- ABA MANUAIS -->
   <div id="tab-manuais" style="display:none">
@@ -405,6 +445,7 @@ fetch("../menu/menu-adm.html")
       initHorarios();
       initTipos();
       initManuais();
+      initAutomaticas();
     };
     document.body.appendChild(s);
   });
@@ -431,6 +472,7 @@ document.querySelectorAll(".tab").forEach(tab => {
     /* init específico */
     if (tab.dataset.tab === "horarios") initHorarios();
     if (tab.dataset.tab === "tipos") initTipos();
+    if (tab.dataset.tab === "automaticas") initAutomaticas();
     if (tab.dataset.tab === "manuais") initManuais();
   });
 });
@@ -794,6 +836,199 @@ function fecharModalTipo() {
     </div>
   </div>
 </div>
+  
+<script>
+/* ======================================================
+   ABA ⚙️ AUTOMÁTICAS — SCRIPT COMPLETO E ISOLADO
+   ====================================================== */
+
+/* ===== ESTADO ===== */
+let automaticaEditandoId = null;
+
+/* ===== INIT ===== */
+function initAutomaticas() {
+  carregarAutomaticas();
+}
+
+/* ===== LISTAR ===== */
+async function carregarAutomaticas() {
+  const refAuto = db.collection("config").doc("notificacoes_automaticas");
+  const refTipos = db.collection("config").doc("notificacoes_tipos");
+  const refHorarios = db.collection("config").doc("notificacoes_horarios");
+
+  const [snapAuto, snapTipos, snapHorarios] = await Promise.all([
+    refAuto.get(),
+    refTipos.get(),
+    refHorarios.get()
+  ]);
+
+  const lista = snapAuto.exists ? snapAuto.data().lista || [] : [];
+  const tipos = snapTipos.exists ? snapTipos.data().lista || [] : [];
+  const horarios = snapHorarios.exists ? snapHorarios.data().lista || [] : [];
+
+  const container = document.getElementById("listaAutomaticas");
+  if (!container) return;
+
+  container.innerHTML = "";
+
+  if (lista.length === 0) {
+    container.innerHTML =
+      `<div class="placeholder">Nenhuma notificação automática cadastrada.</div>`;
+    return;
+  }
+
+  lista.forEach(a => {
+    const tipo = tipos.find(t => t.id === a.tipo_id);
+    const horario = horarios.find(h => h.id === a.horario_id);
+
+    container.innerHTML += `
+      <div class="automatica-card">
+        <div class="automatica-header">
+          ${a.nome}
+        </div>
+
+        <div class="automatica-body">
+          <p>📦 Tipo: <strong>${tipo ? tipo.nome : "—"}</strong></p>
+          <p>⏰ Horário: <strong>${horario ? horario.nome + " (" + horario.hora + ")" : "—"}</strong></p>
+          <span class="${a.ativo ? "ativo" : "inativo"}">
+            ${a.ativo ? "🟢 Ativa" : "🔴 Inativa"}
+          </span>
+        </div>
+
+        <div class="automatica-actions">
+          <button onclick="editarAutomatica('${a.id}')">✏️ Editar</button>
+          <button onclick="excluirAutomatica('${a.id}')">🗑️ Excluir</button>
+        </div>
+      </div>
+    `;
+  });
+}
+
+/* ===== NOVA ===== */
+async function novaAutomatica() {
+  automaticaEditandoId = null;
+
+  document.getElementById("aNome").value = "";
+  document.getElementById("aAtivo").checked = true;
+
+  await carregarSelectsAutomaticas();
+  document.getElementById("modalAutomatica").style.display = "flex";
+}
+
+/* ===== EDITAR ===== */
+async function editarAutomatica(id) {
+  const ref = db.collection("config").doc("notificacoes_automaticas");
+  const snap = await ref.get();
+  if (!snap.exists) return;
+
+  const a = snap.data().lista.find(x => x.id === id);
+  if (!a) return;
+
+  automaticaEditandoId = id;
+
+  document.getElementById("aNome").value = a.nome;
+  document.getElementById("aAtivo").checked = a.ativo;
+
+  await carregarSelectsAutomaticas(a.tipo_id, a.horario_id);
+  document.getElementById("modalAutomatica").style.display = "flex";
+}
+
+/* ===== SALVAR ===== */
+async function salvarAutomatica() {
+  const nome = document.getElementById("aNome").value.trim();
+  const tipo_id = document.getElementById("aTipo").value;
+  const horario_id = document.getElementById("aHorario").value;
+  const ativo = document.getElementById("aAtivo").checked;
+
+  if (!nome || !tipo_id || !horario_id) {
+    alert("Preencha todos os campos.");
+    return;
+  }
+
+  const ref = db.collection("config").doc("notificacoes_automaticas");
+  const snap = await ref.get();
+  let lista = snap.exists ? snap.data().lista || [] : [];
+
+  if (automaticaEditandoId) {
+    lista = lista.map(a =>
+      a.id === automaticaEditandoId
+        ? { ...a, nome, tipo_id, horario_id, ativo }
+        : a
+    );
+  } else {
+    lista.push({
+      id: crypto.randomUUID(),
+      nome,
+      tipo_id,
+      horario_id,
+      ativo
+    });
+  }
+
+  if (!confirm("Deseja salvar esta notificação automática?")) return;
+
+  await ref.set({ lista }, { merge: true });
+  alert("✅ Notificação automática salva com sucesso.");
+  fecharModalAutomatica();
+  carregarAutomaticas();
+}
+
+/* ===== EXCLUIR ===== */
+async function excluirAutomatica(id) {
+  if (!confirm("Deseja realmente excluir esta notificação automática?")) return;
+
+  const ref = db.collection("config").doc("notificacoes_automaticas");
+  const snap = await ref.get();
+  if (!snap.exists) return;
+
+  const lista = snap.data().lista.filter(a => a.id !== id);
+  await ref.set({ lista }, { merge: true });
+
+  alert("🗑️ Notificação automática excluída com sucesso.");
+  carregarAutomaticas();
+}
+
+/* ===== FECHAR MODAL ===== */
+function fecharModalAutomatica() {
+  document.getElementById("modalAutomatica").style.display = "none";
+}
+
+/* ===== SELECTS ===== */
+async function carregarSelectsAutomaticas(tipoSelecionado = "", horarioSelecionado = "") {
+  const refTipos = db.collection("config").doc("notificacoes_tipos");
+  const refHorarios = db.collection("config").doc("notificacoes_horarios");
+
+  const [snapTipos, snapHorarios] = await Promise.all([
+    refTipos.get(),
+    refHorarios.get()
+  ]);
+
+  const tipos = snapTipos.exists ? snapTipos.data().lista || [] : [];
+  const horarios = snapHorarios.exists ? snapHorarios.data().lista || [] : [];
+
+  const selTipo = document.getElementById("aTipo");
+  const selHorario = document.getElementById("aHorario");
+
+  selTipo.innerHTML = `<option value="">Selecione o tipo</option>`;
+  selHorario.innerHTML = `<option value="">Selecione o horário</option>`;
+
+  tipos.filter(t => t.ativo).forEach(t => {
+    selTipo.innerHTML += `
+      <option value="${t.id}" ${t.id === tipoSelecionado ? "selected" : ""}>
+        ${t.nome}
+      </option>
+    `;
+  });
+
+  horarios.filter(h => h.ativo).forEach(h => {
+    selHorario.innerHTML += `
+      <option value="${h.id}" ${h.id === horarioSelecionado ? "selected" : ""}>
+        ${h.nome} (${h.hora})
+      </option>
+    `;
+  });
+}
+</script>
 
 <script>
 /* ======================================================
