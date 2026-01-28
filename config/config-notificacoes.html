@@ -270,7 +270,9 @@ fetch("../menu/menu-adm.html")
     s.src = "../menu/menu-permissoes.js";
     s.onload = () => {
       document.body.style.display = "block";
-      initHorarios(); // 🔥 CHAMA HORÁRIOS SOMENTE AQUI
+      initHorarios();
+      initTipos();
+      initManuais();
     };
     document.body.appendChild(s);
   });
@@ -644,26 +646,82 @@ function fecharModalTipo() {
 </div>
 
 <script>
+
+<script>
 /* ======================================================
-   ABA ✍️ MANUAIS — SCRIPT COMPLETO
+   ABA ✍️ MANUAIS — SCRIPT COMPLETO E DEFINITIVO
    ====================================================== */
 
-/* ===== SALVAR NOTIFICAÇÃO MANUAL ===== */
+/* ===== INIT ===== */
+function initManuais(){
+  carregarManuais();
+}
+
+/* ===== LISTAR ===== */
+async function carregarManuais() {
+  const ref  = db.collection("config").doc("notificacoes_manuais");
+  const snap = await ref.get();
+
+  const lista = snap.exists ? snap.data().lista || [] : [];
+  const container = document.getElementById("listaManuais");
+
+  if (!container) return;
+
+  container.innerHTML = "";
+
+  if (lista.length === 0) {
+    container.innerHTML =
+      `<div class="placeholder">Nenhuma notificação manual cadastrada.</div>`;
+    return;
+  }
+
+  lista.forEach(m => {
+    container.innerHTML += `
+      <div class="item" style="margin-bottom:12px">
+        <strong>${m.titulo}</strong><br>
+        ${m.mensagem}<br>
+        📅 ${m.data} ⏰ ${m.hora}<br><br>
+
+        <button onclick="editarManual('${m.id}')">✏️ Editar</button>
+        <button onclick="excluirManual('${m.id}')">🗑️ Excluir</button>
+      </div>
+    `;
+  });
+}
+
+/* ===== SALVAR / EDITAR ===== */
 async function salvarManual() {
-  const titulo   = document.getElementById("mTitulo").value.trim();
-  const mensagem = document.getElementById("mMensagem").value.trim();
-  const data     = document.getElementById("mData").value;
-  const hora     = document.getElementById("mHora").value;
+  const titulo = document.getElementById("mTitulo").value.trim();
+  const mensagem = document.getElementById("mMsg").value.trim();
+  const data = document.getElementById("mData").value;
+  const hora = document.getElementById("mHora").value;
 
   if (!titulo || !mensagem || !data || !hora) {
     alert("Preencha todos os campos.");
     return;
   }
 
-  if (!confirm("Deseja enviar esta notificação manual?")) return;
+  const ref  = db.collection("config").doc("notificacoes_manuais");
+  const snap = await ref.get();
+  let lista  = snap.exists ? snap.data().lista || [] : [];
 
-  try {
-    await db.collection("notificacoes_manuais").add({
+  if (manualEditandoId) {
+    lista = lista.map(m =>
+      m.id === manualEditandoId
+        ? { ...m, titulo }
+        : m
+    );
+
+    lista = lista.map(m =>
+      m.id === manualEditandoId
+        ? { ...m, mensagem, data, hora }
+        : m
+    );
+
+    alert("✅ Notificação atualizada com sucesso.");
+  } else {
+    lista.push({
+      id: crypto.randomUUID(),
       titulo,
       mensagem,
       data,
@@ -671,18 +729,54 @@ async function salvarManual() {
       criado_em: firebase.firestore.FieldValue.serverTimestamp()
     });
 
-    alert("✅ Notificação manual enviada com sucesso.");
-
-    /* limpa formulário */
-    document.getElementById("mTitulo").value = "";
-    document.getElementById("mMensagem").value = "";
-    document.getElementById("mData").value = "";
-    document.getElementById("mHora").value = "";
-
-  } catch (e) {
-    console.error(e);
-    alert("❌ Erro ao salvar a notificação.");
+    alert("✅ Notificação salva com sucesso.");
   }
+
+  await ref.set({ lista }, { merge: true });
+
+  limparFormularioManual();
+  carregarManuais();
+}
+
+/* ===== EDITAR ===== */
+async function editarManual(id) {
+  const ref  = db.collection("config").doc("notificacoes_manuais");
+  const snap = await ref.get();
+  if (!snap.exists) return;
+
+  const m = snap.data().lista.find(x => x.id === id);
+  if (!m) return;
+
+  manualEditandoId = id;
+
+  document.getElementById("mTitulo").value = m.titulo;
+  document.getElementById("mMsg").value    = m.mensagem;
+  document.getElementById("mData").value   = m.data;
+  document.getElementById("mHora").value   = m.hora;
+}
+
+/* ===== EXCLUIR ===== */
+async function excluirManual(id) {
+  if (!confirm("Deseja realmente excluir esta notificação?")) return;
+
+  const ref  = db.collection("config").doc("notificacoes_manuais");
+  const snap = await ref.get();
+  if (!snap.exists) return;
+
+  const lista = snap.data().lista.filter(m => m.id !== id);
+  await ref.set({ lista }, { merge: true });
+
+  alert("🗑️ Notificação excluída com sucesso.");
+  carregarManuais();
+}
+
+/* ===== LIMPAR ===== */
+function limparFormularioManual() {
+  manualEditandoId = null;
+  document.getElementById("mTitulo").value = "";
+  document.getElementById("mMsg").value    = "";
+  document.getElementById("mData").value   = "";
+  document.getElementById("mHora").value   = "";
 }
 </script>
 <script src="../login/logout.js"></script>
