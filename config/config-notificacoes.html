@@ -696,7 +696,7 @@ async function carregarManuais() {
 /* ===== SALVAR / EDITAR ===== */
 async function salvarManual() {
   const titulo   = document.getElementById("mTitulo").value.trim();
-  const mensagem = document.getElementById("mMsg").value.trim();
+  const mensagem = document.getElementById("mMensagem").value.trim();
   const data     = document.getElementById("mData").value;
   const hora     = document.getElementById("mHora").value;
 
@@ -752,7 +752,7 @@ async function editarManual(id) {
   manualEditandoId = id;
 
   document.getElementById("mTitulo").value = m.titulo;
-  document.getElementById("mMsg").value    = m.mensagem;
+  document.getElementById("mMensagem").value    = m.mensagem;
   document.getElementById("mData").value   = m.data;
   document.getElementById("mHora").value   = m.hora;
 
@@ -778,7 +778,7 @@ async function excluirManual(id) {
 function limparFormularioManual() {
   manualEditandoId = null;
   document.getElementById("mTitulo").value = "";
-  document.getElementById("mMsg").value    = "";
+  document.getElementById("mMensagem").value    = "";
   document.getElementById("mData").value   = "";
   document.getElementById("mHora").value   = "";
 }
