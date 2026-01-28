@@ -247,7 +247,10 @@ button.primario{
     <button class="primario" onclick="salvarManual()">💾 Enviar notificação</button>
   </div>
 </div>
-
+  
+<button class="voltar" onclick="location.href='config.html'">
+    ⬅ Voltar para Configurações
+  </button>
 </div>
 
  <script>
@@ -645,8 +648,8 @@ function fecharModalTipo() {
     </div>
   </div>
 </div>
-
 <script>
+
 
 <script>
 /* ======================================================
@@ -693,7 +696,7 @@ async function carregarManuais() {
   });
 }
 
-/* ===== SALVAR / EDITAR ===== */
+/* ===== SALVAR ===== */
 async function salvarManual() {
   const titulo   = document.getElementById("mTitulo").value.trim();
   const mensagem = document.getElementById("mMensagem").value.trim();
@@ -752,9 +755,9 @@ async function editarManual(id) {
   manualEditandoId = id;
 
   document.getElementById("mTitulo").value = m.titulo;
-  document.getElementById("mMensagem").value    = m.mensagem;
-  document.getElementById("mData").value   = m.data;
-  document.getElementById("mHora").value   = m.hora;
+  document.getElementById("mMensagem").value = m.mensagem;
+  document.getElementById("mData").value = m.data;
+  document.getElementById("mHora").value = m.hora;
 
   alert("✏️ Editando notificação. Após alterar, clique em salvar.");
 }
@@ -774,15 +777,16 @@ async function excluirManual(id) {
   carregarManuais();
 }
 
-/* ===== LIMPAR FORM ===== */
+/* ===== LIMPAR ===== */
 function limparFormularioManual() {
   manualEditandoId = null;
   document.getElementById("mTitulo").value = "";
-  document.getElementById("mMensagem").value    = "";
-  document.getElementById("mData").value   = "";
-  document.getElementById("mHora").value   = "";
+  document.getElementById("mMensagem").value = "";
+  document.getElementById("mData").value = "";
+  document.getElementById("mHora").value = "";
 }
 </script>
+
 <script src="../login/logout.js"></script>
 </body>
 </html>
