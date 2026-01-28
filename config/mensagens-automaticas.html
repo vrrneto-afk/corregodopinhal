@@ -1,36 +1,35 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <title>Motor de Mensagens Automáticas</title>
+<meta charset="UTF-8">
+<title>Motor de Mensagens Automáticas</title>
 
-  <!-- Firebase -->
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
-  <script>
-    if (!firebase.apps.length) {
-      firebase.initializeApp({
-        apiKey: "AIzaSyCW-CuFDrOLO-dteckl_GrPTocmyS-IrzY",
-        authDomain: "sitio-corrego-do-pinhal.firebaseapp.com",
-        projectId: "sitio-corrego-do-pinhal"
-      });
-    }
-  </script>
+<script>
+if (!firebase.apps.length) {
+  firebase.initializeApp({
+    apiKey: "AIzaSyCW-CuFDrOLO-dteckl_GrPTocmyS-IrzY",
+    authDomain: "sitio-corrego-do-pinhal.firebaseapp.com",
+    projectId: "sitio-corrego-do-pinhal"
+  });
+}
+</script>
 </head>
 
 <body>
-  <!-- Nenhuma UI aqui -->
 
 <script>
 /* ======================================================
-   MOTOR DE MENSAGENS AUTOMÁTICAS — DEFINITIVO
+   MOTOR DE MENSAGENS AUTOMÁTICAS — FINAL
    ====================================================== */
 
 const db = firebase.firestore();
 
 /* ======================================================
-   UTILIDADES
+   UTIL
    ====================================================== */
 function normalizarData(d) {
   return new Date(d.getFullYear(), d.getMonth(), d.getDate());
@@ -43,9 +42,8 @@ function render(template, vars) {
 /* ======================================================
    CONFIG
    ====================================================== */
-async function carregarConfigMotor() {
-  const snap = await db
-    .collection("config")
+async function carregarConfig() {
+  const snap = await db.collection("config")
     .doc("mensagens_automaticas")
     .get();
 
@@ -53,24 +51,24 @@ async function carregarConfigMotor() {
 }
 
 /* ======================================================
-   EXECUÇÃO PRINCIPAL
+   EXECUÇÃO
    ====================================================== */
 async function executarMotor() {
-  const cfg = await carregarConfigMotor();
+  const cfg = await carregarConfig();
   const hoje = normalizarData(new Date());
 
-  await processarVacinas(cfg, hoje);
-  await processarPartos(cfg, hoje);
-  await processarCoberturas(cfg, hoje);
-  await processarAniversarios(cfg, hoje);
-  await processarCompras(cfg);
-  await processarEstoque(cfg);
+  await vacinas(cfg, hoje);
+  await partos(cfg, hoje);
+  await coberturas(cfg, hoje);
+  await aniversarios(cfg, hoje);
+  await compras(cfg);
+  await estoque(cfg);
 }
 
 /* ======================================================
    VACINAS
    ====================================================== */
-async function processarVacinas(cfg, hoje) {
+async function vacinas(cfg, hoje) {
   if (!cfg.vacinas) return;
 
   const snap = await db.collection("vacinas").get();
@@ -83,9 +81,7 @@ async function processarVacinas(cfg, hoje) {
     const diff = Math.floor((data - hoje) / 86400000);
 
     if (diff === 0 && cfg.vacinas.pendentes?.ativo) {
-      enviar(render(cfg.vacinas.pendentes.texto, {
-        animal: v.animal
-      }));
+      enviar(render(cfg.vacinas.pendentes.texto, { animal: v.animal }));
     }
 
     else if (diff < 0 && cfg.vacinas.atrasadas?.ativo) {
@@ -98,9 +94,9 @@ async function processarVacinas(cfg, hoje) {
 }
 
 /* ======================================================
-   PARTOS (HOJE E ATRASADOS — RÉGUA EVOLUI DEPOIS)
+   PARTOS — RÉGUA COMPLETA (PRINT)
    ====================================================== */
-async function processarPartos(cfg, hoje) {
+async function partos(cfg, hoje) {
   if (!cfg.partos) return;
 
   const snap = await db.collection("vacas").get();
@@ -112,12 +108,32 @@ async function processarPartos(cfg, hoje) {
     const data = normalizarData(new Date(v.data_parto_prevista));
     const dias = Math.floor((data - hoje) / 86400000);
 
-    if (dias === 0 && cfg.partos.hoje?.ativo) {
-      enviar(render(cfg.partos.hoje.texto, {
-        animal: v.nome
-      }));
+    // OK (partos longe) → nunca notifica
+    if (dias >= 75) return;
+
+    // FAIXAS (informativo, NÃO diário)
+    if (dias >= 60 && cfg.partos.faixa_60?.ativo) {
+      enviar(render(cfg.partos.faixa_60.texto, { animal: v.nome, dias }));
+    }
+    else if (dias >= 45 && cfg.partos.faixa_45?.ativo) {
+      enviar(render(cfg.partos.faixa_45.texto, { animal: v.nome, dias }));
+    }
+    else if (dias >= 30 && cfg.partos.faixa_30?.ativo) {
+      enviar(render(cfg.partos.faixa_30.texto, { animal: v.nome, dias }));
+    }
+    else if (dias >= 15 && cfg.partos.faixa_15?.ativo) {
+      enviar(render(cfg.partos.faixa_15.texto, { animal: v.nome, dias }));
+    }
+    else if (dias > 0 && cfg.partos.faixa_1?.ativo) {
+      enviar(render(cfg.partos.faixa_1.texto, { animal: v.nome, dias }));
     }
 
+    // HOJE → diário
+    else if (dias === 0 && cfg.partos.hoje?.ativo) {
+      enviar(render(cfg.partos.hoje.texto, { animal: v.nome }));
+    }
+
+    // ATRASADO → diário
     else if (dias < 0 && cfg.partos.atrasado?.ativo) {
       enviar(render(cfg.partos.atrasado.texto, {
         animal: v.nome,
@@ -128,9 +144,9 @@ async function processarPartos(cfg, hoje) {
 }
 
 /* ======================================================
-   COBERTURAS (24H APÓS EVENTO)
+   COBERTURAS (24h)
    ====================================================== */
-async function processarCoberturas(cfg, hoje) {
+async function coberturas(cfg, hoje) {
   if (!cfg.coberturas?.ativo) return;
 
   const snap = await db.collection("coberturas").get();
@@ -143,9 +159,7 @@ async function processarCoberturas(cfg, hoje) {
     const diff = Math.floor((hoje - data) / 86400000);
 
     if (diff === 1) {
-      enviar(render(cfg.coberturas.texto, {
-        animal: c.animal
-      }));
+      enviar(render(cfg.coberturas.texto, { animal: c.animal }));
     }
   });
 }
@@ -153,70 +167,60 @@ async function processarCoberturas(cfg, hoje) {
 /* ======================================================
    ANIVERSÁRIOS
    ====================================================== */
-async function processarAniversarios(cfg, hoje) {
+async function aniversarios(cfg, hoje) {
   if (!cfg.aniversarios?.ativo) return;
 
-  const dia = hoje.getDate();
-  const mes = hoje.getMonth() + 1;
+  const d = hoje.getDate();
+  const m = hoje.getMonth() + 1;
 
   const snap = await db.collection("aniversarios").get();
 
   snap.forEach(doc => {
     const a = doc.data();
-    if (a.dia === dia && a.mes === mes) {
-      enviar(render(cfg.aniversarios.texto, {
-        nome: a.nome
-      }));
+    if (a.dia === d && a.mes === m) {
+      enviar(render(cfg.aniversarios.texto, { nome: a.nome }));
     }
   });
 }
 
 /* ======================================================
-   ITENS A COMPRAR (AGREGADO)
+   ITENS A COMPRAR
    ====================================================== */
-async function processarCompras(cfg) {
+async function compras(cfg) {
   if (!cfg.compras?.ativo) return;
 
-  const snap = await db
-    .collection("compras")
+  const snap = await db.collection("compras")
     .where("comprado", "==", false)
     .get();
 
   if (!snap.empty) {
-    enviar(render(cfg.compras.texto, {
-      total: snap.size
-    }));
+    enviar(render(cfg.compras.texto, { total: snap.size }));
   }
 }
 
 /* ======================================================
    ESTOQUE ZERO
    ====================================================== */
-async function processarEstoque(cfg) {
+async function estoque(cfg) {
   if (!cfg.estoque_zero?.ativo) return;
 
-  const snap = await db
-    .collection("farmacia")
+  const snap = await db.collection("farmacia")
     .where("estoque", "==", 0)
     .get();
 
   if (!snap.empty) {
-    enviar(render(cfg.estoque_zero.texto, {
-      total: snap.size
-    }));
+    enviar(render(cfg.estoque_zero.texto, { total: snap.size }));
   }
 }
 
 /* ======================================================
-   ENVIO (STUB — FUTURO PUSH / FILA)
+   ENVIO (stub)
    ====================================================== */
-function enviar(mensagem) {
-  console.log("🔔 NOTIFICAÇÃO GERADA:", mensagem);
+function enviar(msg) {
+  console.log("🔔 NOTIFICAÇÃO:", msg);
 }
 
-/* ======================================================
-   START
-   ====================================================== */
+/* START */
 executarMotor();
 </script>
 
