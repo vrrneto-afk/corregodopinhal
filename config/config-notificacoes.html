@@ -220,6 +220,7 @@ button.primario{
   <div id="tab-manuais" style="display:none">
   <div class="card">
     <h3>Notificação manual</h3>
+    <div id="listaManuais"></div>
 
     <div style="margin-bottom:10px">
       <label>Título</label>
@@ -652,14 +653,17 @@ function fecharModalTipo() {
    ABA ✍️ MANUAIS — SCRIPT COMPLETO E DEFINITIVO
    ====================================================== */
 
+/* ===== ESTADO ===== */
+let manualEditandoId = null;
+
 /* ===== INIT ===== */
-function initManuais(){
+function initManuais() {
   carregarManuais();
 }
 
 /* ===== LISTAR ===== */
 async function carregarManuais() {
-  const ref  = db.collection("config").doc("notificacoes_manuais");
+  const ref = db.collection("config").doc("notificacoes_manuais");
   const snap = await ref.get();
 
   const lista = snap.exists ? snap.data().lista || [] : [];
@@ -691,10 +695,10 @@ async function carregarManuais() {
 
 /* ===== SALVAR / EDITAR ===== */
 async function salvarManual() {
-  const titulo = document.getElementById("mTitulo").value.trim();
+  const titulo   = document.getElementById("mTitulo").value.trim();
   const mensagem = document.getElementById("mMsg").value.trim();
-  const data = document.getElementById("mData").value;
-  const hora = document.getElementById("mHora").value;
+  const data     = document.getElementById("mData").value;
+  const hora     = document.getElementById("mHora").value;
 
   if (!titulo || !mensagem || !data || !hora) {
     alert("Preencha todos os campos.");
@@ -706,20 +710,18 @@ async function salvarManual() {
   let lista  = snap.exists ? snap.data().lista || [] : [];
 
   if (manualEditandoId) {
-    lista = lista.map(m =>
-      m.id === manualEditandoId
-        ? { ...m, titulo }
-        : m
-    );
+    if (!confirm("Deseja salvar as alterações desta notificação?")) return;
 
     lista = lista.map(m =>
       m.id === manualEditandoId
-        ? { ...m, mensagem, data, hora }
+        ? { ...m, titulo, mensagem, data, hora }
         : m
     );
 
     alert("✅ Notificação atualizada com sucesso.");
   } else {
+    if (!confirm("Deseja enviar esta notificação manual?")) return;
+
     lista.push({
       id: crypto.randomUUID(),
       titulo,
@@ -753,11 +755,13 @@ async function editarManual(id) {
   document.getElementById("mMsg").value    = m.mensagem;
   document.getElementById("mData").value   = m.data;
   document.getElementById("mHora").value   = m.hora;
+
+  alert("✏️ Editando notificação. Após alterar, clique em salvar.");
 }
 
 /* ===== EXCLUIR ===== */
 async function excluirManual(id) {
-  if (!confirm("Deseja realmente excluir esta notificação?")) return;
+  if (!confirm("Deseja realmente excluir esta notificação manual?")) return;
 
   const ref  = db.collection("config").doc("notificacoes_manuais");
   const snap = await ref.get();
@@ -770,7 +774,7 @@ async function excluirManual(id) {
   carregarManuais();
 }
 
-/* ===== LIMPAR ===== */
+/* ===== LIMPAR FORM ===== */
 function limparFormularioManual() {
   manualEditandoId = null;
   document.getElementById("mTitulo").value = "";
