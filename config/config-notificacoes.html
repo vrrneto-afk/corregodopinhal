@@ -716,13 +716,13 @@ async function salvarManual() {
     let lista = snap.exists ? snap.data().lista || [] : [];
 
     lista.push({
-      id: crypto.randomUUID(),
-      titulo,
-      mensagem,
-      data,
-      hora,
-      criado_em: firebase.firestore.FieldValue.serverTimestamp()
-    });
+  id: crypto.randomUUID(),
+  titulo,
+  mensagem,
+  data,
+  hora,
+  criado_em: Date.now()
+});
 
     await ref.set({ lista }, { merge: true });
 
