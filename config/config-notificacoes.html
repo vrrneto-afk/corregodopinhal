@@ -1030,6 +1030,55 @@ async function carregarSelectsAutomaticas(tipoSelecionado = "", horarioSeleciona
 }
 </script>
 
+  <!-- ======================================================
+     MODAL ⚙️ AUTOMÁTICA — HTML
+     ====================================================== -->
+<div id="modalAutomatica" style="
+  display:none;
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.55);
+  z-index:9999;
+  align-items:center;
+  justify-content:center;
+">
+  <div style="
+    background:#fff;
+    width:95%;
+    max-width:420px;
+    border-radius:16px;
+    padding:16px;
+  ">
+    <h3 style="color:#7b3f2a">⚙️ Notificação automática</h3>
+
+    <div style="margin-bottom:10px">
+      <label>Nome</label>
+      <input id="aNome">
+    </div>
+
+    <div style="margin-bottom:10px">
+      <label>Tipo</label>
+      <select id="aTipo"></select>
+    </div>
+
+    <div style="margin-bottom:10px">
+      <label>Horário</label>
+      <select id="aHorario"></select>
+    </div>
+
+    <label>
+      <input type="checkbox" id="aAtivo" checked>
+      Ativa
+    </label>
+
+    <div style="display:flex;gap:8px;margin-top:14px">
+      <button class="primario" onclick="salvarAutomatica()">💾 Salvar</button>
+      <button onclick="fecharModalAutomatica()">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+
 <script>
 /* ======================================================
    ABA ✍️ MANUAIS — SCRIPT COMPLETO E DEFINITIVO
