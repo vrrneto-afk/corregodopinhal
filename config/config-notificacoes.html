@@ -707,22 +707,35 @@ async function salvarManual() {
     return;
   }
 
-  if (!confirm("Deseja enviar esta notificação manual?")) return;
-
   const ref = db.collection("config").doc("notificacoes_manuais");
 
   try {
     const snap = await ref.get();
     let lista = snap.exists ? snap.data().lista || [] : [];
 
-    lista.push({
-  id: crypto.randomUUID(),
-  titulo,
-  mensagem,
-  data,
-  hora,
-  criado_em: Date.now()
-});
+    if (manualEditandoId) {
+      // 🔁 EDITAR (substitui o item existente)
+      if (!confirm("Deseja salvar as alterações desta notificação?")) return;
+
+      lista = lista.map(m =>
+        m.id === manualEditandoId
+          ? { ...m, titulo, mensagem, data, hora }
+          : m
+      );
+
+    } else {
+      // ➕ NOVO
+      if (!confirm("Deseja salvar esta notificação manual?")) return;
+
+      lista.push({
+        id: crypto.randomUUID(),
+        titulo,
+        mensagem,
+        data,
+        hora,
+        criado_em: Date.now()
+      });
+    }
 
     await ref.set({ lista }, { merge: true });
 
@@ -730,9 +743,9 @@ async function salvarManual() {
     limparFormularioManual();
     carregarManuais();
 
-  } catch (erro) {
-    console.error("❌ Erro ao salvar notificação manual:", erro);
-    alert("Erro ao salvar a notificação. Verifique permissões.");
+  } catch (e) {
+    console.error("Erro ao salvar notificação manual:", e);
+    alert("Erro ao salvar a notificação.");
   }
 }
 
