@@ -707,22 +707,13 @@ async function salvarManual() {
     return;
   }
 
-  const ref  = db.collection("config").doc("notificacoes_manuais");
-  const snap = await ref.get();
-  let lista  = snap.exists ? snap.data().lista || [] : [];
+  if (!confirm("Deseja enviar esta notificação manual?")) return;
 
-  if (manualEditandoId) {
-    if (!confirm("Deseja salvar as alterações desta notificação?")) return;
+  const ref = db.collection("config").doc("notificacoes_manuais");
 
-    lista = lista.map(m =>
-      m.id === manualEditandoId
-        ? { ...m, titulo, mensagem, data, hora }
-        : m
-    );
-
-    alert("✅ Notificação atualizada com sucesso.");
-  } else {
-    if (!confirm("Deseja enviar esta notificação manual?")) return;
+  try {
+    const snap = await ref.get();
+    let lista = snap.exists ? snap.data().lista || [] : [];
 
     lista.push({
       id: crypto.randomUUID(),
@@ -733,13 +724,16 @@ async function salvarManual() {
       criado_em: firebase.firestore.FieldValue.serverTimestamp()
     });
 
+    await ref.set({ lista }, { merge: true });
+
     alert("✅ Notificação salva com sucesso.");
+    limparFormularioManual();
+    carregarManuais();
+
+  } catch (erro) {
+    console.error("❌ Erro ao salvar notificação manual:", erro);
+    alert("Erro ao salvar a notificação. Verifique permissões.");
   }
-
-  await ref.set({ lista }, { merge: true });
-
-  limparFormularioManual();
-  carregarManuais();
 }
 
 /* ===== EDITAR ===== */
