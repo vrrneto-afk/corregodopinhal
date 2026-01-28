@@ -225,7 +225,12 @@ window.addEventListener("load", () => {
   console.log("🚀 Motor de mensagens iniciado");
   executarMotor();
 });
+function enviar(msg) {
+  console.log("🔔 NOTIFICAÇÃO:", msg);
+}
 
+console.log("🧪 Teste manual de envio");
+enviar("Mensagem de teste do motor");
 </script>
 
 </body>
