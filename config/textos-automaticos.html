@@ -45,14 +45,23 @@ body{
   font-family:Inter,system-ui,Arial;
   background:#f6efe7;
   margin:0;
-  padding:20px;
+  padding:16px;
   display:none; /* 🔒 padrão do projeto */
 }
 
-h2{
-  color:#7b3f2a;
+/* CONTAINER */
+.page-container{
+  max-width:900px;
+  margin:0 auto;
 }
 
+/* TÍTULO */
+h2{
+  color:#7b3f2a;
+  margin-top:10px;
+}
+
+/* CARD */
 .card{
   background:#fff;
   border-radius:16px;
@@ -66,34 +75,63 @@ h2{
   color:#7b3f2a;
 }
 
+/* BLOCO */
+.linha{
+  margin-bottom:16px;
+}
+
+.switch{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  margin-bottom:6px;
+}
+
+label{
+  font-weight:600;
+  font-size:14px;
+}
+
+/* INPUT */
 textarea{
   width:100%;
   min-height:60px;
   border-radius:10px;
   border:1px solid #ccc;
   padding:8px;
+  font-size:14px;
 }
 
-label{
-  font-weight:600;
-}
-
-.linha{
-  margin-bottom:14px;
-}
-
-.switch{
-  margin-bottom:10px;
-}
-
-button{
+/* BOTÃO */
+.btn-salvar{
   background:#7b3f2a;
   color:#fff;
   border:none;
-  padding:10px 18px;
-  border-radius:10px;
+  padding:12px 18px;
+  border-radius:12px;
   font-weight:700;
   cursor:pointer;
+  width:100%;
+  margin-bottom:30px;
+}
+
+/* MOBILE */
+@media (max-width:600px){
+  body{
+    padding:12px;
+  }
+
+  h2{
+    font-size:18px;
+  }
+
+  .card{
+    padding:12px;
+  }
+
+  textarea{
+    font-size:14px;
+  }
 }
 </style>
 </head>
@@ -103,11 +141,13 @@ button{
 <!-- MENU -->
 <div id="menu-adm"></div>
 
-<h2>⚙️ Textos das Mensagens Automáticas</h2>
+<div class="page-container">
+  <h2>⚙️ Textos das Mensagens Automáticas</h2>
 
-<div id="conteudo"></div>
+  <div id="conteudo"></div>
 
-<button onclick="salvar()">💾 Salvar configurações</button>
+  <button class="btn-salvar" onclick="salvar()">💾 Salvar configurações</button>
+</div>
 
 <script>
 /* ======================================================
@@ -196,10 +236,8 @@ function bloco(campo){
   return `
     <div class="linha">
       <div class="switch">
-        <label>
-          <input type="checkbox" data-ativo="${campo}" ${get(campo).ativo ? "checked":""}>
-          Ativo
-        </label>
+        <input type="checkbox" data-ativo="${campo}" ${get(campo).ativo ? "checked":""}>
+        <label>Ativo</label>
       </div>
       <textarea data-texto="${campo}">${get(campo).texto}</textarea>
     </div>
