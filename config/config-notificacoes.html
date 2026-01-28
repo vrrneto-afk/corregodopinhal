@@ -193,6 +193,90 @@ button.primario{
   box-shadow:0 4px 10px rgba(0,0,0,.06);
 }
 
+/* ===============================
+   CARDS – HORÁRIOS
+   =============================== */
+
+.horario-card{
+  width:100%;
+  background:#fdfdfd;
+  border:1px solid var(--borda);
+  border-radius:14px;
+  padding:14px;
+  margin-bottom:14px;
+}
+
+.horario-header{
+  font-weight:700;
+  font-size:16px;
+  color:var(--marrom);
+  margin-bottom:6px;
+}
+
+.horario-body{
+  display:flex;
+  gap:16px;
+  font-size:14px;
+  color:#444;
+}
+
+.horario-body .ativo{
+  color:#2f8f2f;
+  font-weight:600;
+}
+
+.horario-body .inativo{
+  color:#c0392b;
+  font-weight:600;
+}
+
+.horario-actions{
+  display:flex;
+  gap:8px;
+  margin-top:10px;
+}
+
+/* ===============================
+   CARDS – TIPOS DE NOTIFICAÇÃO
+   =============================== */
+
+.tipo-card{
+  width:100%;
+  background:#fdfdfd;
+  border:1px solid var(--borda);
+  border-radius:14px;
+  padding:14px;
+  margin-bottom:14px;
+}
+
+.tipo-header{
+  font-weight:700;
+  font-size:16px;
+  color:var(--marrom);
+  margin-bottom:6px;
+}
+
+.tipo-body p{
+  margin:0 0 6px;
+  color:#444;
+}
+
+.tipo-body .ativo{
+  color:#2f8f2f;
+  font-weight:600;
+}
+
+.tipo-body .inativo{
+  color:#c0392b;
+  font-weight:600;
+}
+
+.tipo-actions{
+  display:flex;
+  gap:8px;
+  margin-top:10px;
+}
+
 </style>
 </head>
 
@@ -387,16 +471,25 @@ async function carregarHorarios() {
 
   lista.forEach(h => {
     container.innerHTML += `
-      <div class="item" style="margin-bottom:10px">
-        <strong>${h.nome}</strong><br>
-        ⏰ ${h.hora} — ${h.ativo ? "🟢 Ativo" : "🔴 Inativo"}<br><br>
+    <div class="horario-card">
+      <div class="horario-header">
+        ${h.nome}
+      </div>
 
+      <div class="horario-body">
+        <span>⏰ ${h.hora}</span>
+        <span class="${h.ativo ? "ativo" : "inativo"}">
+          ${h.ativo ? "🟢 Ativo" : "🔴 Inativo"}
+        </span>
+      </div>
+
+      <div class="horario-actions">
         <button onclick="editarHorario('${h.id}')">✏️ Editar</button>
         <button onclick="excluirHorario('${h.id}')">🗑️ Excluir</button>
       </div>
-    `;
-  });
-}
+    </div>
+  `;
+});
 
 /* ===== NOVO ===== */
 function novoHorario() {
@@ -551,18 +644,26 @@ async function carregarTipos() {
   }
 
   lista.forEach(t => {
-    container.innerHTML += `
-      <div class="item" style="margin-bottom:10px">
-        <strong>${t.nome}</strong><br>
-        ${t.descricao || ""}<br>
-        ${t.ativo ? "🟢 Ativo" : "🔴 Inativo"}<br><br>
+     container.innerHTML += `
+    <div class="tipo-card">
+      <div class="tipo-header">
+        ${t.nome}
+      </div>
 
+      <div class="tipo-body">
+        ${t.descricao ? `<p>${t.descricao}</p>` : ""}
+        <span class="${t.ativo ? "ativo" : "inativo"}">
+          ${t.ativo ? "🟢 Ativo" : "🔴 Inativo"}
+        </span>
+      </div>
+
+      <div class="tipo-actions">
         <button onclick="editarTipo('${t.id}')">✏️ Editar</button>
         <button onclick="excluirTipo('${t.id}')">🗑️ Excluir</button>
       </div>
-    `;
-  });
-}
+    </div>
+  `;
+});
 
 /* ===== NOVO ===== */
 function novoTipo() {
