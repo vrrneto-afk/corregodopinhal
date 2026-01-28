@@ -150,35 +150,47 @@ button.primario{
   padding:10px 0;
 }
 
+/* CARD INDIVIDUAL – NOTIFICAÇÃO MANUAL */
 .manual-card{
-  background:#fff;
-  border:1px solid var(--borda);
-  border-radius:14px;
-  padding:12px;
+  width:100%;
+  background:#fdfdfd;
+  border:1px solid #e0e0e0;
+  border-radius:12px;
+  padding:14px;
   margin-bottom:14px;
 }
 
+/* TÍTULO */
 .manual-header{
   font-weight:700;
+  font-size:16px;
   color:var(--marrom);
   margin-bottom:6px;
 }
 
+/* TEXTO */
 .manual-body p{
   margin:0 0 8px;
+  color:#333;
 }
 
+/* DATA / HORA */
 .manual-info{
   display:flex;
-  gap:14px;
+  gap:16px;
   font-size:13px;
   color:#666;
 }
 
+/* AÇÕES */
 .manual-actions{
   display:flex;
-  gap:8px;
+  gap:10px;
   margin-top:10px;
+}
+
+.manual-card:hover{
+  box-shadow:0 4px 10px rgba(0,0,0,.06);
 }
 
 </style>
@@ -716,9 +728,7 @@ async function carregarManuais() {
   lista.forEach(m => {
    container.innerHTML += `
   <div class="manual-card">
-    <div class="manual-header">
-      ${m.titulo}
-    </div>
+    <div class="manual-header">${m.titulo}</div>
 
     <div class="manual-body">
       <p>${m.mensagem}</p>
