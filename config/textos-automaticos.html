@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Mensagens Automáticas – Textos</title>
+
+<!-- MANIFEST -->
+<link rel="manifest" href="../manifest.json">
+<meta name="theme-color" content="#7b3f2a">
+
+<!-- MENU GLOBAL -->
+<link rel="stylesheet" href="../menu/menu.css">
+
+<!-- CONFIG CSS -->
+<link rel="stylesheet" href="./config.css">
+
+<!-- FIREBASE -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+<script>
+if (!firebase.apps.length) {
+  firebase.initializeApp({
+    apiKey: "AIzaSyCW-CuFDrOLO-dteckl_GrPTocmyS-IrzY",
+    authDomain: "sitio-corrego-do-pinhal.firebaseapp.com",
+    projectId: "sitio-corrego-do-pinhal"
+  });
+}
+</script>
+
+<!-- IDENTIFICAÇÃO DA PÁGINA -->
+<script>
+window.PERMISSAO_PAGINA = {
+  area: "config",
+  chave: "textos-automaticos"
+};
+</script>
+
+<!-- AUTH GUARD GLOBAL -->
+<script src="../login/auth-guard.js"></script>
+</head>
+
+<style>
+body{
+  font-family:Inter,system-ui,Arial;
+  background:#f6efe7;
+  margin:0;
+  padding:20px;
+}
+h2{
+  color:#7b3f2a;
+}
+.card{
+  background:#fff;
+  border-radius:16px;
+  padding:16px;
+  margin-bottom:20px;
+  border:1px solid #e5e5e5;
+}
+.card h3{
+  margin-top:0;
+  color:#7b3f2a;
+}
+textarea{
+  width:100%;
+  min-height:60px;
+  border-radius:10px;
+  border:1px solid #ccc;
+  padding:8px;
+}
+label{
+  font-weight:600;
+}
+.linha{
+  margin-bottom:14px;
+}
+.switch{
+  margin-bottom:10px;
+}
+button{
+  background:#7b3f2a;
+  color:#fff;
+  border:none;
+  padding:10px 18px;
+  border-radius:10px;
+  font-weight:700;
+  cursor:pointer;
+}
+</style>
+</head>
+
+<body>
+
+<h2>⚙️ Textos das Mensagens Automáticas</h2>
+
+<div id="conteudo"></div>
+
+<button onclick="salvar()">💾 Salvar configurações</button>
+
+<script>
+/* MENU ADM – PADRÃO GLOBAL DEFINITIVO */
+fetch("../menu/menu-adm.html")
+  .then(r => r.text())
+  .then(html => {
+    document.getElementById("menu-adm").innerHTML = html;
+
+    document.querySelectorAll(".menu-link").forEach(a=>{
+      if(a.getAttribute("href")?.includes("config.html")){
+        a.classList.add("ativo");
+      }
+    });
+
+    const s = document.createElement("script");
+    s.src = "../menu/menu-permissoes.js";
+    s.onload = () => {
+      document.body.style.display = "block";
+      carregar();
+    };
+    document.body.appendChild(s);
+  });
+</script>
+
+<script>
+const db = firebase.firestore();
+let dados = {};
+
+/* ================= LOAD ================= */
+async function carregar() {
+  const snap = await db.collection("config")
+    .doc("mensagens_automaticas")
+    .get();
+
+  dados = snap.exists ? snap.data() : estruturaPadrao();
+  render();
+}
+
+/* ================= PADRÃO ================= */
+function estruturaPadrao(){
+  return {
+    vacinas:{
+      pendentes:{ ativo:true, texto:"💉 {{animal}} tem vacina marcada para hoje" },
+      atrasadas:{ ativo:true, texto:"⚠️ {{animal}} está {{dias}} dias com vacina atrasada" }
+    },
+    partos:{
+      faixa_60:{ ativo:true, texto:"⏳ Faltam {{dias}} dias para o parto de {{animal}}" },
+      faixa_45:{ ativo:true, texto:"⚠️ Atenção: {{animal}} – {{dias}} dias para o parto" },
+      faixa_30:{ ativo:true, texto:"⚠️ Preparar parto: {{animal}} ({{dias}} dias)" },
+      faixa_15:{ ativo:true, texto:"🚨 Atenção ao parto de {{animal}} – {{dias}} dias" },
+      faixa_1:{ ativo:true, texto:"🔥 Parto iminente: {{animal}} ({{dias}} dias)" },
+      hoje:{ ativo:true, texto:"🚨 Parto previsto para HOJE: {{animal}}" },
+      atrasado:{ ativo:true, texto:"🔥 Parto atrasado há {{dias}} dias: {{animal}}" }
+    },
+    coberturas:{
+      ativo:true,
+      texto:"🐄 Nova cobertura registrada para {{animal}}"
+    },
+    aniversarios:{
+      ativo:true,
+      texto:"🎉 Hoje é aniversário de {{nome}}"
+    },
+    compras:{
+      ativo:true,
+      texto:"🛒 Você tem {{total}} itens pendentes para comprar"
+    },
+    estoque_zero:{
+      ativo:true,
+      texto:"💊 {{total}} remédios estão com estoque zerado"
+    }
+  };
+}
+
+/* ================= RENDER ================= */
+function bloco(titulo, campo){
+  return `
+    <div class="linha">
+      <div class="switch">
+        <label>
+          <input type="checkbox" data-ativo="${campo}" ${get(campo).ativo ? "checked":""}>
+          Ativo
+        </label>
+      </div>
+      <textarea data-texto="${campo}">${get(campo).texto}</textarea>
+    </div>
+  `;
+}
+
+function get(path){
+  return path.split(".").reduce((o,k)=>o[k], dados);
+}
+
+function render(){
+  const c = document.getElementById("conteudo");
+  c.innerHTML = `
+    <div class="card">
+      <h3>💉 Vacinas</h3>
+      ${bloco("Pendentes","vacinas.pendentes")}
+      ${bloco("Atrasadas","vacinas.atrasadas")}
+    </div>
+
+    <div class="card">
+      <h3>🐄 Partos</h3>
+      ${bloco("60–74 dias","partos.faixa_60")}
+      ${bloco("45–59 dias","partos.faixa_45")}
+      ${bloco("30–44 dias","partos.faixa_30")}
+      ${bloco("15–29 dias","partos.faixa_15")}
+      ${bloco("1–14 dias","partos.faixa_1")}
+      ${bloco("Hoje","partos.hoje")}
+      ${bloco("Atrasado","partos.atrasado")}
+    </div>
+
+    <div class="card">
+      <h3>🐂 Coberturas</h3>
+      ${bloco("Cobertura","coberturas")}
+    </div>
+
+    <div class="card">
+      <h3>🎂 Aniversários</h3>
+      ${bloco("Aniversário","aniversarios")}
+    </div>
+
+    <div class="card">
+      <h3>🛒 Itens a comprar</h3>
+      ${bloco("Compras","compras")}
+    </div>
+
+    <div class="card">
+      <h3>💊 Estoque zerado</h3>
+      ${bloco("Estoque","estoque_zero")}
+    </div>
+  `;
+}
+
+/* ================= SAVE ================= */
+async function salvar(){
+  document.querySelectorAll("[data-ativo]").forEach(el=>{
+    get(el.dataset.ativo).ativo = el.checked;
+  });
+  document.querySelectorAll("[data-texto]").forEach(el=>{
+    get(el.dataset.texto).texto = el.value;
+  });
+
+  await db.collection("config")
+    .doc("mensagens_automaticas")
+    .set(dados, { merge:true });
+
+  alert("✅ Textos salvos com sucesso");
+}
+
+/* INIT */
+carregar();
+</script>
+
+</body>
+</html>
