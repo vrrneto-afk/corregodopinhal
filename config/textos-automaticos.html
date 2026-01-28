@@ -42,6 +42,9 @@ window.PERMISSAO_PAGINA = {
 <script src="../login/auth-guard.js"></script>
 
 <style>
+/* ===============================
+   BASE
+   =============================== */
 body{
   font-family:Inter,system-ui,Arial;
   background:#f6efe7;
@@ -50,7 +53,7 @@ body{
   display:none; /* 🔒 padrão do projeto */
 }
 
-/* CONTAINER */
+/* CONTAINER CENTRAL */
 .page-container{
   max-width:900px;
   margin:0 auto;
@@ -59,51 +62,67 @@ body{
 /* TÍTULO */
 h2{
   color:#7b3f2a;
-  margin-top:10px;
+  margin:12px 0 18px;
+  font-size:20px;
 }
 
-/* CARD */
+/* ===============================
+   CARD
+   =============================== */
 .card{
   background:#fff;
   border-radius:16px;
   padding:16px;
-  margin-bottom:20px;
+  margin-bottom:18px;
   border:1px solid #e5e5e5;
 }
 
 .card h3{
-  margin-top:0;
+  margin:0 0 12px;
   color:#7b3f2a;
+  font-size:16px;
 }
 
-/* BLOCO */
+/* ===============================
+   BLOCO DE TEXTO
+   =============================== */
 .linha{
-  margin-bottom:16px;
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+  margin-bottom:14px;
 }
 
+/* CHECKBOX */
 .switch{
   display:flex;
   align-items:center;
   gap:8px;
-  margin-bottom:6px;
-}
-
-label{
   font-weight:600;
   font-size:14px;
+  color:#333;
 }
 
-/* INPUT */
+.switch input[type="checkbox"]{
+  margin:0;
+  transform:scale(1.1);
+}
+
+/* TEXTO DA MENSAGEM */
 textarea{
   width:100%;
-  min-height:60px;
+  min-height:44px;        /* 🔑 altura correta */
+  resize:vertical;
   border-radius:10px;
   border:1px solid #ccc;
-  padding:8px;
+  padding:8px 10px;
   font-size:14px;
+  line-height:1.3;
 }
 
-/* BOTÃO */
+/* ===============================
+   BOTÃO
+   =============================== */
 .btn-salvar{
   background:#7b3f2a;
   color:#fff;
@@ -113,10 +132,12 @@ textarea{
   font-weight:700;
   cursor:pointer;
   width:100%;
-  margin-bottom:30px;
+  margin:20px 0 30px;
 }
 
-/* MOBILE */
+/* ===============================
+   MOBILE
+   =============================== */
 @media (max-width:600px){
   body{
     padding:12px;
@@ -238,7 +259,7 @@ function bloco(campo){
     <div class="linha">
       <div class="switch">
         <input type="checkbox" data-ativo="${campo}" ${get(campo).ativo ? "checked":""}>
-        <label>Ativo</label>
+        <span>Ativo</span>
       </div>
       <textarea data-texto="${campo}">${get(campo).texto}</textarea>
     </div>
