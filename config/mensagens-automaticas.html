@@ -221,7 +221,11 @@ function enviar(msg) {
 }
 
 /* START */
-executarMotor();
+window.addEventListener("load", () => {
+  console.log("🚀 Motor de mensagens iniciado");
+  executarMotor();
+});
+
 </script>
 
 </body>
