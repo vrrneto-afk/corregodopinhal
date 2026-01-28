@@ -37,9 +37,8 @@ window.PERMISSAO_PAGINA = {
 };
 </script>
 
-<!-- AUTH GUARD GLOBAL -->
+<!-- AUTH GUARD -->
 <script src="../login/auth-guard.js"></script>
-</head>
 
 <style>
 body{
@@ -47,10 +46,13 @@ body{
   background:#f6efe7;
   margin:0;
   padding:20px;
+  display:none; /* 🔒 padrão do projeto */
 }
+
 h2{
   color:#7b3f2a;
 }
+
 .card{
   background:#fff;
   border-radius:16px;
@@ -58,10 +60,12 @@ h2{
   margin-bottom:20px;
   border:1px solid #e5e5e5;
 }
+
 .card h3{
   margin-top:0;
   color:#7b3f2a;
 }
+
 textarea{
   width:100%;
   min-height:60px;
@@ -69,15 +73,19 @@ textarea{
   border:1px solid #ccc;
   padding:8px;
 }
+
 label{
   font-weight:600;
 }
+
 .linha{
   margin-bottom:14px;
 }
+
 .switch{
   margin-bottom:10px;
 }
+
 button{
   background:#7b3f2a;
   color:#fff;
@@ -92,6 +100,9 @@ button{
 
 <body>
 
+<!-- MENU -->
+<div id="menu-adm"></div>
+
 <h2>⚙️ Textos das Mensagens Automáticas</h2>
 
 <div id="conteudo"></div>
@@ -99,7 +110,9 @@ button{
 <button onclick="salvar()">💾 Salvar configurações</button>
 
 <script>
-/* MENU ADM – PADRÃO GLOBAL DEFINITIVO */
+/* ======================================================
+   MENU ADM – PADRÃO DEFINITIVO
+   ====================================================== */
 fetch("../menu/menu-adm.html")
   .then(r => r.text())
   .then(html => {
@@ -122,6 +135,10 @@ fetch("../menu/menu-adm.html")
 </script>
 
 <script>
+/* ======================================================
+   LÓGICA DA TELA
+   ====================================================== */
+
 const db = firebase.firestore();
 let dados = {};
 
@@ -170,8 +187,12 @@ function estruturaPadrao(){
   };
 }
 
-/* ================= RENDER ================= */
-function bloco(titulo, campo){
+/* ================= HELPERS ================= */
+function get(path){
+  return path.split(".").reduce((o,k)=>o[k], dados);
+}
+
+function bloco(campo){
   return `
     <div class="linha">
       <div class="switch">
@@ -185,48 +206,45 @@ function bloco(titulo, campo){
   `;
 }
 
-function get(path){
-  return path.split(".").reduce((o,k)=>o[k], dados);
-}
-
+/* ================= RENDER ================= */
 function render(){
   const c = document.getElementById("conteudo");
   c.innerHTML = `
     <div class="card">
       <h3>💉 Vacinas</h3>
-      ${bloco("Pendentes","vacinas.pendentes")}
-      ${bloco("Atrasadas","vacinas.atrasadas")}
+      ${bloco("vacinas.pendentes")}
+      ${bloco("vacinas.atrasadas")}
     </div>
 
     <div class="card">
       <h3>🐄 Partos</h3>
-      ${bloco("60–74 dias","partos.faixa_60")}
-      ${bloco("45–59 dias","partos.faixa_45")}
-      ${bloco("30–44 dias","partos.faixa_30")}
-      ${bloco("15–29 dias","partos.faixa_15")}
-      ${bloco("1–14 dias","partos.faixa_1")}
-      ${bloco("Hoje","partos.hoje")}
-      ${bloco("Atrasado","partos.atrasado")}
+      ${bloco("partos.faixa_60")}
+      ${bloco("partos.faixa_45")}
+      ${bloco("partos.faixa_30")}
+      ${bloco("partos.faixa_15")}
+      ${bloco("partos.faixa_1")}
+      ${bloco("partos.hoje")}
+      ${bloco("partos.atrasado")}
     </div>
 
     <div class="card">
       <h3>🐂 Coberturas</h3>
-      ${bloco("Cobertura","coberturas")}
+      ${bloco("coberturas")}
     </div>
 
     <div class="card">
       <h3>🎂 Aniversários</h3>
-      ${bloco("Aniversário","aniversarios")}
+      ${bloco("aniversarios")}
     </div>
 
     <div class="card">
       <h3>🛒 Itens a comprar</h3>
-      ${bloco("Compras","compras")}
+      ${bloco("compras")}
     </div>
 
     <div class="card">
       <h3>💊 Estoque zerado</h3>
-      ${bloco("Estoque","estoque_zero")}
+      ${bloco("estoque_zero")}
     </div>
   `;
 }
@@ -236,6 +254,7 @@ async function salvar(){
   document.querySelectorAll("[data-ativo]").forEach(el=>{
     get(el.dataset.ativo).ativo = el.checked;
   });
+
   document.querySelectorAll("[data-texto]").forEach(el=>{
     get(el.dataset.texto).texto = el.value;
   });
@@ -246,10 +265,8 @@ async function salvar(){
 
   alert("✅ Textos salvos com sucesso");
 }
-
-/* INIT */
-carregar();
 </script>
 
+<script src="../login/logout.js"></script>
 </body>
 </html>
