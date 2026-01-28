@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Motor de Mensagens Automáticas</title>
+
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+  <script>
+    if (!firebase.apps.length) {
+      firebase.initializeApp({
+        apiKey: "AIzaSyCW-CuFDrOLO-dteckl_GrPTocmyS-IrzY",
+        authDomain: "sitio-corrego-do-pinhal.firebaseapp.com",
+        projectId: "sitio-corrego-do-pinhal"
+      });
+    }
+  </script>
+</head>
+
+<body>
+  <!-- Nenhuma UI aqui -->
+
+<script>
+/* ======================================================
+   MOTOR DE MENSAGENS AUTOMÁTICAS — DEFINITIVO
+   ====================================================== */
+
+const db = firebase.firestore();
+
+/* ======================================================
+   UTILIDADES
+   ====================================================== */
+function normalizarData(d) {
+  return new Date(d.getFullYear(), d.getMonth(), d.getDate());
+}
+
+function render(template, vars) {
+  return template.replace(/\{\{(\w+)\}\}/g, (_, k) => vars[k] ?? "");
+}
+
+/* ======================================================
+   CONFIG
+   ====================================================== */
+async function carregarConfigMotor() {
+  const snap = await db
+    .collection("config")
+    .doc("mensagens_automaticas")
+    .get();
+
+  return snap.exists ? snap.data() : {};
+}
+
+/* ======================================================
+   EXECUÇÃO PRINCIPAL
+   ====================================================== */
+async function executarMotor() {
+  const cfg = await carregarConfigMotor();
+  const hoje = normalizarData(new Date());
+
+  await processarVacinas(cfg, hoje);
+  await processarPartos(cfg, hoje);
+  await processarCoberturas(cfg, hoje);
+  await processarAniversarios(cfg, hoje);
+  await processarCompras(cfg);
+  await processarEstoque(cfg);
+}
+
+/* ======================================================
+   VACINAS
+   ====================================================== */
+async function processarVacinas(cfg, hoje) {
+  if (!cfg.vacinas) return;
+
+  const snap = await db.collection("vacinas").get();
+
+  snap.forEach(doc => {
+    const v = doc.data();
+    if (!v.data_proxima_dose) return;
+
+    const data = normalizarData(new Date(v.data_proxima_dose));
+    const diff = Math.floor((data - hoje) / 86400000);
+
+    if (diff === 0 && cfg.vacinas.pendentes?.ativo) {
+      enviar(render(cfg.vacinas.pendentes.texto, {
+        animal: v.animal
+      }));
+    }
+
+    else if (diff < 0 && cfg.vacinas.atrasadas?.ativo) {
+      enviar(render(cfg.vacinas.atrasadas.texto, {
+        animal: v.animal,
+        dias: Math.abs(diff)
+      }));
+    }
+  });
+}
+
+/* ======================================================
+   PARTOS (HOJE E ATRASADOS — RÉGUA EVOLUI DEPOIS)
+   ====================================================== */
+async function processarPartos(cfg, hoje) {
+  if (!cfg.partos) return;
+
+  const snap = await db.collection("vacas").get();
+
+  snap.forEach(doc => {
+    const v = doc.data();
+    if (!v.data_parto_prevista) return;
+
+    const data = normalizarData(new Date(v.data_parto_prevista));
+    const dias = Math.floor((data - hoje) / 86400000);
+
+    if (dias === 0 && cfg.partos.hoje?.ativo) {
+      enviar(render(cfg.partos.hoje.texto, {
+        animal: v.nome
+      }));
+    }
+
+    else if (dias < 0 && cfg.partos.atrasado?.ativo) {
+      enviar(render(cfg.partos.atrasado.texto, {
+        animal: v.nome,
+        dias: Math.abs(dias)
+      }));
+    }
+  });
+}
+
+/* ======================================================
+   COBERTURAS (24H APÓS EVENTO)
+   ====================================================== */
+async function processarCoberturas(cfg, hoje) {
+  if (!cfg.coberturas?.ativo) return;
+
+  const snap = await db.collection("coberturas").get();
+
+  snap.forEach(doc => {
+    const c = doc.data();
+    if (!c.data) return;
+
+    const data = normalizarData(new Date(c.data));
+    const diff = Math.floor((hoje - data) / 86400000);
+
+    if (diff === 1) {
+      enviar(render(cfg.coberturas.texto, {
+        animal: c.animal
+      }));
+    }
+  });
+}
+
+/* ======================================================
+   ANIVERSÁRIOS
+   ====================================================== */
+async function processarAniversarios(cfg, hoje) {
+  if (!cfg.aniversarios?.ativo) return;
+
+  const dia = hoje.getDate();
+  const mes = hoje.getMonth() + 1;
+
+  const snap = await db.collection("aniversarios").get();
+
+  snap.forEach(doc => {
+    const a = doc.data();
+    if (a.dia === dia && a.mes === mes) {
+      enviar(render(cfg.aniversarios.texto, {
+        nome: a.nome
+      }));
+    }
+  });
+}
+
+/* ======================================================
+   ITENS A COMPRAR (AGREGADO)
+   ====================================================== */
+async function processarCompras(cfg) {
+  if (!cfg.compras?.ativo) return;
+
+  const snap = await db
+    .collection("compras")
+    .where("comprado", "==", false)
+    .get();
+
+  if (!snap.empty) {
+    enviar(render(cfg.compras.texto, {
+      total: snap.size
+    }));
+  }
+}
+
+/* ======================================================
+   ESTOQUE ZERO
+   ====================================================== */
+async function processarEstoque(cfg) {
+  if (!cfg.estoque_zero?.ativo) return;
+
+  const snap = await db
+    .collection("farmacia")
+    .where("estoque", "==", 0)
+    .get();
+
+  if (!snap.empty) {
+    enviar(render(cfg.estoque_zero.texto, {
+      total: snap.size
+    }));
+  }
+}
+
+/* ======================================================
+   ENVIO (STUB — FUTURO PUSH / FILA)
+   ====================================================== */
+function enviar(mensagem) {
+  console.log("🔔 NOTIFICAÇÃO GERADA:", mensagem);
+}
+
+/* ======================================================
+   START
+   ====================================================== */
+executarMotor();
+</script>
+
+</body>
+</html>
