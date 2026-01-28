@@ -218,12 +218,34 @@ button.primario{
 
   <!-- ABA MANUAIS -->
   <div id="tab-manuais" style="display:none">
-    <div class="card">
-      <h3>Notificação manual</h3>
-      <div class="placeholder">Estrutura pronta.</div>
-      <button class="primario">💾 Salvar</button>
+  <div class="card">
+    <h3>Notificação manual</h3>
+
+    <div style="margin-bottom:10px">
+      <label>Título</label>
+      <input id="mTitulo" placeholder="Ex: Viagem amanhã">
     </div>
+
+    <div style="margin-bottom:10px">
+      <label>Mensagem</label>
+      <textarea id="mMensagem" rows="3"
+        placeholder="Ex: Não esquecer documentos e ferramentas."></textarea>
+    </div>
+
+    <div style="display:flex;gap:10px;margin-bottom:10px">
+      <div style="flex:1">
+        <label>Data</label>
+        <input type="date" id="mData">
+      </div>
+      <div style="flex:1">
+        <label>Hora</label>
+        <input type="time" id="mHora">
+      </div>
+    </div>
+
+    <button class="primario" onclick="salvarManual()">💾 Enviar notificação</button>
   </div>
+</div>
 
 </div>
 
@@ -621,6 +643,48 @@ function fecharModalTipo() {
   </div>
 </div>
 
+<script>
+/* ======================================================
+   ABA ✍️ MANUAIS — SCRIPT COMPLETO
+   ====================================================== */
+
+/* ===== SALVAR NOTIFICAÇÃO MANUAL ===== */
+async function salvarManual() {
+  const titulo   = document.getElementById("mTitulo").value.trim();
+  const mensagem = document.getElementById("mMensagem").value.trim();
+  const data     = document.getElementById("mData").value;
+  const hora     = document.getElementById("mHora").value;
+
+  if (!titulo || !mensagem || !data || !hora) {
+    alert("Preencha todos os campos.");
+    return;
+  }
+
+  if (!confirm("Deseja enviar esta notificação manual?")) return;
+
+  try {
+    await db.collection("notificacoes_manuais").add({
+      titulo,
+      mensagem,
+      data,
+      hora,
+      criado_em: firebase.firestore.FieldValue.serverTimestamp()
+    });
+
+    alert("✅ Notificação manual enviada com sucesso.");
+
+    /* limpa formulário */
+    document.getElementById("mTitulo").value = "";
+    document.getElementById("mMensagem").value = "";
+    document.getElementById("mData").value = "";
+    document.getElementById("mHora").value = "";
+
+  } catch (e) {
+    console.error(e);
+    alert("❌ Erro ao salvar a notificação.");
+  }
+}
+</script>
 <script src="../login/logout.js"></script>
 </body>
 </html>
