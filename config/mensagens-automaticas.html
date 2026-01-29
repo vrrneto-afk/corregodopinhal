@@ -2,235 +2,125 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<title>Motor de Mensagens Automáticas</title>
+<title>Motor de Mensagens – ADM</title>
 
-<!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
 <script>
-if (!firebase.apps.length) {
-  firebase.initializeApp({
-    apiKey: "AIzaSyCW-CuFDrOLO-dteckl_GrPTocmyS-IrzY",
-    authDomain: "sitio-corrego-do-pinhal.firebaseapp.com",
-    projectId: "sitio-corrego-do-pinhal"
-  });
-}
+firebase.initializeApp({
+  apiKey: "AIzaSyCW-CuFDrOLO-dteckl_GrPTocmyS-IrzY",
+  authDomain: "sitio-corrego-do-pinhal.firebaseapp.com",
+  projectId: "sitio-corrego-do-pinhal"
+});
 </script>
+
+<style>
+body{font-family:system-ui;background:#f6efe7;padding:20px}
+button{padding:12px;font-size:15px}
+pre{background:#fff;padding:12px;border-radius:8px;margin-top:10px}
+</style>
 </head>
 
 <body>
 
+<h2>⚙️ Motor de Mensagens</h2>
+<button onclick="rodarMotor()">▶️ Executar Motor</button>
+
+<pre id="log"></pre>
+
 <script>
-/* ======================================================
-   MOTOR DE MENSAGENS AUTOMÁTICAS — FINAL
-   ====================================================== */
-
 const db = firebase.firestore();
+const log = msg => document.getElementById("log").textContent += msg + "\n";
 
-/* ======================================================
-   UTIL
-   ====================================================== */
-function normalizarData(d) {
-  return new Date(d.getFullYear(), d.getMonth(), d.getDate());
+async function rodarMotor(){
+  document.getElementById("log").textContent = "";
+  log("🔄 Iniciando motor...");
+
+  await motorVacinas();
+  await motorParto();
+  await motorEventos();
+  await motorEstoque();
+  await motorAniversarios();
+
+  log("✅ Motor finalizado");
 }
 
-function render(template, vars) {
-  return template.replace(/\{\{(\w+)\}\}/g, (_, k) => vars[k] ?? "");
-}
-
-/* ======================================================
-   CONFIG
-   ====================================================== */
-async function carregarConfig() {
-  const snap = await db.collection("config")
-    .doc("mensagens_automaticas")
-    .get();
-
-  return snap.exists ? snap.data() : {};
-}
-
-/* ======================================================
-   EXECUÇÃO
-   ====================================================== */
-async function executarMotor() {
-  const cfg = await carregarConfig();
-  const hoje = normalizarData(new Date());
-
-  await vacinas(cfg, hoje);
-  await partos(cfg, hoje);
-  await coberturas(cfg, hoje);
-  await aniversarios(cfg, hoje);
-  await compras(cfg);
-  await estoque(cfg);
-}
-
-/* ======================================================
-   VACINAS
-   ====================================================== */
-async function vacinas(cfg, hoje) {
-  if (!cfg.vacinas) return;
-
+/* ===== VACINAS ===== */
+async function motorVacinas(){
+  log("💉 Verificando vacinas...");
+  const hoje = new Date().toISOString().split("T")[0];
   const snap = await db.collection("vacinas").get();
 
-  snap.forEach(doc => {
-    const v = doc.data();
-    if (!v.data_proxima_dose) return;
-
-    const data = normalizarData(new Date(v.data_proxima_dose));
-    const diff = Math.floor((data - hoje) / 86400000);
-
-    if (diff === 0 && cfg.vacinas.pendentes?.ativo) {
-      enviar(render(cfg.vacinas.pendentes.texto, { animal: v.animal }));
+  snap.forEach(d=>{
+    const v = d.data();
+    if(v.data_proxima_dose < hoje){
+      log(`🚨 Vacina atrasada: ${v.nome_animal} - ${v.nome_vacina}`);
     }
-
-    else if (diff < 0 && cfg.vacinas.atrasadas?.ativo) {
-      enviar(render(cfg.vacinas.atrasadas.texto, {
-        animal: v.animal,
-        dias: Math.abs(diff)
-      }));
+    if(v.data_proxima_dose === hoje){
+      log(`💉 Vacina vence hoje: ${v.nome_animal}`);
     }
   });
 }
 
-/* ======================================================
-   PARTOS — RÉGUA COMPLETA (PRINT)
-   ====================================================== */
-async function partos(cfg, hoje) {
-  if (!cfg.partos) return;
+/* ===== PARTO ===== */
+async function motorParto(){
+  log("🐄 Verificando partos...");
+  const vacas = await db.collection("vacas").where("ativo","==",true).get();
 
-  const snap = await db.collection("vacas").get();
+  for(const d of vacas.docs){
+    const v = d.data();
+    const estadoRef = db.collection("motor_estado_parto").doc(d.id);
+    const estadoSnap = await estadoRef.get();
+    const ultimo = estadoSnap.exists ? estadoSnap.data().ultimo_status : null;
 
-  snap.forEach(doc => {
-    const v = doc.data();
-    if (!v.data_parto_prevista) return;
-
-    const data = normalizarData(new Date(v.data_parto_prevista));
-    const dias = Math.floor((data - hoje) / 86400000);
-
-    // OK (partos longe) → nunca notifica
-    if (dias >= 75) return;
-
-    // FAIXAS (informativo, NÃO diário)
-    if (dias >= 60 && cfg.partos.faixa_60?.ativo) {
-      enviar(render(cfg.partos.faixa_60.texto, { animal: v.nome, dias }));
+    if(ultimo !== v.status_parto){
+      log(`🪧 ${v.nome} mudou para ${v.status_parto}`);
+      await estadoRef.set({ultimo_status:v.status_parto});
     }
-    else if (dias >= 45 && cfg.partos.faixa_45?.ativo) {
-      enviar(render(cfg.partos.faixa_45.texto, { animal: v.nome, dias }));
-    }
-    else if (dias >= 30 && cfg.partos.faixa_30?.ativo) {
-      enviar(render(cfg.partos.faixa_30.texto, { animal: v.nome, dias }));
-    }
-    else if (dias >= 15 && cfg.partos.faixa_15?.ativo) {
-      enviar(render(cfg.partos.faixa_15.texto, { animal: v.nome, dias }));
-    }
-    else if (dias > 0 && cfg.partos.faixa_1?.ativo) {
-      enviar(render(cfg.partos.faixa_1.texto, { animal: v.nome, dias }));
-    }
-
-    // HOJE → diário
-    else if (dias === 0 && cfg.partos.hoje?.ativo) {
-      enviar(render(cfg.partos.hoje.texto, { animal: v.nome }));
-    }
-
-    // ATRASADO → diário
-    else if (dias < 0 && cfg.partos.atrasado?.ativo) {
-      enviar(render(cfg.partos.atrasado.texto, {
-        animal: v.nome,
-        dias: Math.abs(dias)
-      }));
-    }
-  });
-}
-
-/* ======================================================
-   COBERTURAS (24h)
-   ====================================================== */
-async function coberturas(cfg, hoje) {
-  if (!cfg.coberturas?.ativo) return;
-
-  const snap = await db.collection("coberturas").get();
-
-  snap.forEach(doc => {
-    const c = doc.data();
-    if (!c.data) return;
-
-    const data = normalizarData(new Date(c.data));
-    const diff = Math.floor((hoje - data) / 86400000);
-
-    if (diff === 1) {
-      enviar(render(cfg.coberturas.texto, { animal: c.animal }));
-    }
-  });
-}
-
-/* ======================================================
-   ANIVERSÁRIOS
-   ====================================================== */
-async function aniversarios(cfg, hoje) {
-  if (!cfg.aniversarios?.ativo) return;
-
-  const d = hoje.getDate();
-  const m = hoje.getMonth() + 1;
-
-  const snap = await db.collection("aniversarios").get();
-
-  snap.forEach(doc => {
-    const a = doc.data();
-    if (a.dia === d && a.mes === m) {
-      enviar(render(cfg.aniversarios.texto, { nome: a.nome }));
-    }
-  });
-}
-
-/* ======================================================
-   ITENS A COMPRAR
-   ====================================================== */
-async function compras(cfg) {
-  if (!cfg.compras?.ativo) return;
-
-  const snap = await db.collection("compras")
-    .where("comprado", "==", false)
-    .get();
-
-  if (!snap.empty) {
-    enviar(render(cfg.compras.texto, { total: snap.size }));
   }
 }
 
-/* ======================================================
-   ESTOQUE ZERO
-   ====================================================== */
-async function estoque(cfg) {
-  if (!cfg.estoque_zero?.ativo) return;
+/* ===== EVENTOS ===== */
+async function motorEventos(){
+  log("📅 Verificando eventos...");
+  const hoje = new Date().toISOString().split("T")[0];
+  const eventos = await db.collection("eventos").where("ativo","==",true).get();
 
-  const snap = await db.collection("farmacia")
-    .where("estoque", "==", 0)
-    .get();
-
-  if (!snap.empty) {
-    enviar(render(cfg.estoque_zero.texto, { total: snap.size }));
-  }
+  eventos.forEach(d=>{
+    if(d.data().data_evento === hoje){
+      log(`📌 Evento hoje: ${d.data().titulo}`);
+    }
+  });
 }
 
-/* ======================================================
-   ENVIO (stub)
-   ====================================================== */
-function enviar(msg) {
-  console.log("🔔 NOTIFICAÇÃO:", msg);
+/* ===== ESTOQUE ===== */
+async function motorEstoque(){
+  log("📦 Verificando estoque...");
+  const itens = await db.collection("farmacia").get();
+
+  itens.forEach(d=>{
+    const i = d.data();
+    if(i.estoque_atual <= 0){
+      log(`🚨 Estoque zerado: ${i.nome}`);
+    }
+  });
 }
 
-/* START */
-window.addEventListener("load", () => {
-  console.log("🚀 Motor de mensagens iniciado");
-  executarMotor();
-});
-function enviar(msg) {
-  console.log("🔔 NOTIFICAÇÃO:", msg);
-}
+/* ===== ANIVERSÁRIOS ===== */
+async function motorAniversarios(){
+  log("🎂 Verificando aniversários...");
+  const hoje = new Date();
+  const dia = hoje.getDate();
+  const mes = hoje.getMonth()+1;
 
-console.log("🧪 Teste manual de envio");
-enviar("Mensagem de teste do motor");
+  const snap = await db.collection("config").doc("aniversarios").get();
+  (snap.data()?.lista||[]).forEach(a=>{
+    if(a.ativo && a.dia === dia && a.mes === mes){
+      log(`🎉 Aniversário de ${a.nome}`);
+    }
+  });
+}
 </script>
 
 </body>
