@@ -22,10 +22,7 @@ firebase.initializeApp({
 </script>
 
 <script>
-window.PERMISSAO_PAGINA = {
-  area: "adm",
-  chave: "cadastro_mensagem"
-};
+window.PERMISSAO_PAGINA = { area: "adm", chave: "cadastro_mensagem" };
 </script>
 
 <script src="../login/auth-guard.js"></script>
@@ -46,37 +43,41 @@ header{background:var(--logo);padding:14px;text-align:center;font-weight:800}
 label{font-weight:600;margin-top:10px;display:block}
 input,select,textarea{width:100%;padding:10px;border-radius:8px;border:1px solid #ccc}
 textarea{min-height:70px}
+select[multiple]{min-height:90px}
 
 button{width:100%;padding:12px;margin-top:14px;border:none;border-radius:10px;font-size:15px;cursor:pointer}
 .salvar{background:var(--verde);color:#fff}
 .excluir{background:var(--vermelho);color:#fff}
 .cancelar{background:#999;color:#fff}
 
-.card{border:1px solid #ddd;border-radius:10px;padding:12px;margin-top:12px}
-.actions{display:flex;gap:8px;margin-top:8px}
+.card{
+  border:1px solid #ddd;
+  border-radius:12px;
+  padding:14px;
+  margin-top:14px;
+  background:#fafafa;
+}
+.card h4{margin:0 0 6px 0}
+.card small{color:#666}
+.card p{margin:8px 0}
+
+.actions{display:flex;gap:8px;margin-top:10px}
 .actions button{flex:1}
 
 .hidden{display:none}
 
-/* ====== TABS ====== */
-.tabs{
-  display:flex;
-  gap:8px;
-  margin-bottom:16px;
-}
+/* ===== TABS ===== */
+.tabs{display:flex;gap:8px;margin-bottom:16px}
 .tab-btn{
   flex:1;
   padding:12px;
   border:none;
   border-radius:10px;
   font-weight:700;
-  cursor:pointer;
   background:#e5e5e5;
+  cursor:pointer;
 }
-.tab-btn.ativa{
-  background:var(--marrom);
-  color:#fff;
-}
+.tab-btn.ativa{background:var(--marrom);color:#fff}
 </style>
 </head>
 
@@ -88,66 +89,67 @@ button{width:100%;padding:12px;margin-top:14px;border:none;border-radius:10px;fo
 <div class="container">
 
 <div class="tabs">
-  <button class="tab-btn ativa" onclick="abrirAba('manuais', this)">📢 Manuais</button>
-  <button class="tab-btn" onclick="abrirAba('automaticas', this)">⚙️ Automáticas</button>
+  <button class="tab-btn ativa" onclick="abrirAba('manuais',this)">📢 Manuais</button>
+  <button class="tab-btn" onclick="abrirAba('automaticas',this)">⚙️ Automáticas</button>
 </div>
 
 <!-- ================= ABA MANUAIS ================= -->
 <div id="aba-manuais">
 
-  <label>Data</label>
-  <input type="date" id="m_data">
+<label>Data</label>
+<input type="date" id="m_data">
 
-  <label>Horário</label>
-  <input type="time" id="m_hora">
+<label>Horário</label>
+<input type="time" id="m_hora">
 
-  <label>Grupo de usuários</label>
-  <select id="m_grupos" multiple></select>
+<label>Grupo de usuários</label>
+<select id="m_grupos" multiple></select>
 
-  <label>Título</label>
-  <input id="m_titulo">
+<label>Título</label>
+<input id="m_titulo">
 
-  <label>Mensagem</label>
-  <textarea id="m_texto"></textarea>
+<label>Mensagem</label>
+<textarea id="m_texto"></textarea>
 
-  <button class="salvar" onclick="salvarManual()">💾 Salvar</button>
-  <button class="cancelar hidden" id="btnCancelarManual" onclick="cancelarManual()">↩️ Cancelar</button>
+<button class="salvar" onclick="salvarManual()">💾 Salvar</button>
+<button class="cancelar hidden" id="btnCancelarManual" onclick="cancelarManual()">↩️ Cancelar</button>
 
-  <div id="listaManuais"></div>
+<div id="listaManuais"></div>
 </div>
 
 <!-- ================= ABA AUTOMÁTICAS ================= -->
 <div id="aba-automaticas" class="hidden">
 
-  <label>Horário</label>
-  <select id="a_horario"></select>
+<label>Horário</label>
+<select id="a_horario"></select>
 
-  <label>Tipo da mensagem</label>
-  <select id="a_tipo"></select>
+<label>Tipo da mensagem</label>
+<select id="a_tipo"></select>
 
-  <label>Grupo de usuários</label>
-  <select id="a_grupos" multiple></select>
+<label>Grupo de usuários</label>
+<select id="a_grupos" multiple></select>
 
-  <label>Mensagem (template)</label>
-  <textarea id="a_texto"></textarea>
+<label>Mensagem (template)</label>
+<textarea id="a_texto"></textarea>
 
-  <label>
-    <input type="checkbox" id="a_ativo" checked> Ativa
-  </label>
+<label>
+  <input type="checkbox" id="a_ativo" checked> Ativa
+</label>
 
-  <button class="salvar" onclick="salvarAutomatica()">💾 Salvar</button>
-  <button class="cancelar hidden" id="btnCancelarAuto" onclick="cancelarAutomatica()">↩️ Cancelar</button>
+<button class="salvar" onclick="salvarAutomatica()">💾 Salvar</button>
+<button class="cancelar hidden" id="btnCancelarAuto" onclick="cancelarAutomatica()">↩️ Cancelar</button>
 
-  <div id="listaAutomaticas"></div>
+<div id="listaAutomaticas"></div>
 </div>
 
 </div>
 
 <script>
+/* ===== MENU ===== */
 fetch("../menu/menu-adm.html")
 .then(r=>r.text())
 .then(html=>{
-  document.getElementById("menu-adm").innerHTML=html;
+  document.getElementById("menu-adm").innerHTML = html;
   document.querySelectorAll(".menu-link").forEach(a=>{
     if(a.getAttribute("href")?.includes("cadastro_mensagem")){
       a.classList.add("ativo");
@@ -160,11 +162,11 @@ fetch("../menu/menu-adm.html")
 
 const db = firebase.firestore();
 
-/* ================= ESTADO ================= */
+/* ===== ESTADO ===== */
 let modoManual="novo", manualAtual=null;
 let modoAuto="novo", autoAtual=null;
 
-/* ================= TABS ================= */
+/* ===== TABS ===== */
 function abrirAba(aba, btn){
   document.getElementById("aba-manuais").classList.toggle("hidden", aba!=="manuais");
   document.getElementById("aba-automaticas").classList.toggle("hidden", aba!=="automaticas");
@@ -172,10 +174,10 @@ function abrirAba(aba, btn){
   btn.classList.add("ativa");
 }
 
-/* ================= CONFIG ================= */
+/* ===== CONFIG ===== */
 async function carregarGrupos(){
-  const snap=await db.collection("config").doc("grupos").get();
-  const lista=snap.data()?.lista||[];
+  const snap = await db.collection("config").doc("grupos").get();
+  const lista = snap.data()?.lista || [];
   m_grupos.innerHTML=""; a_grupos.innerHTML="";
   lista.forEach(g=>{
     m_grupos.innerHTML+=`<option value="${g.id}">${g.nome}</option>`;
@@ -184,16 +186,17 @@ async function carregarGrupos(){
 }
 
 async function carregarConfigMensagem(){
-  const h=await db.collection("config").doc("notificacoes_horarios").get();
-  const t=await db.collection("config").doc("notificacoes_tipos").get();
+  const h = await db.collection("config").doc("notificacoes_horarios").get();
+  const t = await db.collection("config").doc("notificacoes_tipos").get();
   a_horario.innerHTML=""; a_tipo.innerHTML="";
   (h.data()?.lista||[]).forEach(x=>a_horario.innerHTML+=`<option>${x}</option>`);
   (t.data()?.lista||[]).forEach(x=>a_tipo.innerHTML+=`<option value="${x.id}">${x.nome}</option>`);
 }
 
-/* ================= MANUAIS ================= */
+/* ===== MANUAIS ===== */
 async function salvarManual(){
-  if(!m_data.value||!m_hora.value||!m_titulo.value||!m_texto.value) return alert("Preencha todos os campos.");
+  if(!m_data.value||!m_hora.value||!m_titulo.value||!m_texto.value)
+    return alert("Preencha todos os campos.");
   const dados={
     data_envio:m_data.value,
     horario_envio:m_hora.value,
@@ -218,10 +221,13 @@ async function listarManuais(){
     const m=d.data();
     listaManuais.innerHTML+=`
       <div class="card">
-        <strong>${m.titulo}</strong><br>${m.data_envio} ${m.horario_envio}
+        <h4>${m.titulo}</h4>
+        <small>🕒 ${m.data_envio} ${m.horario_envio}</small><br>
+        <small>👥 ${m.grupos.join(", ")}</small>
+        <p>${m.mensagem}</p>
         <div class="actions">
-          <button onclick="editarManual('${d.id}')">✏️</button>
-          <button class="excluir" onclick="excluirManual('${d.id}')">🗑️</button>
+          <button onclick="editarManual('${d.id}')">✏️ Editar</button>
+          <button class="excluir" onclick="excluirManual('${d.id}')">🗑️ Excluir</button>
         </div>
       </div>`;
   });
@@ -229,7 +235,8 @@ async function listarManuais(){
 
 async function editarManual(id){
   const d=await db.collection("notificacoes_manuais").doc(id).get();
-  manualAtual={id,...d.data()}; modoManual="editar";
+  manualAtual={id,...d.data()};
+  modoManual="editar";
   m_data.value=manualAtual.data_envio;
   m_hora.value=manualAtual.horario_envio;
   m_titulo.value=manualAtual.titulo;
@@ -252,9 +259,10 @@ function cancelarManual(){
   btnCancelarManual.classList.add("hidden");
 }
 
-/* ================= AUTOMÁTICAS ================= */
+/* ===== AUTOMÁTICAS ===== */
 async function salvarAutomatica(){
-  if(!a_horario.value||!a_tipo.value) return alert("Selecione horário e tipo.");
+  if(!a_horario.value||!a_tipo.value)
+    return alert("Selecione horário e tipo.");
   const dados={
     ativo:a_ativo.checked,
     horario_id:a_horario.value,
@@ -279,10 +287,13 @@ async function listarAutomaticas(){
     const a=d.data();
     listaAutomaticas.innerHTML+=`
       <div class="card">
-        <strong>${a.tipo_id}</strong><br>Horário: ${a.horario_id}
+        <h4>${a.tipo_id}</h4>
+        <small>🕒 ${a.horario_id}</small><br>
+        <small>👥 ${a.grupos.join(", ")}</small>
+        <p>${a.mensagem_template}</p>
         <div class="actions">
-          <button onclick="editarAutomatica('${d.id}')">✏️</button>
-          <button class="excluir" onclick="excluirAutomatica('${d.id}')">🗑️</button>
+          <button onclick="editarAutomatica('${d.id}')">✏️ Editar</button>
+          <button class="excluir" onclick="excluirAutomatica('${d.id}')">🗑️ Excluir</button>
         </div>
       </div>`;
   });
@@ -290,7 +301,8 @@ async function listarAutomaticas(){
 
 async function editarAutomatica(id){
   const d=await db.collection("notificacoes_automaticas").doc(id).get();
-  autoAtual={id,...d.data()}; modoAuto="editar";
+  autoAtual={id,...d.data()};
+  modoAuto="editar";
   a_horario.value=autoAtual.horario_id;
   a_tipo.value=autoAtual.tipo_id;
   a_texto.value=autoAtual.mensagem_template;
@@ -313,7 +325,7 @@ function cancelarAutomatica(){
   btnCancelarAuto.classList.add("hidden");
 }
 
-/* ================= INIT ================= */
+/* ===== INIT ===== */
 carregarGrupos();
 carregarConfigMensagem();
 listarManuais();
