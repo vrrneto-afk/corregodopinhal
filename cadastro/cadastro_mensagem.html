@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cadastro de Mensagens – ADM</title>
+
+<link rel="manifest" href="../manifest.json">
+<meta name="theme-color" content="#7b3f2a">
+
+<link rel="stylesheet" href="../menu/menu.css">
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+<script>
+firebase.initializeApp({
+  apiKey: "AIzaSyCW-CuFDrOLO-dteckl_GrPTocmyS-IrzY",
+  authDomain: "sitio-corrego-do-pinhal.firebaseapp.com",
+  projectId: "sitio-corrego-do-pinhal"
+});
+</script>
+
+<script>
+window.PERMISSAO_PAGINA = {
+  area: "adm",
+  chave: "cadastro_mensagem"
+};
+</script>
+
+<script src="../login/auth-guard.js"></script>
+
+<style>
+:root{
+  --marrom:#7b3f2a;
+  --bege:#f6efe7;
+  --verde:#2f6b2f;
+  --vermelho:#b03a2e;
+  --logo:#D0B485;
+}
+*{box-sizing:border-box;font-family:system-ui}
+body{margin:0;background:var(--bege)}
+header{background:var(--logo);padding:14px;text-align:center;font-weight:800}
+.container{max-width:720px;margin:16px auto;padding:16px;background:#fff;border-radius:12px}
+.section{margin-top:24px;padding-top:12px;border-top:2px dashed #ccc}
+label{font-weight:600;margin-top:10px;display:block}
+input,select,textarea{width:100%;padding:10px;border-radius:8px;border:1px solid #ccc}
+textarea{min-height:70px}
+button{width:100%;padding:12px;margin-top:14px;border:none;border-radius:10px;font-size:15px}
+.salvar{background:var(--verde);color:#fff}
+.excluir{background:var(--vermelho);color:#fff}
+.card{border:1px solid #ddd;border-radius:10px;padding:12px;margin-top:12px}
+.actions{display:flex;gap:8px}
+.actions button{flex:1}
+</style>
+</head>
+
+<body>
+
+<header>🔔 Cadastro de Mensagens</header>
+<div id="menu-adm"></div>
+
+<div class="container">
+
+<h3>📢 Notificações Manuais</h3>
+
+<label>Data</label>
+<input type="date" id="m_data">
+
+<label>Horário</label>
+<input type="time" id="m_hora">
+
+<label>Grupo de usuários</label>
+<select id="m_grupos" multiple></select>
+
+<label>Título</label>
+<input id="m_titulo">
+
+<label>Mensagem</label>
+<textarea id="m_texto"></textarea>
+
+<button class="salvar" onclick="salvarManual()">💾 Salvar notificação manual</button>
+
+<div id="listaManuais"></div>
+
+<div class="section">
+<h3>⚙️ Notificações Automáticas</h3>
+
+<label>Horário</label>
+<select id="a_horario"></select>
+
+<label>Tipo da mensagem</label>
+<select id="a_tipo"></select>
+
+<label>Grupo de usuários</label>
+<select id="a_grupos" multiple></select>
+
+<label>Mensagem (template)</label>
+<textarea id="a_texto"></textarea>
+
+<label>
+<input type="checkbox" id="a_ativo" checked> Ativa
+</label>
+
+<button class="salvar" onclick="salvarAutomatica()">💾 Salvar notificação automática</button>
+
+<div id="listaAutomaticas"></div>
+</div>
+
+</div>
+
+<script>
+fetch("../menu/menu-adm.html")
+.then(r=>r.text())
+.then(html=>{
+  document.getElementById("menu-adm").innerHTML=html;
+  document.querySelectorAll(".menu-link").forEach(a=>{
+    if(a.href.includes("cadastro_mensagem")) a.classList.add("ativo");
+  });
+  const s=document.createElement("script");
+  s.src="../menu/menu-permissoes.js";
+  document.body.appendChild(s);
+});
+
+const db=firebase.firestore();
+
+async function carregarConfigs(){
+  const g=await db.collection("config").doc("grupos").get();
+  const h=await db.collection("config").doc("mensagem_horarios").get();
+  const t=await db.collection("config").doc("mensagem_tipos").get();
+
+  g.data().lista.forEach(x=>{
+    m_grupos.innerHTML+=`<option value="${x.id}">${x.nome}</option>`;
+    a_grupos.innerHTML+=`<option value="${x.id}">${x.nome}</option>`;
+  });
+
+  h.data().lista.forEach(x=>{
+    a_horario.innerHTML+=`<option>${x}</option>`;
+  });
+
+  t.data().lista.forEach(x=>{
+    a_tipo.innerHTML+=`<option value="${x.id}">${x.nome}</option>`;
+  });
+}
+
+async function salvarManual(){
+  await db.collection("notificacoes_manuais").add({
+    data_envio:m_data.value,
+    horario_envio:m_hora.value,
+    grupos:[...m_grupos.selectedOptions].map(o=>o.value),
+    titulo:m_titulo.value,
+    mensagem:m_texto.value,
+    status:"rascunho",
+    criado_em:firebase.firestore.FieldValue.serverTimestamp()
+  });
+  alert("Notificação manual salva.");
+  location.reload();
+}
+
+async function salvarAutomatica(){
+  if(!a_horario.value||!a_tipo.value){
+    alert("Cadastre horário e tipo antes.");
+    return;
+  }
+  await db.collection("notificacoes_automaticas").add({
+    ativo:a_ativo.checked,
+    horario_id:a_horario.value,
+    tipo_id:a_tipo.value,
+    grupos:[...a_grupos.selectedOptions].map(o=>o.value),
+    mensagem_template:a_texto.value,
+    criado_em:firebase.firestore.FieldValue.serverTimestamp()
+  });
+  alert("Notificação automática salva.");
+  location.reload();
+}
+
+carregarConfigs();
+</script>
+
+<script src="../login/logout.js"></script>
+</body>
+</html>
