@@ -3,175 +3,142 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Mensagens Automáticas – Textos</title>
+<title>Configuração de Mensagens – ADM</title>
 
-<!-- MANIFEST -->
 <link rel="manifest" href="../manifest.json">
 <meta name="theme-color" content="#7b3f2a">
-
-<!-- MENU GLOBAL -->
 <link rel="stylesheet" href="../menu/menu.css">
 
-<!-- CONFIG CSS -->
-<link rel="stylesheet" href="./config.css">
-
-<!-- FIREBASE -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
 <script>
-if (!firebase.apps.length) {
-  firebase.initializeApp({
-    apiKey: "AIzaSyCW-CuFDrOLO-dteckl_GrPTocmyS-IrzY",
-    authDomain: "sitio-corrego-do-pinhal.firebaseapp.com",
-    projectId: "sitio-corrego-do-pinhal"
-  });
-}
+firebase.initializeApp({
+  apiKey: "AIzaSyCW-CuFDrOLO-dteckl_GrPTocmyS-IrzY",
+  authDomain: "sitio-corrego-do-pinhal.firebaseapp.com",
+  projectId: "sitio-corrego-do-pinhal"
+});
 </script>
 
-<!-- IDENTIFICAÇÃO DA PÁGINA -->
 <script>
-window.PERMISSAO_PAGINA = {
-  area: "config",
-  chave: "textos-automaticos"
-};
+window.PERMISSAO_PAGINA = { area:"config", chave:"config_mensagem" };
 </script>
 
-<!-- AUTH GUARD -->
 <script src="../login/auth-guard.js"></script>
 
 <style>
-/* ===============================
-   BASE
-   =============================== */
-body{
-  font-family:Inter,system-ui,Arial;
-  background:#f6efe7;
-  margin:0;
-  padding:16px;
-  display:none; /* 🔒 padrão do projeto */
+:root{
+  --marrom:#7b3f2a;
+  --bege:#f6efe7;
+  --verde:#2f6b2f;
+  --vermelho:#b03a2e;
+  --logo:#D0B485;
 }
+*{box-sizing:border-box;font-family:system-ui}
+body{margin:0;background:var(--bege)}
+header{background:var(--logo);padding:14px;text-align:center;font-weight:800}
 
-/* CONTAINER CENTRAL */
-.page-container{
-  max-width:900px;
-  margin:0 auto;
-}
+.container{max-width:720px;margin:16px auto;padding:16px;background:#fff;border-radius:12px}
 
-/* TÍTULO */
-h2{
-  color:#7b3f2a;
-  margin:12px 0 18px;
-  font-size:20px;
-}
-
-/* ===============================
-   CARD
-   =============================== */
-.card{
-  background:#fff;
-  border-radius:16px;
-  padding:16px;
-  margin-bottom:18px;
-  border:1px solid #e5e5e5;
-}
-
-.card h3{
-  margin:0 0 12px;
-  color:#7b3f2a;
-  font-size:16px;
-}
-
-/* ===============================
-   BLOCO DE TEXTO
-   =============================== */
-.linha{
-  display:flex;
-  flex-direction:column;
-  gap:6px;
-  margin-bottom:14px;
-}
-
-/* CHECKBOX */
-.switch{
-  display:flex;
-  align-items:center;
-  gap:8px;
-  font-weight:600;
-  font-size:14px;
-  color:#333;
-}
-
-.switch input[type="checkbox"]{
-  margin:0;
-  transform:scale(1.1);
-}
-
-/* TEXTO DA MENSAGEM */
-textarea{
-  width:100%;
-  min-height:44px;        /* 🔑 altura correta */
-  resize:vertical;
-  border-radius:10px;
-  border:1px solid #ccc;
-  padding:8px 10px;
-  font-size:14px;
-  line-height:1.3;
-}
-
-/* ===============================
-   BOTÃO
-   =============================== */
-.btn-salvar{
-  background:#7b3f2a;
-  color:#fff;
+.tabs{display:flex;gap:8px;margin-bottom:16px}
+.tab-btn{
+  flex:1;
+  padding:12px;
   border:none;
-  padding:12px 18px;
-  border-radius:12px;
+  border-radius:10px;
   font-weight:700;
+  background:#e5e5e5;
   cursor:pointer;
+}
+.tab-btn.ativa{background:var(--marrom);color:#fff}
+
+label{font-weight:600;margin-top:10px;display:block}
+input{width:100%;padding:10px;border-radius:8px;border:1px solid #ccc}
+
+button{
   width:100%;
-  margin:20px 0 30px;
+  padding:12px;
+  margin-top:14px;
+  border:none;
+  border-radius:10px;
+  font-size:15px;
+  cursor:pointer
+}
+.salvar{background:var(--verde);color:#fff}
+.excluir{background:var(--vermelho);color:#fff}
+.cancelar{background:#999;color:#fff}
+
+.card{
+  border:1px solid #ddd;
+  border-radius:12px;
+  padding:14px;
+  margin-top:14px;
+  background:#fafafa;
 }
 
-/* ===============================
-   MOBILE
-   =============================== */
-@media (max-width:600px){
-  body{
-    padding:12px;
-  }
+.linha{margin-top:6px;font-size:14px}
+.linha.titulo{font-weight:700}
 
-  h2{
-    font-size:18px;
-  }
+.actions{display:flex;gap:8px;margin-top:10px}
+.actions button{flex:1}
 
-  .card{
-    padding:12px;
-  }
-
-  textarea{
-    font-size:14px;
-  }
-}
+.hidden{display:none}
 </style>
 </head>
 
 <body>
 
-<!-- MENU -->
+<header>⚙️ Configuração de Mensagens</header>
 <div id="menu-adm"></div>
 
-<div class="page-container">
-  <h2>⚙️ Textos das Mensagens Automáticas</h2>
+<div class="container">
 
-  <div id="conteudo"></div>
+<div class="tabs">
+  <button class="tab-btn ativa" onclick="abrirAba('horarios',this)">⏰ Horários</button>
+  <button class="tab-btn" onclick="abrirAba('tipos',this)">🏷️ Tipos</button>
+</div>
 
-  <button class="btn-salvar" onclick="salvar()">💾 Salvar configurações</button>
+<!-- ================= HORÁRIOS ================= -->
+<div id="aba-horarios">
+
+<label>Nome do horário</label>
+<input id="h_nome" placeholder="Ex: Manhã">
+
+<label>Hora</label>
+<input type="time" id="h_hora">
+
+<label>
+  <input type="checkbox" id="h_ativo" checked> Ativo
+</label>
+
+<button class="salvar" onclick="salvarHorario()">💾 Salvar</button>
+<button class="cancelar hidden" id="btnCancelarHorario" onclick="cancelarHorario()">↩️ Cancelar</button>
+
+<div id="listaHorarios"></div>
+</div>
+
+<!-- ================= TIPOS ================= -->
+<div id="aba-tipos" class="hidden">
+
+<label>Nome do tipo de mensagem</label>
+<input id="t_nome" placeholder="Ex: Vacinas atrasadas">
+
+<label>
+  <input type="checkbox" id="t_ativo" checked> Ativo
+</label>
+
+<button class="salvar" onclick="salvarTipo()">💾 Salvar</button>
+<button class="cancelar hidden" id="btnCancelarTipo" onclick="cancelarTipo()">↩️ Cancelar</button>
+
+<div id="listaTipos"></div>
+</div>
+
 </div>
 
 <script>
+const db = firebase.firestore();
+
 /* ======================================================
    MENU ADM – PADRÃO DEFINITIVO
    ====================================================== */
@@ -194,137 +161,134 @@ fetch("../menu/menu-adm.html")
     };
     document.body.appendChild(s);
   });
-</script>
 
-<script>
-/* ======================================================
-   LÓGICA DA TELA
-   ====================================================== */
-
-const db = firebase.firestore();
-let dados = {};
-
-/* ================= LOAD ================= */
-async function carregar() {
-  const snap = await db.collection("config")
-    .doc("mensagens_automaticas")
-    .get();
-
-  dados = snap.exists ? snap.data() : estruturaPadrao();
-  render();
+/* ===== TABS ===== */
+function abrirAba(aba, btn){
+  document.getElementById("aba-horarios").classList.toggle("hidden", aba!=="horarios");
+  document.getElementById("aba-tipos").classList.toggle("hidden", aba!=="tipos");
+  document.querySelectorAll(".tab-btn").forEach(b=>b.classList.remove("ativa"));
+  btn.classList.add("ativa");
 }
 
-/* ================= PADRÃO ================= */
-function estruturaPadrao(){
-  return {
-    vacinas:{
-      pendentes:{ ativo:true, texto:"💉 {{animal}} tem vacina marcada para hoje" },
-      atrasadas:{ ativo:true, texto:"⚠️ {{animal}} está {{dias}} dias com vacina atrasada" }
-    },
-    partos:{
-      faixa_60:{ ativo:true, texto:"⏳ Faltam {{dias}} dias para o parto de {{animal}}" },
-      faixa_45:{ ativo:true, texto:"⚠️ Atenção: {{animal}} – {{dias}} dias para o parto" },
-      faixa_30:{ ativo:true, texto:"⚠️ Preparar parto: {{animal}} ({{dias}} dias)" },
-      faixa_15:{ ativo:true, texto:"🚨 Atenção ao parto de {{animal}} – {{dias}} dias" },
-      faixa_1:{ ativo:true, texto:"🔥 Parto iminente: {{animal}} ({{dias}} dias)" },
-      hoje:{ ativo:true, texto:"🚨 Parto previsto para HOJE: {{animal}}" },
-      atrasado:{ ativo:true, texto:"🔥 Parto atrasado há {{dias}} dias: {{animal}}" }
-    },
-    coberturas:{
-      ativo:true,
-      texto:"🐄 Nova cobertura registrada para {{animal}}"
-    },
-    aniversarios:{
-      ativo:true,
-      texto:"🎉 Hoje é aniversário de {{nome}}"
-    },
-    compras:{
-      ativo:true,
-      texto:"🛒 Você tem {{total}} itens pendentes para comprar"
-    },
-    estoque_zero:{
-      ativo:true,
-      texto:"💊 {{total}} remédios estão com estoque zerado"
-    }
-  };
+/* ===== HORÁRIOS ===== */
+let horarioEditando = null;
+
+async function salvarHorario(){
+  if(!h_nome.value || !h_hora.value) return alert("Preencha os campos.");
+
+  const ref = db.collection("config").doc("notificacoes_horarios");
+  const snap = await ref.get();
+  let lista = snap.data()?.lista || [];
+
+  if(horarioEditando){
+    lista = lista.map(h =>
+      h.id === horarioEditando.id
+        ? {...h, nome:h_nome.value, hora:h_hora.value, ativo:h_ativo.checked}
+        : h
+    );
+  }else{
+    lista.push({
+      id: crypto.randomUUID(),
+      nome: h_nome.value,
+      hora: h_hora.value,
+      ativo: h_ativo.checked
+    });
+  }
+
+  await ref.set({lista});
+  cancelarHorario();
+  listarHorarios();
 }
 
-/* ================= HELPERS ================= */
-function get(path){
-  return path.split(".").reduce((o,k)=>o[k], dados);
-}
-
-function bloco(campo){
-  return `
-    <div class="linha">
-      <div class="switch">
-        <input type="checkbox" data-ativo="${campo}" ${get(campo).ativo ? "checked":""}>
-        <span>Ativo</span>
-      </div>
-      <textarea data-texto="${campo}">${get(campo).texto}</textarea>
-    </div>
-  `;
-}
-
-/* ================= RENDER ================= */
-function render(){
-  const c = document.getElementById("conteudo");
-  c.innerHTML = `
-    <div class="card">
-      <h3>💉 Vacinas</h3>
-      ${bloco("vacinas.pendentes")}
-      ${bloco("vacinas.atrasadas")}
-    </div>
-
-    <div class="card">
-      <h3>🐄 Partos</h3>
-      ${bloco("partos.faixa_60")}
-      ${bloco("partos.faixa_45")}
-      ${bloco("partos.faixa_30")}
-      ${bloco("partos.faixa_15")}
-      ${bloco("partos.faixa_1")}
-      ${bloco("partos.hoje")}
-      ${bloco("partos.atrasado")}
-    </div>
-
-    <div class="card">
-      <h3>🐂 Coberturas</h3>
-      ${bloco("coberturas")}
-    </div>
-
-    <div class="card">
-      <h3>🎂 Aniversários</h3>
-      ${bloco("aniversarios")}
-    </div>
-
-    <div class="card">
-      <h3>🛒 Itens a comprar</h3>
-      ${bloco("compras")}
-    </div>
-
-    <div class="card">
-      <h3>💊 Estoque zerado</h3>
-      ${bloco("estoque_zero")}
-    </div>
-  `;
-}
-
-/* ================= SAVE ================= */
-async function salvar(){
-  document.querySelectorAll("[data-ativo]").forEach(el=>{
-    get(el.dataset.ativo).ativo = el.checked;
+async function listarHorarios(){
+  listaHorarios.innerHTML="";
+  const snap = await db.collection("config").doc("notificacoes_horarios").get();
+  (snap.data()?.lista||[]).forEach(h=>{
+    listaHorarios.innerHTML+=`
+      <div class="card">
+        <div class="linha titulo">${h.nome} – ${h.hora}</div>
+        <div class="linha">${h.ativo?"🟢 Ativo":"🔴 Inativo"}</div>
+        <div class="actions">
+          <button onclick='editarHorario(${JSON.stringify(h)})'>✏️ Editar</button>
+        </div>
+      </div>`;
   });
-
-  document.querySelectorAll("[data-texto]").forEach(el=>{
-    get(el.dataset.texto).texto = el.value;
-  });
-
-  await db.collection("config")
-    .doc("mensagens_automaticas")
-    .set(dados, { merge:true });
-
-  alert("✅ Textos salvos com sucesso");
 }
+
+function editarHorario(h){
+  horarioEditando = h;
+  h_nome.value = h.nome;
+  h_hora.value = h.hora;
+  h_ativo.checked = h.ativo;
+  btnCancelarHorario.classList.remove("hidden");
+}
+
+function cancelarHorario(){
+  horarioEditando=null;
+  h_nome.value=""; h_hora.value=""; h_ativo.checked=true;
+  btnCancelarHorario.classList.add("hidden");
+}
+
+/* ===== TIPOS ===== */
+let tipoEditando=null;
+
+async function salvarTipo(){
+  if(!t_nome.value) return alert("Informe o nome.");
+
+  const ref = db.collection("config").doc("notificacoes_tipos");
+  const snap = await ref.get();
+  let lista = snap.data()?.lista || [];
+
+  if(tipoEditando){
+    lista = lista.map(t =>
+      t.id === tipoEditando.id
+        ? {...t, nome:t_nome.value, ativo:t_ativo.checked}
+        : t
+    );
+  }else{
+    lista.push({
+      id: crypto.randomUUID(),
+      nome: t_nome.value,
+      ativo: t_ativo.checked
+    });
+  }
+
+  await ref.set({lista});
+  cancelarTipo();
+  listarTipos();
+}
+
+async function listarTipos(){
+  listaTipos.innerHTML="";
+  const snap = await db.collection("config").doc("notificacoes_tipos").get();
+  (snap.data()?.lista||[]).forEach(t=>{
+    listaTipos.innerHTML+=`
+      <div class="card">
+        <div class="linha titulo">${t.nome}</div>
+        <div class="linha">${t.ativo?"🟢 Ativo":"🔴 Inativo"}</div>
+        <div class="actions">
+          <button onclick='editarTipo(${JSON.stringify(t)})'>✏️ Editar</button>
+        </div>
+      </div>`;
+  });
+}
+
+function editarTipo(t){
+  tipoEditando=t;
+  t_nome.value=t.nome;
+  t_ativo.checked=t.ativo;
+  btnCancelarTipo.classList.remove("hidden");
+}
+
+function cancelarTipo(){
+  tipoEditando=null;
+  t_nome.value=""; t_ativo.checked=true;
+  btnCancelarTipo.classList.add("hidden");
+}
+
+/* ===== INIT ===== */
+listarHorarios();
+listarTipos();
 </script>
 
 <script src="../login/logout.js"></script>
