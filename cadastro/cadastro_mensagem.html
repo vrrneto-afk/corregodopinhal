@@ -263,7 +263,7 @@ async function listarManuais(){
     </div>
 
     <div class="linha data">
-      🕒 ${m.data_envio} às ${m.horario_envio}
+      ${formatarDataHora(m.data_envio, m.horario_envio)}
     </div>
 
     <div class="linha grupos">
@@ -344,7 +344,7 @@ async function listarAutomaticas(){
     </div>
 
     <div class="linha data">
-      🕒 Horário: ${a.horario_id}
+     ${formatarHorario(a.horario_id)}
     </div>
 
     <div class="linha grupos">
