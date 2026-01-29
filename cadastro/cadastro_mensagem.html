@@ -193,6 +193,26 @@ async function carregarConfigMensagem(){
   (t.data()?.lista||[]).forEach(x=>a_tipo.innerHTML+=`<option value="${x.id}">${x.nome}</option>`);
 }
 
+function formatarDataHora(dataISO, hora) {
+  if (!dataISO || !hora) return "";
+
+  const data = new Date(dataISO + "T00:00:00");
+
+  const dataFormatada = data.toLocaleDateString("pt-BR", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric"
+  });
+
+  return `🕒 ${dataFormatada} às ${hora}`;
+}
+
+function formatarHorario(hora) {
+  if (!hora) return "";
+  return `🕒 Todos os dias às ${hora}`;
+}
+
+
 /* ===== MANUAIS ===== */
 async function salvarManual(){
   if(!m_data.value||!m_hora.value||!m_titulo.value||!m_texto.value)
@@ -222,7 +242,7 @@ async function listarManuais(){
     listaManuais.innerHTML+=`
       <div class="card">
         <h4>${m.titulo}</h4>
-        <small>🕒 ${m.data_envio} ${m.horario_envio}</small><br>
+        <small>${formatarDataHora(m.data_envio, m.horario_envio)}</small>
         <small>👥 ${m.grupos.join(", ")}</small>
         <p>${m.mensagem}</p>
         <div class="actions">
@@ -288,7 +308,7 @@ async function listarAutomaticas(){
     listaAutomaticas.innerHTML+=`
       <div class="card">
         <h4>${a.tipo_id}</h4>
-        <small>🕒 ${a.horario_id}</small><br>
+        <small>${formatarHorario(a.horario_id)}</small>
         <small>👥 ${a.grupos.join(", ")}</small>
         <p>${a.mensagem_template}</p>
         <div class="actions">
