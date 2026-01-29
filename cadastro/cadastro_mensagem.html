@@ -210,10 +210,33 @@ async function carregarGrupos(){
 async function carregarConfigMensagem(){
   const h = await db.collection("config").doc("notificacoes_horarios").get();
   const t = await db.collection("config").doc("notificacoes_tipos").get();
-  a_horario.innerHTML=""; a_tipo.innerHTML="";
-  (h.data()?.lista||[]).forEach(x=>a_horario.innerHTML+=`<option>${x}</option>`);
-  (t.data()?.lista||[]).forEach(x=>a_tipo.innerHTML+=`<option value="${x.id}">${x.nome}</option>`);
+
+  a_horario.innerHTML = "";
+  a_tipo.innerHTML = "";
+
+  // ===== HORÁRIOS =====
+  (h.data()?.lista || [])
+    .filter(h => h.ativo === true)
+    .forEach(h => {
+      a_horario.innerHTML += `
+        <option value="${h.id}">
+          ${h.nome} – ${h.hora}
+        </option>
+      `;
+    });
+
+  // ===== TIPOS =====
+  (t.data()?.lista || [])
+    .filter(t => t.ativo === true)
+    .forEach(t => {
+      a_tipo.innerHTML += `
+        <option value="${t.id}">
+          ${t.nome}
+        </option>
+      `;
+    });
 }
+
 
 function formatarDataHora(dataISO, hora) {
   if (!dataISO || !hora) return "";
