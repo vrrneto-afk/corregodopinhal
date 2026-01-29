@@ -218,15 +218,9 @@ async function carregarConfigMensagem(){
 function formatarDataHora(dataISO, hora) {
   if (!dataISO || !hora) return "";
 
-  const data = new Date(dataISO + "T00:00:00");
+  const [ano, mes, dia] = dataISO.split("-");
 
-  const dataFormatada = data.toLocaleDateString("pt-BR", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric"
-  });
-
-  return `🕒 ${dataFormatada} às ${hora}`;
+  return `🕒 ${dia}/${mes}/${ano} às ${hora}`;
 }
 
 function formatarHorario(hora) {
