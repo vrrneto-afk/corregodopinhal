@@ -77,6 +77,25 @@ button{
   background:#fafafa;
 }
 
+.checkbox-linha{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  margin-top:12px;
+}
+
+.checkbox-linha input[type="checkbox"]{
+  width:auto;
+  margin:0;
+  cursor:pointer;
+}
+
+.checkbox-linha label{
+  margin:0;
+  font-weight:600;
+  cursor:pointer;
+}
+
 .linha{margin-top:6px;font-size:14px}
 .linha.titulo{font-weight:700}
 
@@ -124,9 +143,10 @@ button{
 <label>Nome do tipo de mensagem</label>
 <input id="t_nome" placeholder="Ex: Vacinas atrasadas">
 
-<label>
-  <input type="checkbox" id="t_ativo" checked> Ativo
-</label>
+<div class="checkbox-linha">
+  <input type="checkbox" id="t_ativo" checked>
+  <label for="t_ativo">Ativo</label>
+</div>
 
 <button class="salvar" onclick="salvarTipo()">💾 Salvar</button>
 <button class="cancelar hidden" id="btnCancelarTipo" onclick="cancelarTipo()">↩️ Cancelar</button>
