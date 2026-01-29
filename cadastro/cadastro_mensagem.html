@@ -77,6 +77,28 @@ button{width:100%;padding:12px;margin-top:14px;border:none;border-radius:10px;fo
   background:#e5e5e5;
   cursor:pointer;
 }
+
+  .linha {
+  margin-top: 6px;
+  font-size: 14px;
+}
+
+.linha.titulo {
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.linha.data,
+.linha.grupos {
+  color: #555;
+}
+
+.linha.mensagem {
+  margin-top: 10px;
+  padding-top: 6px;
+  border-top: 1px dashed #ddd;
+}
+
 .tab-btn.ativa{background:var(--marrom);color:#fff}
 </style>
 </head>
@@ -239,17 +261,32 @@ async function listarManuais(){
   const snap=await db.collection("notificacoes_manuais").orderBy("criado_em","desc").get();
   snap.forEach(d=>{
     const m=d.data();
-    listaManuais.innerHTML+=`
-      <div class="card">
-        <h4>${m.titulo}</h4>
-        <small>${formatarDataHora(m.data_envio, m.horario_envio)}</small>
-        <small>👥 ${m.grupos.join(", ")}</small>
-        <p>${m.mensagem}</p>
-        <div class="actions">
-          <button onclick="editarManual('${d.id}')">✏️ Editar</button>
-          <button class="excluir" onclick="excluirManual('${d.id}')">🗑️ Excluir</button>
-        </div>
-      </div>`;
+    listaManuais.innerHTML += `
+  <div class="card">
+
+    <div class="linha titulo">
+      <strong>${m.titulo}</strong>
+    </div>
+
+    <div class="linha data">
+      🕒 ${m.data_envio} às ${m.horario_envio}
+    </div>
+
+    <div class="linha grupos">
+      👥 ${m.grupos.join(", ")}
+    </div>
+
+    <div class="linha mensagem">
+      ${m.mensagem}
+    </div>
+
+    <div class="actions">
+      <button onclick="editarManual('${d.id}')">✏️ Editar</button>
+      <button class="excluir" onclick="excluirManual('${d.id}')">🗑️ Excluir</button>
+    </div>
+
+  </div>
+`;
   });
 }
 
@@ -305,17 +342,32 @@ async function listarAutomaticas(){
   const snap=await db.collection("notificacoes_automaticas").orderBy("criado_em","desc").get();
   snap.forEach(d=>{
     const a=d.data();
-    listaAutomaticas.innerHTML+=`
-      <div class="card">
-        <h4>${a.tipo_id}</h4>
-        <small>${formatarHorario(a.horario_id)}</small>
-        <small>👥 ${a.grupos.join(", ")}</small>
-        <p>${a.mensagem_template}</p>
-        <div class="actions">
-          <button onclick="editarAutomatica('${d.id}')">✏️ Editar</button>
-          <button class="excluir" onclick="excluirAutomatica('${d.id}')">🗑️ Excluir</button>
-        </div>
-      </div>`;
+   listaAutomaticas.innerHTML += `
+  <div class="card">
+
+    <div class="linha titulo">
+      ${a.tipo_id}
+    </div>
+
+    <div class="linha data">
+      🕒 Horário: ${a.horario_id}
+    </div>
+
+    <div class="linha grupos">
+      👥 ${a.grupos.join(", ")}
+    </div>
+
+    <div class="linha mensagem">
+      ${a.mensagem_template}
+    </div>
+
+    <div class="actions">
+      <button onclick="editarAutomatica('${d.id}')">✏️ Editar</button>
+      <button class="excluir" onclick="excluirAutomatica('${d.id}')">🗑️ Excluir</button>
+    </div>
+
+  </div>
+`;
   });
 }
 
