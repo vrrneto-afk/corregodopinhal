@@ -99,6 +99,25 @@ button{width:100%;padding:12px;margin-top:14px;border:none;border-radius:10px;fo
   border-top: 1px dashed #ddd;
 }
 
+.checkbox-linha {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.checkbox-linha input[type="checkbox"] {
+  width: auto;
+  margin: 0;
+  cursor: pointer;
+}
+
+.checkbox-linha label {
+  margin: 0;
+  font-weight: 600;
+  cursor: pointer;
+}
+
 .tab-btn.ativa{background:var(--marrom);color:#fff}
 </style>
 </head>
@@ -154,9 +173,10 @@ button{width:100%;padding:12px;margin-top:14px;border:none;border-radius:10px;fo
 <label>Mensagem (template)</label>
 <textarea id="a_texto"></textarea>
 
-<label>
-  <input type="checkbox" id="a_ativo" checked> Ativa
-</label>
+<div class="checkbox-linha">
+  <input type="checkbox" id="a_ativo" checked>
+  <label for="a_ativo">Ativa</label>
+</div>
 
 <button class="salvar" onclick="salvarAutomatica()">💾 Salvar</button>
 <button class="cancelar hidden" id="btnCancelarAuto" onclick="cancelarAutomatica()">↩️ Cancelar</button>
@@ -335,82 +355,121 @@ function cancelarManual(){
 
 /* ===== AUTOMÁTICAS ===== */
 async function salvarAutomatica(){
-  if(!a_horario.value||!a_tipo.value)
+  if(!a_horario.value || !a_tipo.value)
     return alert("Selecione horário e tipo.");
-  const dados={
-    ativo:a_ativo.checked,
-    horario_id:a_horario.value,
-    tipo_id:a_tipo.value,
-    grupos:[...a_grupos.selectedOptions].map(o=>o.value),
-    mensagem_template:a_texto.value,
-    atualizado_em:firebase.firestore.FieldValue.serverTimestamp()
+
+  const tipoSelecionado = a_tipo.options[a_tipo.selectedIndex];
+  const horarioSelecionado = a_horario.options[a_horario.selectedIndex];
+
+  const dados = {
+    ativo: a_ativo.checked,
+    horario_id: a_horario.value,
+    horario_nome: horarioSelecionado.textContent, // opcional, mas útil
+    tipo_id: a_tipo.value,
+    tipo_nome: tipoSelecionado.textContent,
+    grupos: [...a_grupos.selectedOptions].map(o => o.value),
+    mensagem_template: a_texto.value.trim(),
+    atualizado_em: firebase.firestore.FieldValue.serverTimestamp()
   };
-  if(modoAuto==="novo"){
-    dados.criado_em=firebase.firestore.FieldValue.serverTimestamp();
+
+  if(modoAuto === "novo"){
+    dados.criado_em = firebase.firestore.FieldValue.serverTimestamp();
     await db.collection("notificacoes_automaticas").add(dados);
-  }else{
-    await db.collection("notificacoes_automaticas").doc(autoAtual.id).update(dados);
+  } else {
+    await db.collection("notificacoes_automaticas")
+      .doc(autoAtual.id)
+      .update(dados);
   }
-  cancelarAutomatica(); listarAutomaticas();
+
+  cancelarAutomatica();
+  listarAutomaticas();
 }
 
+/* ===== LISTAGEM ===== */
 async function listarAutomaticas(){
-  listaAutomaticas.innerHTML="";
-  const snap=await db.collection("notificacoes_automaticas").orderBy("criado_em","desc").get();
-  snap.forEach(d=>{
-    const a=d.data();
-   listaAutomaticas.innerHTML += `
-  <div class="card">
+  listaAutomaticas.innerHTML = "";
 
-    <div class="linha titulo">
-      ${a.tipo_id}
-    </div>
+  const snap = await db
+    .collection("notificacoes_automaticas")
+    .orderBy("criado_em", "desc")
+    .get();
 
-    <div class="linha data">
-     ${formatarHorario(a.horario_id)}
-    </div>
+  snap.forEach(d => {
+    const a = d.data();
 
-    <div class="linha grupos">
-      👥 ${a.grupos.join(", ")}
-    </div>
+    listaAutomaticas.innerHTML += `
+      <div class="card">
 
-    <div class="linha mensagem">
-      ${a.mensagem_template}
-    </div>
+        <div class="linha titulo">
+          ${a.tipo_nome || "Tipo não informado"}
+        </div>
 
-    <div class="actions">
-      <button onclick="editarAutomatica('${d.id}')">✏️ Editar</button>
-      <button class="excluir" onclick="excluirAutomatica('${d.id}')">🗑️ Excluir</button>
-    </div>
+        <div class="linha data">
+          ${formatarHorario(a.horario_nome || a.horario_id)}
+        </div>
 
-  </div>
-`;
+        <div class="linha grupos">
+          👥 ${(a.grupos || []).join(", ")}
+        </div>
+
+        <div class="linha mensagem">
+          ${a.mensagem_template || ""}
+        </div>
+
+        <div class="actions">
+          <button onclick="editarAutomatica('${d.id}')">✏️ Editar</button>
+          <button class="excluir" onclick="excluirAutomatica('${d.id}')">🗑️ Excluir</button>
+        </div>
+
+      </div>
+    `;
   });
 }
 
+/* ===== EDITAR ===== */
 async function editarAutomatica(id){
-  const d=await db.collection("notificacoes_automaticas").doc(id).get();
-  autoAtual={id,...d.data()};
-  modoAuto="editar";
-  a_horario.value=autoAtual.horario_id;
-  a_tipo.value=autoAtual.tipo_id;
-  a_texto.value=autoAtual.mensagem_template;
-  a_ativo.checked=autoAtual.ativo;
-  [...a_grupos.options].forEach(o=>o.selected=autoAtual.grupos.includes(o.value));
+  const d = await db
+    .collection("notificacoes_automaticas")
+    .doc(id)
+    .get();
+
+  autoAtual = { id, ...d.data() };
+  modoAuto = "editar";
+
+  a_horario.value = autoAtual.horario_id;
+  a_tipo.value = autoAtual.tipo_id;
+  a_texto.value = autoAtual.mensagem_template || "";
+  a_ativo.checked = !!autoAtual.ativo;
+
+  [...a_grupos.options].forEach(o => {
+    o.selected = (autoAtual.grupos || []).includes(o.value);
+  });
+
   btnCancelarAuto.classList.remove("hidden");
 }
 
+/* ===== EXCLUIR ===== */
 async function excluirAutomatica(id){
   if(confirm("Excluir notificação automática?")){
-    await db.collection("notificacoes_automaticas").doc(id).delete();
+    await db
+      .collection("notificacoes_automaticas")
+      .doc(id)
+      .delete();
+
     listarAutomaticas();
   }
 }
 
+/* ===== CANCELAR ===== */
 function cancelarAutomatica(){
-  modoAuto="novo"; autoAtual=null;
-  a_texto.value="";
-  [...a_grupos.options].forEach(o=>o.selected=false);
+  modoAuto = "novo";
+  autoAtual = null;
+
+  a_texto.value = "";
+  a_ativo.checked = true;
+
+  [...a_grupos.options].forEach(o => o.selected = false);
+
   btnCancelarAuto.classList.add("hidden");
 }
 
