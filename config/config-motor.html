@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Motor de Mensagens – ADM</title>
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+<script>
+firebase.initializeApp({
+  apiKey: "AIzaSyCW-CuFDrOLO-dteckl_GrPTocmyS-IrzY",
+  authDomain: "sitio-corrego-do-pinhal.firebaseapp.com",
+  projectId: "sitio-corrego-do-pinhal"
+});
+</script>
+
+<style>
+body{font-family:system-ui;background:#f6efe7;padding:20px}
+button{padding:12px;font-size:15px}
+pre{background:#fff;padding:12px;border-radius:8px;margin-top:10px}
+</style>
+</head>
+
+<body>
+
+<h2>⚙️ Motor de Mensagens</h2>
+<button onclick="rodarMotor()">▶️ Executar Motor</button>
+
+<pre id="log"></pre>
+
+<script>
+const db = firebase.firestore();
+const logEl = document.getElementById("log");
+const log = msg => logEl.textContent += msg + "\n";
+
+/* ======================================================
+   MOTOR PRINCIPAL
+====================================================== */
+async function rodarMotor(){
+  logEl.textContent = "";
+  log("🔄 Iniciando motor...");
+
+  await motorVacinas();
+  await motorEventos();
+  await motorEstoque();
+  await motorAniversarios();
+
+  // 🔴 MOTOR DE ESTADO (mudanças)
+  await motorEstadoParto();
+
+  log("✅ Motor finalizado");
+}
+
+/* ======================================================
+   VACINAS — COMPARAÇÃO DE DATAS
+====================================================== */
+async function motorVacinas(){
+  log("💉 Verificando vacinas...");
+  const hoje = new Date().toISOString().split("T")[0];
+  const snap = await db.collection("vacinas").get();
+
+  snap.forEach(d=>{
+    const v = d.data();
+    if(!v.data_proxima_dose) return;
+
+    if(v.data_proxima_dose < hoje){
+      log(`🚨 Vacina atrasada: ${v.nome_animal} – ${v.nome_vacina}`);
+    }
+
+    if(v.data_proxima_dose === hoje){
+      log(`💉 Vacina vence hoje: ${v.nome_animal} – ${v.nome_vacina}`);
+    }
+  });
+}
+
+/* ======================================================
+   EVENTOS — DATA FIXA
+====================================================== */
+async function motorEventos(){
+  log("📅 Verificando eventos...");
+  const hoje = new Date().toISOString().split("T")[0];
+
+  const eventos = await db
+    .collection("eventos")
+    .where("ativo","==",true)
+    .get();
+
+  eventos.forEach(d=>{
+    const e = d.data();
+    if(e.data_evento === hoje){
+      log(`📌 Evento hoje: ${e.titulo}`);
+    }
+  });
+}
+
+/* ======================================================
+   ESTOQUE / FARMÁCIA
+====================================================== */
+async function motorEstoque(){
+  log("📦 Verificando estoque...");
+  const itens = await db.collection("farmacia").get();
+
+  itens.forEach(d=>{
+    const i = d.data();
+    if(i.estoque_atual <= 0){
+      log(`🚨 Estoque zerado: ${i.nome}`);
+    }
+  });
+}
+
+/* ======================================================
+   ANIVERSÁRIOS
+====================================================== */
+async function motorAniversarios(){
+  log("🎂 Verificando aniversários...");
+  const hoje = new Date();
+  const dia = hoje.getDate();
+  const mes = hoje.getMonth() + 1;
+
+  const snap = await db.collection("config").doc("aniversarios").get();
+  const lista = snap.data()?.lista || [];
+
+  lista.forEach(a=>{
+    if(a.ativo && a.dia === dia && a.mes === mes){
+      log(`🎉 Aniversário de ${a.nome}`);
+    }
+  });
+}
+
+/* ======================================================
+   🔴 MOTOR DE ESTADO — PARTO
+   Detecta MUDANÇA de status
+====================================================== */
+async function motorEstadoParto(){
+  log("🐄 Motor de estado — parto");
+
+  const snapVacas = await db
+    .collection("vacas")
+    .where("ativo","==",true)
+    .get();
+
+  for(const doc of snapVacas.docs){
+    const vaca = doc.data();
+    const vacaId = doc.id;
+
+    if(!vaca.status_parto) continue;
+
+    const estadoRef = db.collection("motor_estado_parto").doc(vacaId);
+    const estadoSnap = await estadoRef.get();
+
+    const ultimoStatus = estadoSnap.exists
+      ? estadoSnap.data().ultimo_status
+      : null;
+
+    // Primeira execução: apenas registra estado
+    if(!ultimoStatus){
+      await estadoRef.set({
+        vaca_id: vacaId,
+        ultimo_status: vaca.status_parto,
+        atualizado_em: firebase.firestore.FieldValue.serverTimestamp()
+      });
+
+      log(`📌 Estado inicial registrado: ${vaca.nome} → ${vaca.status_parto}`);
+      continue;
+    }
+
+    // Mudança detectada
+    if(ultimoStatus !== vaca.status_parto){
+      log(
+        `🪧 MUDANÇA DE PARTO: ${vaca.nome} ` +
+        `(${ultimoStatus} → ${vaca.status_parto})`
+      );
+
+      // aqui depois entra o envio real da notificação
+
+      await estadoRef.update({
+        ultimo_status: vaca.status_parto,
+        atualizado_em: firebase.firestore.FieldValue.serverTimestamp()
+      });
+    }
+  }
+}
+</script>
+
+</body>
+</html>
