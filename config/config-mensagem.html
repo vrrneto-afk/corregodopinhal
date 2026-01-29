@@ -127,9 +127,11 @@ button{
 <label>Hora</label>
 <input type="time" id="h_hora">
 
-<label>
-  <input type="checkbox" id="h_ativo" checked> Ativo
-</label>
+<!-- ✅ CORREÇÃO APLICADA AQUI -->
+<div class="checkbox-linha">
+  <input type="checkbox" id="h_ativo" checked>
+  <label for="h_ativo">Ativo</label>
+</div>
 
 <button class="salvar" onclick="salvarHorario()">💾 Salvar</button>
 <button class="cancelar hidden" id="btnCancelarHorario" onclick="cancelarHorario()">↩️ Cancelar</button>
@@ -143,9 +145,10 @@ button{
 <label>Nome do tipo de mensagem</label>
 <input id="t_nome" placeholder="Ex: Vacinas atrasadas">
 
+<!-- ✅ CORREÇÃO DO ID APLICADA AQUI -->
 <div class="checkbox-linha">
-  <input type="checkbox" id="h_ativo" checked>
-  <label for="h_ativo">Ativo</label>
+  <input type="checkbox" id="t_ativo" checked>
+  <label for="t_ativo">Ativo</label>
 </div>
 
 <button class="salvar" onclick="salvarTipo()">💾 Salvar</button>
