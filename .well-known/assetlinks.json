@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "br.com.corregodopinhal.app",
+      "sha256_cert_fingerprints": [
+        "B9:00:AF:66:62:9E:2B:0E:26:AA:18:68:2E:FC:D6:8A:69:8B:FF:18:A3:B4:9D:7A:C2:CF:F2:69:FB:8A:F7:89"
+      ]
+    }
+  }
+]
