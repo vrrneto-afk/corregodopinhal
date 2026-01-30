@@ -427,7 +427,7 @@ async function loadLuaVigente(){
   fim.setDate(fim.getDate() + 2);
 
  luaBtn.innerHTML = `
-  Lua vigente: ${emoji} ${fase} • ${vigente.d.toLocaleDateString("pt-BR")}<br>
+  Lua ${emoji} <strong>${fase}<strong> • ${vigente.d.toLocaleDateString("pt-BR")}<br>
   Força da lua: <small>${ini.toLocaleDateString("pt-BR")} até ${fim.toLocaleDateString("pt-BR")}</small>
 `;
 }
