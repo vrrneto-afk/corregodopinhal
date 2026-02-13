@@ -377,7 +377,7 @@ async function loadIndex(){
 
       html+=`
       <div class="card ${status}">
-        <strong>💉 ${v.nome_vacina}</strong>
+       <strong>💉 ${v.nome_vacina.toUpperCase()}</strong>
         <p class="dias">${cfgVacinas.status?.[status]} ${Math.abs(dias)} dias</p>
         <p class="data">🐄 ${(animal?.nome||"-").toUpperCase()}</p>
         <p class="data">📅 ${reap.toLocaleDateString("pt-BR")}</p>
