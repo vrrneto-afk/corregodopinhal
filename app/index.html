@@ -152,6 +152,7 @@ function cacheGet(key, ttl){
   if(Date.now() - o.time > ttl) return null;
   return o.data;
 }
+
 function cacheSet(key, data){
   localStorage.setItem(key, JSON.stringify({ time:Date.now(), data }));
 }
@@ -160,7 +161,8 @@ function cacheSet(key, data){
 fetch("../menu/menu.html")
   .then(r => r.text())
   .then(html => {
-    menu.innerHTML = html;
+
+    document.getElementById("menu").innerHTML = html;
 
     document.querySelectorAll("#menu a").forEach(a=>{
       if(a.getAttribute("href")==="../app/index.html"){
@@ -176,34 +178,77 @@ fetch("../menu/menu.html")
 
 /* ================= CLIMA ================= */
 async function loadClima(){
-  const cache = cacheGet("clima_cache",600000);
-  if(cache){
-    clima.innerHTML = cache;
-    return;
-  }
 
-  const snap = await db.collection("config").doc("clima").get();
-  if(!snap.exists) return;
-  const cfg = snap.data();
+  try{
 
-  const r = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${cfg.latitude}&longitude=${cfg.longitude}&current_weather=true&hourly=precipitation_probability&timezone=${cfg.timezone}`);
-  const d = await r.json();
+    const cache = cacheGet("clima_cache",600000);
 
-  let texto = cfg.textos?.sem_chuva || "";
-  const agoraD = new Date();
-
-  for(let i=0;i<d.hourly.time.length;i++){
-    const h = new Date(d.hourly.time[i]);
-    const diffMin = (h - agoraD) / 60000;
-    if(diffMin>0 && diffMin<=cfg.janela_previsao_minutos && d.hourly.precipitation_probability[i]>=cfg.limite_chuva_percentual){
-      texto = `${cfg.textos?.chuva_em} ${Math.round(diffMin)} minutos.`;
-      break;
+    if(cache){
+      clima.innerHTML = cache;
+      return;
     }
-  }
 
-  const html = `☀️ ${cfg.cidade} – ${cfg.regiao} • ${Math.round(d.current_weather.temperature)}°C<br>${texto}`;
-  clima.innerHTML = html;
-  cacheSet("clima_cache", html);
+    const snap = await db.collection("config").doc("clima").get();
+
+    if(!snap.exists){
+      clima.innerHTML = "⚠️ Configuração do clima não encontrada";
+      return;
+    }
+
+    const cfg = snap.data();
+
+    const controller = new AbortController();
+
+    const timeout = setTimeout(()=>{
+      controller.abort();
+    }, 8000);
+
+    const r = await fetch(
+      `https://api.open-meteo.com/v1/forecast?latitude=${cfg.latitude}&longitude=${cfg.longitude}&current_weather=true&hourly=precipitation_probability&timezone=${cfg.timezone}`,
+      { signal: controller.signal }
+    );
+
+    clearTimeout(timeout);
+
+    const d = await r.json();
+
+    let texto = cfg.textos?.sem_chuva || "";
+
+    const agoraD = new Date();
+
+    for(let i=0;i<d.hourly.time.length;i++){
+
+      const h = new Date(d.hourly.time[i]);
+
+      const diffMin = (h - agoraD) / 60000;
+
+      if(
+        diffMin > 0 &&
+        diffMin <= cfg.janela_previsao_minutos &&
+        d.hourly.precipitation_probability[i] >= cfg.limite_chuva_percentual
+      ){
+        texto = `${cfg.textos?.chuva_em} ${Math.round(diffMin)} minutos.`;
+        break;
+      }
+    }
+
+    const html = `
+      ☀️ ${cfg.cidade} – ${cfg.regiao}
+      • ${Math.round(d.current_weather.temperature)}°C
+      <br>${texto}
+    `;
+
+    clima.innerHTML = html;
+
+    cacheSet("clima_cache", html);
+
+  }catch(e){
+
+    console.error("Erro clima:", e);
+
+    clima.innerHTML = "⚠️ Clima indisponível";
+
+  }
 }
 
 /* ===== MODAL CLIMA ===== */
@@ -309,18 +354,22 @@ async function loadAlertas(){
 
 /* ================= INDEX ================= */
 async function loadIndex(){
+
   conteudo.innerHTML = "";
 
   const cfgVacas = cacheGet("cfg_vacas",1800000) ||
     (await db.collection("config").doc("vacas").get()).data();
+
   cacheSet("cfg_vacas",cfgVacas);
 
   const cfgVacinas = cacheGet("cfg_vacinas",1800000) ||
     (await db.collection("config").doc("vacinas").get()).data();
+
   cacheSet("cfg_vacinas",cfgVacinas);
 
   const animais = cacheGet("animais",1800000) ||
     (await db.collection("animais").get()).docs.map(d=>({_id:d.id,...d.data()}));
+
   cacheSet("animais",animais);
 
   const eventos = (await db.collection("eventos")
@@ -335,25 +384,37 @@ async function loadIndex(){
 
   eventos
     .map(c=>{
+
       const animal = animais.find(a=>a._id===c.id_animal);
+
       if(!animal) return null;
 
       const prev = addMeses(parseData(c.data_evento), cfgVacas.gestacao_meses);
+
       const dias = diffDias(hojeZ, prev);
+
       return { animal, prev, dias };
+
     })
     .filter(Boolean)
     .sort((a,b)=>a.dias-b.dias)
     .forEach(v=>{
+
       const abs = Math.abs(v.dias);
+
       const regra = cfgVacas.prenhez_intervalos
         .filter(r=>r.ativa!==false && abs>=r.dias_de && abs<=r.dias_ate)
         .sort((a,b)=>a.dias_de-b.dias_de)[0];
 
       let texto="";
-      if(v.dias>0) texto=cfgVacas.prenhez_textos?.antes_parto?.replace("{{dias}}",v.dias);
-      else if(v.dias===0) texto=cfgVacas.prenhez_textos?.parto_hoje;
-      else texto=cfgVacas.prenhez_textos?.parto_atrasado?.replace("{{dias}}",abs);
+
+      if(v.dias>0){
+        texto=cfgVacas.prenhez_textos?.antes_parto?.replace("{{dias}}",v.dias);
+      }else if(v.dias===0){
+        texto=cfgVacas.prenhez_textos?.parto_hoje;
+      }else{
+        texto=cfgVacas.prenhez_textos?.parto_atrasado?.replace("{{dias}}",abs);
+      }
 
       html+=`
       <div class="card ${regra?.classe||"ok"}">
@@ -369,10 +430,15 @@ async function loadIndex(){
   vacinas
     .filter(v=>v.data_aplicacao && Number(v.repeticao_dias)>0)
     .forEach(v=>{
+
       const reap = parseData(v.data_aplicacao);
+
       reap.setDate(reap.getDate()+Number(v.repeticao_dias));
+
       const dias = diffDias(hojeZ,reap);
+
       const animal = animais.find(a=>a._id===v.id_animal);
+
       const status = dias<0 ? "atrasada" : "pendente";
 
       html+=`
@@ -391,20 +457,23 @@ async function loadIndex(){
 async function loadLuaVigente(){
 
   const r = await fetch("../app/luas.json");
+
   const dados = await r.json();
 
   const hoje = new Date();
+
   hoje.setHours(0,0,0,0);
 
   const luas = dados.map(l => {
+
     const [dia, mes, ano] = l.Data.split("/");
+
     return {
       ...l,
       d: new Date(Number(ano), Number(mes)-1, Number(dia))
     };
   });
 
-  // 👉 lua vigente = última lua com data <= hoje
   const vigente = luas
     .filter(l => l.d <= hoje)
     .sort((a,b) => b.d - a.d)[0];
@@ -421,24 +490,26 @@ async function loadLuaVigente(){
   }[fase] || "🌙";
 
   const ini = new Date(vigente.d);
+
   ini.setDate(ini.getDate() - 2);
 
   const fim = new Date(vigente.d);
+
   fim.setDate(fim.getDate() + 2);
 
- luaBtn.innerHTML = `
-  Lua ${emoji} <strong>${fase}</strong> • ${vigente.d.toLocaleDateString("pt-BR")}<br>
-  Força da lua: <small>${ini.toLocaleDateString("pt-BR")} até ${fim.toLocaleDateString("pt-BR")}</small>
-`;
+  luaBtn.innerHTML = `
+    Lua ${emoji} <strong>${fase}</strong> • ${vigente.d.toLocaleDateString("pt-BR")}<br>
+    Força da lua: <small>${ini.toLocaleDateString("pt-BR")} até ${fim.toLocaleDateString("pt-BR")}</small>
+  `;
 }
 
 /* ================= START ================= */
-(async ()=>{
-  await loadClima();
-  await loadLuaVigente();
-  await loadAlertas();
-  await loadIndex();
-})();
+Promise.allSettled([
+  loadClima(),
+  loadLuaVigente(),
+  loadAlertas(),
+  loadIndex()
+]);
 </script>
 
 <script src="../login/logout.js"></script>
