@@ -148,13 +148,33 @@ function diffDias(a,b){
 function cacheGet(key, ttl){
   const c = localStorage.getItem(key);
   if(!c) return null;
+
   const o = JSON.parse(c);
-  if(Date.now() - o.time > ttl) return null;
+
+  if(Date.now() - o.time > ttl){
+    return null;
+  }
+
   return o.data;
 }
 
+function cacheGetRaw(key){
+  const c = localStorage.getItem(key);
+
+  if(!c) return null;
+
+  try{
+    return JSON.parse(c).data;
+  }catch{
+    return null;
+  }
+}
+
 function cacheSet(key, data){
-  localStorage.setItem(key, JSON.stringify({ time:Date.now(), data }));
+  localStorage.setItem(key, JSON.stringify({
+    time:Date.now(),
+    data
+  }));
 }
 
 /* ================= MENU ================= */
@@ -171,22 +191,27 @@ fetch("../menu/menu.html")
     });
 
     const s = document.createElement("script");
+
     s.src = "../menu/menu-permissoes.js";
-    s.onload = () => document.body.style.display = "block";
+
+    s.onload = () => {
+      document.body.style.display = "block";
+    };
+
     document.body.appendChild(s);
   });
 
 /* ================= CLIMA ================= */
 async function loadClima(){
 
+  const cache = cacheGet("clima_cache",600000);
+
+  if(cache){
+    clima.innerHTML = cache;
+    return;
+  }
+
   try{
-
-    const cache = cacheGet("clima_cache",600000);
-
-    if(cache){
-      clima.innerHTML = cache;
-      return;
-    }
 
     const snap = await db.collection("config").doc("clima").get();
 
@@ -205,7 +230,9 @@ async function loadClima(){
 
     const r = await fetch(
       `https://api.open-meteo.com/v1/forecast?latitude=${cfg.latitude}&longitude=${cfg.longitude}&current_weather=true&hourly=precipitation_probability&timezone=${cfg.timezone}`,
-      { signal: controller.signal }
+      {
+        signal: controller.signal
+      }
     );
 
     clearTimeout(timeout);
@@ -246,6 +273,21 @@ async function loadClima(){
 
     console.error("Erro clima:", e);
 
+    const cacheAntigo = cacheGetRaw("clima_cache");
+
+    if(cacheAntigo){
+
+      clima.innerHTML = `
+        ${cacheAntigo}
+        <br>
+        <small style="color:#666">
+          ⚠️ Exibindo último clima salvo
+        </small>
+      `;
+
+      return;
+    }
+
     clima.innerHTML = "⚠️ Clima indisponível";
 
   }
@@ -257,7 +299,9 @@ clima.addEventListener("click", () => {
   if (document.getElementById("modal-clima")) return;
 
   const overlay = document.createElement("div");
+
   overlay.id = "modal-clima";
+
   overlay.style.cssText = `
     position:fixed;
     inset:0;
@@ -269,6 +313,7 @@ clima.addEventListener("click", () => {
   `;
 
   const box = document.createElement("div");
+
   box.style.cssText = `
     width:92%;
     max-width:480px;
@@ -280,15 +325,20 @@ clima.addEventListener("click", () => {
   `;
 
   const iframe = document.createElement("iframe");
+
   iframe.src = "../app/tempo.html";
+
   iframe.style.cssText = "width:100%;height:100%;border:none";
 
   box.appendChild(iframe);
   overlay.appendChild(box);
+
   document.body.appendChild(overlay);
 
   overlay.addEventListener("click", e=>{
-    if(e.target===overlay) overlay.remove();
+    if(e.target===overlay){
+      overlay.remove();
+    }
   });
 });
 
@@ -298,7 +348,9 @@ luaBtn.addEventListener("click", () => {
   if (document.getElementById("modal-lua")) return;
 
   const overlay = document.createElement("div");
+
   overlay.id = "modal-lua";
+
   overlay.style.cssText = `
     position:fixed;
     inset:0;
@@ -310,6 +362,7 @@ luaBtn.addEventListener("click", () => {
   `;
 
   const box = document.createElement("div");
+
   box.style.cssText = `
     width:95%;
     max-width:520px;
@@ -321,23 +374,30 @@ luaBtn.addEventListener("click", () => {
   `;
 
   const iframe = document.createElement("iframe");
+
   iframe.src = "../app/lua.html";
+
   iframe.style.cssText = "width:100%;height:100%;border:none";
 
   box.appendChild(iframe);
   overlay.appendChild(box);
+
   document.body.appendChild(overlay);
 
   overlay.addEventListener("click", e=>{
-    if(e.target===overlay) overlay.remove();
+    if(e.target===overlay){
+      overlay.remove();
+    }
   });
 });
 
 /* ===== FECHAR VIA postMessage ===== */
 window.addEventListener("message", e => {
+
   if (e.data?.tipo === "fechar-clima") {
     document.getElementById("modal-clima")?.remove();
   }
+
   if (e.data?.tipo === "fechar-lua") {
     document.getElementById("modal-lua")?.remove();
   }
@@ -345,11 +405,18 @@ window.addEventListener("message", e => {
 
 /* ================= ALERTAS ================= */
 async function loadAlertas(){
+
   const s = await db.collection("lembretes").get();
-  alertaRapido.className = s.size ? "alerta-rapido alerta-on" : "alerta-rapido alerta-ok";
-  alertaRapido.innerText = s.size
-    ? `🔔 ${s.size} itens pendentes para comprar`
-    : "🔔 Nenhum alerta no momento";
+
+  alertaRapido.className =
+    s.size
+      ? "alerta-rapido alerta-on"
+      : "alerta-rapido alerta-ok";
+
+  alertaRapido.innerText =
+    s.size
+      ? `🔔 ${s.size} itens pendentes para comprar`
+      : "🔔 Nenhum alerta no momento";
 }
 
 /* ================= INDEX ================= */
@@ -368,17 +435,24 @@ async function loadIndex(){
   cacheSet("cfg_vacinas",cfgVacinas);
 
   const animais = cacheGet("animais",1800000) ||
-    (await db.collection("animais").get()).docs.map(d=>({_id:d.id,...d.data()}));
+    (await db.collection("animais").get()).docs.map(d=>({
+      _id:d.id,
+      ...d.data()
+    }));
 
   cacheSet("animais",animais);
 
-  const eventos = (await db.collection("eventos")
-    .where("tipo_evento","==","cobertura").get())
-    .docs.map(d=>d.data());
+  const eventos = (
+    await db.collection("eventos")
+      .where("tipo_evento","==","cobertura")
+      .get()
+  ).docs.map(d=>d.data());
 
-  const vacinas = (await db.collection("vacinas")
-    .where("status","!=","Finalizada").get())
-    .docs.map(d=>d.data());
+  const vacinas = (
+    await db.collection("vacinas")
+      .where("status","!=","Finalizada")
+      .get()
+  ).docs.map(d=>d.data());
 
   let html = "<h2>🐄 Vacas a Criar</h2>";
 
@@ -389,11 +463,18 @@ async function loadIndex(){
 
       if(!animal) return null;
 
-      const prev = addMeses(parseData(c.data_evento), cfgVacas.gestacao_meses);
+      const prev = addMeses(
+        parseData(c.data_evento),
+        cfgVacas.gestacao_meses
+      );
 
       const dias = diffDias(hojeZ, prev);
 
-      return { animal, prev, dias };
+      return {
+        animal,
+        prev,
+        dias
+      };
 
     })
     .filter(Boolean)
@@ -403,50 +484,78 @@ async function loadIndex(){
       const abs = Math.abs(v.dias);
 
       const regra = cfgVacas.prenhez_intervalos
-        .filter(r=>r.ativa!==false && abs>=r.dias_de && abs<=r.dias_ate)
+        .filter(r=>
+          r.ativa!==false &&
+          abs>=r.dias_de &&
+          abs<=r.dias_ate
+        )
         .sort((a,b)=>a.dias_de-b.dias_de)[0];
 
-      let texto="";
+      let texto = "";
 
-      if(v.dias>0){
-        texto=cfgVacas.prenhez_textos?.antes_parto?.replace("{{dias}}",v.dias);
-      }else if(v.dias===0){
-        texto=cfgVacas.prenhez_textos?.parto_hoje;
+      if(v.dias > 0){
+
+        texto = cfgVacas.prenhez_textos?.antes_parto
+          ?.replace("{{dias}}",v.dias);
+
+      }else if(v.dias === 0){
+
+        texto = cfgVacas.prenhez_textos?.parto_hoje;
+
       }else{
-        texto=cfgVacas.prenhez_textos?.parto_atrasado?.replace("{{dias}}",abs);
+
+        texto = cfgVacas.prenhez_textos?.parto_atrasado
+          ?.replace("{{dias}}",abs);
       }
 
-      html+=`
+      html += `
       <div class="card ${regra?.classe||"ok"}">
         <strong>🐄 ${v.animal.nome.toUpperCase()}</strong>
         <p class="dias">${texto}</p>
         <p class="data">📅 ${v.prev.toLocaleDateString("pt-BR")}</p>
-        ${regra?.mensagem?`<p class="msg">${regra.mensagem}</p>`:""}
+        ${regra?.mensagem
+          ? `<p class="msg">${regra.mensagem}</p>`
+          : ""
+        }
       </div>`;
     });
 
   html += "<h2>💉 Vacinas pendentes</h2>";
 
   vacinas
-    .filter(v=>v.data_aplicacao && Number(v.repeticao_dias)>0)
+    .filter(v=>
+      v.data_aplicacao &&
+      Number(v.repeticao_dias)>0
+    )
     .forEach(v=>{
 
       const reap = parseData(v.data_aplicacao);
 
-      reap.setDate(reap.getDate()+Number(v.repeticao_dias));
+      reap.setDate(
+        reap.getDate()+Number(v.repeticao_dias)
+      );
 
       const dias = diffDias(hojeZ,reap);
 
       const animal = animais.find(a=>a._id===v.id_animal);
 
-      const status = dias<0 ? "atrasada" : "pendente";
+      const status = dias<0
+        ? "atrasada"
+        : "pendente";
 
-      html+=`
+      html += `
       <div class="card ${status}">
-       <strong>💉 ${v.nome_vacina.toUpperCase()}</strong>
-        <p class="dias">${cfgVacinas.status?.[status]} ${Math.abs(dias)} dias</p>
-        <p class="data">🐄 ${(animal?.nome||"-").toUpperCase()}</p>
-        <p class="data">📅 ${reap.toLocaleDateString("pt-BR")}</p>
+        <strong>💉 ${v.nome_vacina.toUpperCase()}</strong>
+        <p class="dias">
+          ${cfgVacinas.status?.[status]}
+          ${Math.abs(dias)} dias
+        </p>
+        <p class="data">
+          🐄 ${(animal?.nome||"-").toUpperCase()}
+        </p>
+        <p class="data">
+          📅 ${reap.toLocaleDateString("pt-BR")}
+        </p>
       </div>`;
     });
 
@@ -470,7 +579,11 @@ async function loadLuaVigente(){
 
     return {
       ...l,
-      d: new Date(Number(ano), Number(mes)-1, Number(dia))
+      d: new Date(
+        Number(ano),
+        Number(mes)-1,
+        Number(dia)
+      )
     };
   });
 
@@ -498,8 +611,16 @@ async function loadLuaVigente(){
   fim.setDate(fim.getDate() + 2);
 
   luaBtn.innerHTML = `
-    Lua ${emoji} <strong>${fase}</strong> • ${vigente.d.toLocaleDateString("pt-BR")}<br>
-    Força da lua: <small>${ini.toLocaleDateString("pt-BR")} até ${fim.toLocaleDateString("pt-BR")}</small>
+    Lua ${emoji}
+    <strong>${fase}</strong>
+    • ${vigente.d.toLocaleDateString("pt-BR")}
+    <br>
+    Força da lua:
+    <small>
+      ${ini.toLocaleDateString("pt-BR")}
+      até
+      ${fim.toLocaleDateString("pt-BR")}
+    </small>
   `;
 }
 
