@@ -6,7 +6,7 @@
     </a>
 
     <span class="footer-versao">
-      <span id="appVersao">...</span>
+      📦 <span id="appVersao">Carregando...</span>
     </span>
 
     <a href="#" class="footer-sair" id="footerLogout">
@@ -15,3 +15,55 @@
 
   </div>
 </footer>
+
+<script>
+(async () => {
+
+  const versaoEl = document.getElementById("appVersao");
+
+  try {
+
+    if (!("serviceWorker" in navigator)) {
+      versaoEl.textContent = "Sem SW";
+      return;
+    }
+
+    const reg = await navigator.serviceWorker.getRegistration();
+
+    if (!reg) {
+      versaoEl.textContent = "Sem versão";
+      return;
+    }
+
+    if (!navigator.serviceWorker.controller) {
+      versaoEl.textContent = "Aguardando...";
+      return;
+    }
+
+    const receberVersao = (event) => {
+
+      if (event.data?.version) {
+        versaoEl.textContent = event.data.version;
+      }
+
+    };
+
+    navigator.serviceWorker.addEventListener(
+      "message",
+      receberVersao,
+      { once:true }
+    );
+
+    navigator.serviceWorker.controller.postMessage(
+      "GET_VERSION"
+    );
+
+  } catch (e) {
+
+    console.error(e);
+    versaoEl.textContent = "Erro";
+
+  }
+
+})();
+</script>
