@@ -424,17 +424,17 @@ async function loadIndex(){
 
   conteudo.innerHTML = "";
 
-  const cfgVacas = cacheGet("cfg_vacas",1800000) ||
+  const cfgVacas = cacheGet("cfg_vacas",900000) ||
     (await db.collection("config").doc("vacas").get()).data();
 
   cacheSet("cfg_vacas",cfgVacas);
 
-  const cfgVacinas = cacheGet("cfg_vacinas",1800000) ||
+  const cfgVacinas = cacheGet("cfg_vacinas",900000) ||
     (await db.collection("config").doc("vacinas").get()).data();
 
   cacheSet("cfg_vacinas",cfgVacinas);
 
-  const animais = cacheGet("animais",1800000) ||
+  const animais = cacheGet("animais",900000) ||
     (await db.collection("animais").get()).docs.map(d=>({
       _id:d.id,
       ...d.data()
