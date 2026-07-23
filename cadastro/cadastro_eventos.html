@@ -228,11 +228,30 @@ async function carregar(){
   const snapEventos = await db.collection("eventos").get();
   EVENTOS = snapEventos.docs.map(d=>({id:d.id,...d.data()}));
 
-  eventoExistente.innerHTML='<option value="">Selecione</option>';
-  EVENTOS.forEach(e=>{
-    const nome=e.nome_animal||"Animal não informado";
-    eventoExistente.innerHTML+=
-      `<option value="${e.id}">${nome} – ${e.tipo_evento}</option>`;
+  eventoExistente.innerHTML = '<option value="">Selecione</option>';
+
+EVENTOS
+  .sort((a, b) => {
+    const nomeA = (a.nome_animal || "").localeCompare(
+      b.nome_animal || "",
+      "pt-BR"
+    );
+
+    if (nomeA !== 0) return nomeA;
+
+    return (b.data_evento || "").localeCompare(a.data_evento || "");
+  })
+  .forEach(e => {
+
+    const data = e.data_evento
+      ? e.data_evento.split("-").reverse().join("/")
+      : "--/--/----";
+
+    eventoExistente.innerHTML += `
+      <option value="${e.id}">
+        ${e.nome_animal} • ${data} • ${e.tipo_evento}
+      </option>
+    `;
   });
 }
 
